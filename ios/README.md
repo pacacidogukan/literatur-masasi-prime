@@ -1,6 +1,6 @@
 # Literatür Masası Prime — iOS cihaz test projesi
 
-Mevcut ekranları koruyan SwiftUI + WKWebView projesidir. HTML/CSS/JS ve marka varlıkları uygulama paketinde bulunur; ana ekran bir uzak web sayfası olarak yüklenmez. Kampanya ve bildirim verileri ortak backend'den alınır. Bu ilk cihaz test projesidir; bu Linux ortamında Xcode derlemesi veya fiziksel iPhone testi yapılmamıştır.
+Mevcut ekranları koruyan SwiftUI + WKWebView projesidir. HTML/CSS/JS ve marka varlıkları uygulama paketinde bulunur; ana ekran bir uzak web sayfası olarak yüklenmez. Kampanya ve bildirim verileri ortak backend'den alınır. GitHub Actions macOS ortamında Xcode simülatör derlemesi ve altı XCTest ekran senaryosu doğrulandı. Fiziksel iPhone ve Release dağıtım doğrulaması henüz tamamlanmadı.
 
 ## Hazır olanlar
 
@@ -49,7 +49,7 @@ Mobil oturumlar ayrı `mobile_sessions` tablosundadır; anahtarlar yalnızca SHA
 
 ## TestFlight öncesinde tamamlanacaklar
 
-- Xcode derlemesi, gerçek cihaz testi, Apple imzalama ve provisioning.
+- Release arşiv derlemesi, gerçek cihaz testi, Apple dağıtım imzalama ve provisioning.
 - 1024 px opak uygulama simgesi ve son açılış varlıkları. Bu proje henüz dağıtım simgesi içermez.
 - İşletmeci bilgileri, resmî iletişim ve son gizlilik/kullanıcı sözleşmesi. Bundled sözleşme mobil girişe göre uyarlanmıştır ama işletmeci bilgileri hâlâ taslaktır.
 - PrivacyInfo.xcprivacy teknik başlangıç beyanıdır; App Store Connect veri beyanı gerçek son veri akışıyla birlikte doğrulanmalıdır. Push/analitik/mağaza entegrasyonları eklendiğinde yeniden değerlendirilmelidir.
@@ -60,3 +60,21 @@ Mobil oturumlar ayrı `mobile_sessions` tablosundadır; anahtarlar yalnızca SHA
 `node tests/client.cjs`, `node tests/ios.cjs`, `node tests/server.cjs`, `npx tsc --noEmit`.
 
 `tests/ios.cjs` native pakete uyarlanan UI akışlarını JavaScript ortamında sınar; Swift derlemesi veya WebKit/iPhone testi yerine geçmez.
+
+
+## Otomatik iPhone ekran testleri
+
+`.github/workflows/ios.yml`, her main push ve pull request için istemci, native köprü, backend ve iPhone simülatör kontrollerini çalıştırır.
+
+Doğrulanan son çalışma: [38933705368](https://github.com/pacacidogukan/literatur-masasi-prime/actions/runs/38933705368), commit `41a28da725341a35ee162a725e19ebe4227b2c86`. Altı senaryo, sıfır hata:
+
+- Geçersiz giriş kodunun reddedilmesi.
+- Oturumun yeniden açılışta korunması ve çıkış sonrası kapalı kalması.
+- Favori ekleme, yeniden açılışta kalıcılık ve kaldırma.
+- Bildirimin okundu durumunun yenileme ve yeniden açılışta korunması.
+- Bildirim kaydetme hatasının gösterilmesi ve bildirimin okunmamış kalması.
+- Sağa kaydırarak kampanya kodunu açma ve gerçek native panoya `SPRING26` kopyalama.
+
+Ekran testleri Debug sürümüne özel örnek API yanıtları kullanır; canlı backend ile uçtan uca cihaz testi değildir. Kopyalama testi uygulama sürecindeki gerçek `UIPasteboard` değerini doğrular. Ayrı backend testleri kalıcılık ve yetkilendirmeyi sınar. Test araçları Release sürümünde bulunmamalıdır.
+
+Bu sonuçlar fiziksel cihaz, fotoğraf izinleri, gerçek ağ kesintisi, Release imzalama veya TestFlight doğrulaması anlamına gelmez.
