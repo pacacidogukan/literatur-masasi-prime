@@ -1,0 +1,1 @@
+ALTER TABLE `campaigns` ADD `reveal_count` integer DEFAULT 0 NOT NULL;

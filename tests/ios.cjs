@@ -1,0 +1,16 @@
+const fs=require('node:fs'),assert=require('node:assert/strict');
+const native=fs.readFileSync('ios/Prime/Resources/Web/app.js','utf8');
+assert.ok(native.includes('window.webkit?.messageHandlers?.primeAPI'));
+assert.ok(native.includes("await server('copy',{text:selected.code})"));
+assert.ok(!native.includes("fetch('/api/"));
+assert.ok(!native.includes('OAI-Sites-Authorization'));
+assert.ok(!native.includes('ChatGPT oturumu da gereklidir'));
+const swift=fs.readFileSync('ios/Prime/PrimeWebView.swift','utf8');
+assert.ok(swift.includes('message.frameInfo.isMainFrame'));
+assert.ok(swift.includes('result.removeValue(forKey: "sessionToken")'));
+assert.ok(swift.includes('completionHandler(nil)'));
+let suite=fs.readFileSync('tests/client.cjs','utf8');
+suite=suite.replace('vm.createContext(box);vm.runInContext',`box.window.webkit={messageHandlers:{primeAPI:{async postMessage({path,body}){if(path==='copy')return {status:200,data:{ok:true}};const r=await box.fetch('/api/'+path,body?{method:'POST',body:JSON.stringify(body)}:undefined);return {status:r.ok?200:403,data:await r.json()}}}}};vm.createContext(box);vm.runInContext`);
+const mockFs={...fs,readFileSync(p,...args){return p==='public/app.js'?native:fs.readFileSync(p,...args)}};
+new Function('require',suite)(name=>name==='node:fs'?mockFs:require(name));
+console.log('PASS: native UI adapter, Keychain-only session response and bridge origin restrictions checked. Shared client scenarios run against the native bundle.');
