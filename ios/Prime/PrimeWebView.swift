@@ -6,6 +6,15 @@ struct PrimeWebView: UIViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator() }
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--prime-ui-tests") {
+            if ProcessInfo.processInfo.arguments.contains("--reset-test-state") {
+                SecureStore.clear("session")
+                UserDefaults(suiteName: "PrimeUITests")?.removePersistentDomain(forName: "PrimeUITests")
+                configuration.userContentController.addUserScript(WKUserScript(source: "localStorage.clear();", injectionTime: .atDocumentStart, forMainFrameOnly: true))
+            }
+        }
+        #endif
         configuration.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "primeAPI")
         let view = WKWebView(frame: .zero, configuration: configuration)
         view.navigationDelegate = context.coordinator
@@ -35,6 +44,11 @@ struct PrimeWebView: UIViewRepresentable {
         private let redirectGuard = NoRedirect()
         private lazy var session: URLSession = {
             let config = URLSessionConfiguration.ephemeral
+            #if DEBUG
+            if ProcessInfo.processInfo.arguments.contains("--prime-ui-tests") {
+                config.protocolClasses = [PrimeUITestProtocol.self]
+            }
+            #endif
             config.timeoutIntervalForRequest = 20
             config.httpShouldSetCookies = false
             config.urlCache = nil

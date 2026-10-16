@@ -4,13 +4,18 @@
 
 - İstemci ve native köprü davranış testleri; bildirim okuma, yenileme yarışı ve hata mesajları dahil.
 - SQLite ile backend kalıcılık ve yetkilendirme testleri.
-- macOS üzerinde imzasız iOS Simulator derlemesi, yükleme ve başlatma.
-- Giriş ekranının PNG görüntüsü, çalışmanın `prime-ios-simulator` çıktısında saklanır.
+- macOS üzerinde imzasız iOS Simulator derlemesi ve altı XCTest UI senaryosu.
+- Ekran görüntüleri ve XCTest sonuçları `prime-ios-simulator` çıktısındaki `PrimeUI.xcresult` içinde saklanır.
 
 Bu süreç App Store/TestFlight dağıtımı yapmaz ve canlı sisteme bildirim göndermez.
-Simülatör başlatma kontrolü tam kullanıcı arayüzü testi değildir; giriş ve kampanya
-akışları istemci testlerinde taklit servisle kontrol edilir. Canlı API ve fiziksel
-cihaz doğrulaması ayrıca gerekir. Apple hesabı veya erişim kodu CI içine eklenmez.
+UI testleri giriş/çıkış ve oturum kalıcılığı, geçersiz kod, favorilerin kalıcılığı ve
+kaldırılması, kaydırarak kod açma ve native pano içeriği, bildirim okuma kalıcılığı,
+bildirim kaydetme hatası senaryolarını kapsar. Debug derlemesinde açık bir başlatma
+argümanıyla URLSession taşıması örnek yanıtlarla değiştirilir; gerçek WKWebView,
+mesaj köprüsü, Keychain ve yerel depolama kullanılır. Test Keychain alanı ayrıdır.
+Örnek API tüm ağ isteklerini yakalar; canlı sisteme bağlanmaz. Release derlemesinde
+bu kod derlenmez. Canlı API entegrasyonu ve fiziksel cihaz doğrulaması ayrıca gerekir.
+Apple hesabı veya erişim kodu CI içine eklenmez.
 
 Özel depodaki macOS işleri GitHub Actions kotasını tüketir. Kota veya hesap
 doğrulaması nedeniyle iş çalışmazsa Actions sayfasında gösterilen nedeni inceleyin.

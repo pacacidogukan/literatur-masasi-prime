@@ -2,7 +2,12 @@ import Foundation
 import Security
 
 struct SecureStore {
-    static let service = "LiteraturMasasiPrime.Session"
+    static var service: String {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--prime-ui-tests") { return "LiteraturMasasiPrime.UITests" }
+        #endif
+        return "LiteraturMasasiPrime.Session"
+    }
     static func read(_ account: String) -> String? {
         let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service, kSecAttrAccount as String: account,

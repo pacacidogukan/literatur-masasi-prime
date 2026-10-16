@@ -31,7 +31,7 @@ jobs:
 
   simulator:
     runs-on: macos-15
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - name: Build iOS Simulator app
@@ -40,17 +40,13 @@ jobs:
           -configuration Debug -sdk iphonesimulator
           -destination 'generic/platform=iOS Simulator'
           -derivedDataPath build-ci CODE_SIGNING_ALLOWED=NO build
-      - name: Launch and capture Simulator
+      - name: Run iPhone UI tests
+        timeout-minutes: 15
         run: |
           set -euo pipefail
           DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(x["udid"] for group in d["devices"].values() for x in group if x["name"].startswith("iPhone")))')
-          xcrun simctl boot "$DEVICE_ID"
-          xcrun simctl bootstatus "$DEVICE_ID" -b
-          xcrun simctl install "$DEVICE_ID" build-ci/Build/Products/Debug-iphonesimulator/Prime.app
-          xcrun simctl launch "$DEVICE_ID" com.literaturmasasi.prime
-          sleep 5
           mkdir -p ci-artifacts
-          xcrun simctl io "$DEVICE_ID" screenshot ci-artifacts/login.png
+          xcodebuild -project ios/Prime.xcodeproj -scheme Prime -configuration Debug -destination "platform=iOS Simulator,id=$DEVICE_ID" -derivedDataPath build-ci -resultBundlePath ci-artifacts/PrimeUI.xcresult -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO test
       - uses: actions/upload-artifact@v4
         if: always()
         with:
