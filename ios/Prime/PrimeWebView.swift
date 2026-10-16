@@ -104,6 +104,11 @@ struct PrimeWebView: UIViewRepresentable {
                     replyHandler(["status":http.statusCode, "data":result], nil)
                 } catch {
                     if path == "logout" { SecureStore.clear("session") }
+                    #if DEBUG
+                    if ProcessInfo.processInfo.arguments.contains("--prime-ui-tests") {
+                        replyHandler(nil, "UI test: \(error.localizedDescription)"); return
+                    }
+                    #endif
                     replyHandler(nil, "Bağlantı kurulamadı. İnternet bağlantını kontrol edip tekrar dene.")
                 }
             }
