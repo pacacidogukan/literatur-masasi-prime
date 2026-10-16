@@ -9,10 +9,10 @@ struct PrimeWebView: UIViewRepresentable {
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--prime-ui-tests") {
             configuration.userContentController.addUserScript(WKUserScript(source: """
-            document.addEventListener('click', e => {
+            ['click','pointerdown','pointerup','touchstart','touchend'].forEach(kind=>document.addEventListener(kind, e => {
               const el=e.target.closest('[data-action]');
-              window.webkit.messageHandlers.primeAPI.postMessage({path:'uitest/trace',body:{action:el?.dataset.action||e.target.tagName,x:e.clientX,y:e.clientY,hit:document.elementFromPoint(e.clientX,e.clientY)?.outerHTML.slice(0,240)}}).catch(()=>{});
-            },true);
+              window.webkit.messageHandlers.primeAPI.postMessage({path:'uitest/trace',body:{kind,action:el?.dataset.action||e.target.tagName,x:e.clientX??e.changedTouches?.[0]?.clientX,y:e.clientY??e.changedTouches?.[0]?.clientY,hit:document.elementFromPoint(e.clientX??e.changedTouches?.[0]?.clientX,e.clientY??e.changedTouches?.[0]?.clientY)?.outerHTML.slice(0,240)}}).catch(()=>{});
+            },true));
             """, injectionTime: .atDocumentStart, forMainFrameOnly: true))
             if ProcessInfo.processInfo.arguments.contains("--reset-test-state") {
                 SecureStore.clear("session")
