@@ -49,7 +49,7 @@ jobs:
           xcrun simctl bootstatus "$DEVICE_ID" -b
           printf 'prime-ci-empty' | xcrun simctl pbcopy "$DEVICE_ID"
           mkdir -p ci-artifacts
-          xcodebuild -project ios/Prime.xcodeproj -scheme Prime -configuration Debug -destination "platform=iOS Simulator,id=$DEVICE_ID" -derivedDataPath build-ci -resultBundlePath ci-artifacts/PrimeUI.xcresult -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY="-" -only-testing:PrimeUITests/PrimeFlowTests/testSwipeRevealsAndCopiesCampaignCode test
+          xcodebuild -project ios/Prime.xcodeproj -scheme Prime -configuration Debug -destination "platform=iOS Simulator,id=$DEVICE_ID" -derivedDataPath build-ci -resultBundlePath ci-artifacts/PrimeUI.xcresult -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY="-" test
       - name: Collect isolated UI trace
         if: always()
         run: |

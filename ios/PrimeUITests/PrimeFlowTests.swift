@@ -66,7 +66,7 @@ final class PrimeFlowTests: XCTestCase {
         XCTAssertTrue(app.webViews.staticTexts["SPRING26"].waitForExistence(timeout: 15))
         let copy = button("Kopyala")
         XCTAssertTrue(copy.waitForExistence(timeout: 15))
-        print("COPY_FRAME: \\(copy.frame) APP_FRAME: \\(app.frame)")
+        // Use window coordinates for the fixed WKWebView footer's physical tap.
         app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: copy.frame.midX, dy: copy.frame.midY)).tap()
         let clipboard = app.staticTexts["prime-test-clipboard"]
         XCTAssertTrue(clipboard.waitForExistence(timeout: 15), app.debugDescription)
