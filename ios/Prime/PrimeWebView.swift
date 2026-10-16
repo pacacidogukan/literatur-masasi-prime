@@ -69,6 +69,16 @@ struct PrimeWebView: UIViewRepresentable {
                     replyHandler(nil, "Kopyalanacak metin geçersiz."); return
                 }
                 UIPasteboard.general.string = text
+                #if DEBUG
+                if ProcessInfo.processInfo.arguments.contains("--prime-ui-tests"), let view = message.webView {
+                    let label = (view.viewWithTag(9364) as? UILabel) ?? UILabel(frame: CGRect(x: 8, y: 0, width: 300, height: 24))
+                    label.tag = 9364
+                    label.accessibilityIdentifier = "prime-test-clipboard"
+                    label.text = UIPasteboard.general.string ?? "EMPTY"
+                    label.backgroundColor = .white
+                    view.addSubview(label)
+                }
+                #endif
                 replyHandler(["status":200, "data":["ok":true]], nil); return
             }
             guard let method = methods[path] else { replyHandler(nil, "İşlem desteklenmiyor."); return }

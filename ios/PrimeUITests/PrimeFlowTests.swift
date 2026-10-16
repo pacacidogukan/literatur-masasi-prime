@@ -65,8 +65,9 @@ final class PrimeFlowTests: XCTestCase {
         start.press(forDuration: 0.1, thenDragTo: start.withOffset(CGVector(dx: app.frame.width * 0.72, dy: 0)))
         XCTAssertTrue(app.webViews.staticTexts["SPRING26"].waitForExistence(timeout: 15))
         tap("Kopyala")
-        // The workflow reads the actual Simulator pasteboard after the UI suite.
-        // Reading it from the background XCTest runner can trigger cross-app restrictions.
+        let clipboard = app.staticTexts["prime-test-clipboard"]
+        XCTAssertTrue(clipboard.waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertEqual(clipboard.label, "SPRING26")
     }
     func testNotificationReadPersistsAfterRefreshAndRelaunch() {
         login(); home(); openInbox(); tap("Test bildirimi, okunmamış")

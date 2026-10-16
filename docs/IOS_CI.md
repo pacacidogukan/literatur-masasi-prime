@@ -20,4 +20,4 @@ Apple hesabı veya erişim kodu CI içine eklenmez.
 Özel depodaki macOS işleri GitHub Actions kotasını tüketir. Kota veya hesap
 doğrulaması nedeniyle iş çalışmazsa Actions sayfasında gösterilen nedeni inceleyin.
 
-Kopyalama sonucu XCTest arka plan sürecinden değil, simülatörün `simctl pbpaste` aracıyla doğrulanır. Test öncesinde pano bilinen farklı bir değerle sıfırlanır. Son senaryo kaydırma/kopyalamadır; test sırasını değiştirirken bu kontrolü de güncelleyin.
+Kopyalama sonucu uygulamanın kendi sürecinde gerçek `UIPasteboard.general.string` değeri okunarak doğrulanır. Bu değer yalnızca açık test modu ve Debug derlemesinde native bir erişilebilirlik etiketiyle XCTest tarafından kontrol edilir. Release sürümünde bu etiket ve test kodu derlenmez.
