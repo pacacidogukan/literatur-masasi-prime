@@ -4,7 +4,7 @@
 
 - İstemci ve native köprü davranış testleri; bildirim okuma, yenileme yarışı ve hata mesajları dahil.
 - SQLite ile backend kalıcılık ve yetkilendirme testleri.
-- macOS üzerinde imzasız iOS Simulator derlemesi ve altı XCTest UI senaryosu.
+- macOS üzerinde yerel imzalı iOS Simulator derlemesi ve altı XCTest UI senaryosu.
 - Ekran görüntüleri ve XCTest sonuçları `prime-ios-simulator` çıktısındaki `PrimeUI.xcresult` içinde saklanır.
 
 Bu süreç App Store/TestFlight dağıtımı yapmaz ve canlı sisteme bildirim göndermez.
@@ -19,3 +19,5 @@ Apple hesabı veya erişim kodu CI içine eklenmez.
 
 Özel depodaki macOS işleri GitHub Actions kotasını tüketir. Kota veya hesap
 doğrulaması nedeniyle iş çalışmazsa Actions sayfasında gösterilen nedeni inceleyin.
+
+Kopyalama sonucu XCTest arka plan sürecinden değil, simülatörün `simctl pbpaste` aracıyla doğrulanır. Test öncesinde pano bilinen farklı bir değerle sıfırlanır. Son senaryo kaydırma/kopyalamadır; test sırasını değiştirirken bu kontrolü de güncelleyin.
