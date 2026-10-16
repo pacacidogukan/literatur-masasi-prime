@@ -8,6 +8,12 @@ struct PrimeWebView: UIViewRepresentable {
         let configuration = WKWebViewConfiguration()
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--prime-ui-tests") {
+            configuration.userContentController.addUserScript(WKUserScript(source: """
+            document.addEventListener('click', e => {
+              const el=e.target.closest('[data-action]');
+              window.webkit.messageHandlers.primeAPI.postMessage({path:'uitest/trace',body:{action:el?.dataset.action||e.target.tagName,x:e.clientX,y:e.clientY,hit:document.elementFromPoint(e.clientX,e.clientY)?.outerHTML.slice(0,240)}}).catch(()=>{});
+            },true);
+            """, injectionTime: .atDocumentStart, forMainFrameOnly: true))
             if ProcessInfo.processInfo.arguments.contains("--reset-test-state") {
                 SecureStore.clear("session")
                 UserDefaults(suiteName: "PrimeUITests")?.removePersistentDomain(forName: "PrimeUITests")
@@ -64,6 +70,12 @@ struct PrimeWebView: UIViewRepresentable {
                   let payload = message.body as? [String: Any], let path = payload["path"] as? String else {
                 replyHandler(nil, "Bu sayfaya erişim izni verilmedi."); return
             }
+            #if DEBUG
+            if ProcessInfo.processInfo.arguments.contains("--prime-ui-tests") {
+                trace(["request": path, "body": path == "uitest/trace" ? (payload["body"] ?? "") : ""])
+                if path == "uitest/trace" { replyHandler(["status":200, "data":["ok":true]], nil); return }
+            }
+            #endif
             if path == "copy" {
                 guard let body = payload["body"] as? [String: Any], let text = body["text"] as? String, text.count <= 1000 else {
                     replyHandler(nil, "Kopyalanacak metin geçersiz."); return
@@ -71,12 +83,15 @@ struct PrimeWebView: UIViewRepresentable {
                 UIPasteboard.general.string = text
                 #if DEBUG
                 if ProcessInfo.processInfo.arguments.contains("--prime-ui-tests"), let view = message.webView {
-                    let label = (view.viewWithTag(9364) as? UILabel) ?? UILabel(frame: CGRect(x: 8, y: 0, width: 300, height: 24))
+                    trace(["pasteboard": UIPasteboard.general.string ?? "EMPTY"])
+                    let container = view.window ?? view
+                    let label = (container.viewWithTag(9364) as? UILabel) ?? UILabel(frame: CGRect(x: 8, y: 65, width: 300, height: 24))
                     label.tag = 9364
                     label.accessibilityIdentifier = "prime-test-clipboard"
                     label.text = UIPasteboard.general.string ?? "EMPTY"
                     label.backgroundColor = .white
-                    view.addSubview(label)
+                    label.isUserInteractionEnabled = false
+                    container.addSubview(label)
                 }
                 #endif
                 replyHandler(["status":200, "data":["ok":true]], nil); return
@@ -123,6 +138,16 @@ struct PrimeWebView: UIViewRepresentable {
                 }
             }
         }
+        #if DEBUG
+        private func trace(_ event: [String: Any]) {
+            guard let root = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first,
+                  let data = try? JSONSerialization.data(withJSONObject: event),
+                  let text = String(data: data, encoding: .utf8) else { return }
+            let file = root.appendingPathComponent("ui-trace.log")
+            let old = (try? String(contentsOf: file, encoding: .utf8)) ?? ""
+            try? (old + text + "\\n").write(to: file, atomically: true, encoding: .utf8)
+        }
+        #endif
         private func isLocal(_ url: URL) -> Bool {
             guard url.isFileURL, let root = webRoot else { return false }
             return url.standardizedFileURL.path.hasPrefix(root.path + "/")

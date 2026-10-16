@@ -64,7 +64,9 @@ final class PrimeFlowTests: XCTestCase {
         let start = thumb.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
         start.press(forDuration: 0.1, thenDragTo: start.withOffset(CGVector(dx: app.frame.width * 0.72, dy: 0)))
         XCTAssertTrue(app.webViews.staticTexts["SPRING26"].waitForExistence(timeout: 15))
-        tap("Kopyala")
+        let copy = button("Kopyala")
+        XCTAssertTrue(copy.waitForExistence(timeout: 15))
+        copy.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         let clipboard = app.staticTexts["prime-test-clipboard"]
         XCTAssertTrue(clipboard.waitForExistence(timeout: 15), app.debugDescription)
         XCTAssertEqual(clipboard.label, "SPRING26")
