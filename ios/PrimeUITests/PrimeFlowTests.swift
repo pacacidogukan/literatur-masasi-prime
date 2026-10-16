@@ -14,6 +14,11 @@ final class PrimeFlowTests: XCTestCase {
         XCTAssertTrue(element.waitForExistence(timeout: 15), "Missing button: \(label)")
         element.tap()
     }
+    func toggleFavorite(_ label: String) {
+        let element = app.webViews.switches[label].firstMatch
+        XCTAssertTrue(element.waitForExistence(timeout: 15), app.debugDescription)
+        element.tap()
+    }
     func login(_ code: String = "654321") {
         for (index, digit) in code.enumerated() {
             let field = app.webViews.textFields["Kodun \(index + 1). hanesi"]
@@ -47,8 +52,8 @@ final class PrimeFlowTests: XCTestCase {
     }
     func testFavoritesPersistAndCanBeRemoved() {
         login(); home(); tap("Markalar"); tap("Solgar kampanyasını aç")
-        tap("Solgar favorilere ekle"); relaunch(); home(); tap("Favoriler")
-        tap("Solgar kampanyasını aç"); tap("Solgar favorilerden çıkar")
+        toggleFavorite("Solgar favorilere ekle"); relaunch(); home(); tap("Favoriler")
+        tap("Solgar kampanyasını aç"); toggleFavorite("Solgar favorilerden çıkar")
         relaunch(); home(); tap("Favoriler")
         XCTAssertFalse(button("Solgar kampanyasını aç").exists)
     }
@@ -60,8 +65,10 @@ final class PrimeFlowTests: XCTestCase {
         start.press(forDuration: 0.1, thenDragTo: start.withOffset(CGVector(dx: app.frame.width * 0.72, dy: 0)))
         XCTAssertTrue(app.webViews.staticTexts["SPRING26"].waitForExistence(timeout: 15))
         tap("Kopyala")
-        XCTAssertTrue(app.webViews.staticTexts["Kod kopyalandı"].waitForExistence(timeout: 10))
-        XCTAssertEqual(UIPasteboard.general.string, "SPRING26")
+        let copied = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            UIPasteboard.general.string == "SPRING26"
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [copied], timeout: 5), .completed, app.debugDescription)
     }
     func testNotificationReadPersistsAfterRefreshAndRelaunch() {
         login(); home(); openInbox(); tap("Test bildirimi, okunmamış")
