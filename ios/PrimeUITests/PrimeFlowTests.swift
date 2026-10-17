@@ -58,8 +58,10 @@ final class PrimeFlowTests: XCTestCase {
         link.tap()
         let safari = XCUIApplication(bundleIdentifier: "com.apple.mobilesafari")
         let foreground = NSPredicate(format: "state == %d", XCUIApplication.State.runningForeground.rawValue)
-        expectation(for: foreground, evaluatedWith: safari)
-        waitForExpectations(timeout: 20)
+        let safariOpened = expectation(for: foreground, evaluatedWith: safari)
+        let result = XCTWaiter.wait(for: [safariOpened], timeout: 20)
+        if result != .completed { print("EXTERNAL_APP_STATE: \(app.debugDescription)"); print("SAFARI_STATE: \(safari.debugDescription)") }
+        XCTAssertEqual(result, .completed)
         app.activate()
         XCTAssertTrue(button("Kodu açmak için sağa kaydır veya Enter tuşuna bas").waitForExistence(timeout: 15))
         let opened = app.staticTexts["prime-test-external-url"]

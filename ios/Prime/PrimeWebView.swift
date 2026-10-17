@@ -77,6 +77,9 @@ struct PrimeWebView: UIViewRepresentable {
             }
             #endif
             if path == "open-external" {
+                #if DEBUG
+                if ProcessInfo.processInfo.arguments.contains("--prime-ui-tests") { trace(["externalBody": payload["body"] ?? "missing"]) }
+                #endif
                 guard let body = payload["body"] as? [String: Any],
                       let value = body["url"] as? String, value.count <= 2048,
                       let url = URL(string: value), url.scheme?.lowercased() == "https",
@@ -85,6 +88,9 @@ struct PrimeWebView: UIViewRepresentable {
                 }
                 Task { @MainActor in
                     UIApplication.shared.open(url, options: [:]) { opened in
+                        #if DEBUG
+                        if ProcessInfo.processInfo.arguments.contains("--prime-ui-tests") { self.trace(["externalOpened": opened, "externalURL": url.absoluteString]) }
+                        #endif
                         #if DEBUG
                         if opened, ProcessInfo.processInfo.arguments.contains("--prime-ui-tests"), let view = message.webView {
                             let container = view.window ?? view
