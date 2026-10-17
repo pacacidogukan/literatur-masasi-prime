@@ -50,8 +50,7 @@ jobs:
             '/v1/profiles?filter[profileType]=IOS_APP_STORE&limit=200',
           ];
           const unsigned = b64({ alg: 'ES256', kid: process.env.ASC_KEY_ID.trim(), typ: 'JWT' }) + '.' +
-            b64({ iss: process.env.ASC_ISSUER.trim(), iat: now - 10, exp: now + 300, aud: 'appstoreconnect-v1',
-              scope: ['GET /v1/apps/6823890365', 'GET /v1/bundleIds', 'GET /v1/certificates', 'GET /v1/profiles'] });
+            b64({ iss: process.env.ASC_ISSUER.trim(), iat: now - 10, exp: now + 300, aud: 'appstoreconnect-v1' });
           const token = unsigned + '.' + sign('sha256', Buffer.from(unsigned), { key, dsaEncoding: 'ieee-p1363' }).toString('base64url');
           console.log('::add-mask::' + token);
           const report = [];
