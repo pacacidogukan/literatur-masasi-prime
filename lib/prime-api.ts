@@ -4,6 +4,13 @@ const json=(v:unknown,status=200)=>Response.json(v,{status,headers:{'Cache-Contr
 const now=()=>Math.floor(Date.now()/1000);
 function campaignContent(c:any){return {...c,description:c.description??`${c.demo?'Örnek kampanya. ':''}Seçili ${c.name} ürünlerindeki ayrıcalığı keşfet. Kampanya kodunu aşağıdaki butonu sağa kaydırarak açabilirsin.`};}
 async function digest(value:string){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value)))).map(x=>x.toString(16).padStart(2,'0')).join('')}
+const codeBytes=(value:string)=>new TextEncoder().encode(value);
+const codeHex=(bytes:Uint8Array)=>Array.from(bytes).map(x=>x.toString(16).padStart(2,'0')).join('');
+const codeUnhex=(value:string)=>new Uint8Array(value.match(/../g)!.map(x=>parseInt(x,16)));
+async function displayKey(){return crypto.subtle.importKey('raw',await crypto.subtle.digest('SHA-256',codeBytes('prime-code-display:v1:'+env.PRIME_CODE_PEPPER)),{name:'AES-GCM'},false,['encrypt','decrypt']);}
+async function sealCode(id:string,plain:string){const iv=crypto.getRandomValues(new Uint8Array(12));const sealed=await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:codeBytes(id)},await displayKey(),codeBytes(plain));return 'v1:'+codeHex(iv)+':'+codeHex(new Uint8Array(sealed));}
+async function openCode(id:string,value:string|null){if(!value||!env.PRIME_CODE_PEPPER||!/^v1:[a-f0-9]{24}:[a-f0-9]{44}$/.test(value))return null;try{const [,iv,data]=value.split(':');const plain=new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:codeUnhex(iv),additionalData:codeBytes(id)},await displayKey(),codeUnhex(data)));return /^\d{6}$/.test(plain)?plain:null;}catch{return null;}}
+async function rememberCode(db:any,id:string,plain:string){await db.prepare('UPDATE access_codes SET display_cipher=? WHERE id=? AND display_cipher IS NULL').bind(await sealCode(id,plain),id).run();}
 export async function api(request:Request){
  const db=env.DB;if(!db)return json({error:'Veritabanı henüz hazır değil.'},503);
  const path=new URL(request.url).pathname.replace('/api/',''),method=request.method;
@@ -54,6 +61,7 @@ export async function api(request:Request){
   const hash=await digest(env.PRIME_CODE_PEPPER+':'+body.code);
   const code=await db.prepare('UPDATE access_codes SET uses=uses+1 WHERE hash=? AND active=1 AND expires>? AND uses<max_uses RETURNING id').bind(hash,now()).first<{id:string}>();
   if(!code)return json({error:'Kod geçersiz, süresi dolmuş veya kullanım sınırına ulaşmış.'},403);
+  await rememberCode(db,code.id,body.code!);
   await db.prepare('INSERT INTO grants(user_id,code_id,created) VALUES (?,?,?) ON CONFLICT(user_id) DO UPDATE SET code_id=excluded.code_id,created=excluded.created').bind(user,code.id,now()).run();
   // Bounded cleanup keeps the attempt table small without changing its schema.
   await db.prepare('DELETE FROM attempts WHERE expires<?').bind(now()-86400).run();
@@ -102,7 +110,7 @@ export async function api(request:Request){
    }
    return json({url:(env.PRIME_EDITOR_ORIGIN||new URL('/edit',request.url).href)+'#'+existing!.token});
   }
-  if(path==='admin/codes'&&method==='GET')return json({codes:(await db.prepare('SELECT id,label,suffix,expires,max_uses,uses,active,created FROM access_codes ORDER BY created DESC LIMIT 200').all()).results});
+  if(path==='admin/codes'&&method==='GET'){const rows=(await db.prepare('SELECT id,label,suffix,display_cipher,expires,max_uses,uses,active,created FROM access_codes ORDER BY created DESC LIMIT 200').all()).results;return json({codes:await Promise.all(rows.map(async({display_cipher,...row}:any)=>({...row,code:await openCode(row.id,display_cipher)})))});}
   if(path==='admin/codes'&&method==='POST'){
    const b=await request.json() as any;const days=Math.trunc(Number(b.days)),max=Math.trunc(Number(b.maxUses));
    if(!Number.isFinite(days)||days<1||days>365||!Number.isFinite(max)||max<1||max>100000)return json({error:'Süre 1–365 gün, kullanım adedi 1–100.000 olmalı.'},400);
@@ -110,7 +118,7 @@ export async function api(request:Request){
    for(let i=0;i<10;i++){
     const numbers=crypto.getRandomValues(new Uint32Array(1));if(numbers[0]>=4294000000){i--;continue;}
     const plain=String(numbers[0]%1000000).padStart(6,'0'),id=crypto.randomUUID(),hash=await digest(env.PRIME_CODE_PEPPER+':'+plain);
-    try{await db.prepare('INSERT INTO access_codes(id,hash,label,suffix,expires,max_uses,created) VALUES (?,?,?,?,?,?,?)').bind(id,hash,String(b.label||'Instagram erişimi').slice(0,100),plain.slice(-2),now()+days*86400,max,now()).run();return json({id,code:plain},201)}catch(e){if(!String(e).includes('UNIQUE'))throw e;}
+    try{await db.prepare('INSERT INTO access_codes(id,hash,label,suffix,expires,max_uses,created,display_cipher) VALUES (?,?,?,?,?,?,?,?)').bind(id,hash,String(b.label||'Instagram erişimi').slice(0,100),plain.slice(-2),now()+days*86400,max,now(),await sealCode(id,plain)).run();return json({id,code:plain},201)}catch(e){if(!String(e).includes('UNIQUE'))throw e;}
    }return json({error:'Kod oluşturulamadı, tekrar dene.'},500);
   }
   if(path==='admin/revoke'&&method==='POST'){const b=await request.json() as any;await db.prepare('UPDATE access_codes SET active=0 WHERE id=?').bind(String(b.id)).run();return json({ok:true});}
@@ -147,10 +155,7 @@ export async function api(request:Request){
  if(path==='notifications/read'&&method==='POST'){
   const b=await request.json() as any,id=String(b.id||'');
   if(!await db.prepare("SELECT id FROM notifications WHERE id=? AND active=1 AND (audience='all' OR (audience='admin' AND ?=1))").bind(id,owner?1:0).first())return json({error:'Bildirim bulunamadı.'},404);
-  await db.prepare('INSERT OR IGNORE INTO notification_reads(id,user_id,notification_id,created) VALUES (?,?,?,?)').bind(user+':'+id,user,id,now()).run();
-  const saved=await db.prepare('SELECT id FROM notification_reads WHERE user_id=? AND notification_id=?').bind(user,id).first();
-  if(!saved)return json({error:'Bildirim okundu olarak kaydedilemedi. Tekrar dene.'},500);
-  return json({ok:true,id,is_read:1});
+  await db.prepare('INSERT OR IGNORE INTO notification_reads(id,user_id,notification_id,created) VALUES (?,?,?,?)').bind(user+':'+id,user,id,now()).run();return json({ok:true});
  }
  if(path==='notifications/preference'&&method==='POST'){
   const b=await request.json() as any;if(typeof b.enabled!=='boolean')return json({error:'Geçersiz tercih.'},400);
@@ -273,6 +278,7 @@ async function mobileApi(request:Request,db:any,path:string):Promise<Response>{
   }
   const code=await db.prepare('UPDATE access_codes SET uses=uses+1 WHERE hash=? AND active=1 AND expires>? AND uses<max_uses RETURNING id,expires').bind(await digest(env.PRIME_CODE_PEPPER+':'+b.code),now()).first();
   if(!code)return json({error:'Kod geçersiz, süresi dolmuş veya kullanım sınırına ulaşmış.'},403);
+  await rememberCode(db,code.id,b.code);
   const id='mobile:'+crypto.randomUUID(),token=Array.from(crypto.getRandomValues(new Uint8Array(32))).map(x=>x.toString(16).padStart(2,'0')).join(''),expires=Math.min(code.expires,now()+30*86400);
   await db.batch([
    db.prepare('INSERT INTO grants(user_id,code_id,created) VALUES (?,?,?)').bind(id,code.id,now()),

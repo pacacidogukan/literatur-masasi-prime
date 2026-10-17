@@ -1,0 +1,1 @@
+ALTER TABLE `access_codes` ADD `display_cipher` text;

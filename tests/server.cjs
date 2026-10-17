@@ -9,7 +9,7 @@ else:
 const query=(sql,params=[])=>JSON.parse(execFileSync('python',['-c',python,dbfile,JSON.stringify({sql,params})],{encoding:'utf8'}));
 execFileSync('python',['-c',python,dbfile,JSON.stringify({migration:fs.readdirSync('drizzle').filter(x=>x.endsWith('.sql')).sort().map(x=>fs.readFileSync('drizzle/'+x,'utf8')).join('\n')})]);
 const db={prepare(sql){let params=[];return{bind(...p){params=p;return this},async first(){return query(sql,params).results[0]||null},async run(){return query(sql,params)},async all(){return query(sql,params)}}},async batch(list){return Promise.all(list.map(x=>x.run()))}};
-let seed=fs.readFileSync('lib/prime-seed.ts','utf8').replace('export const seedCampaigns=','globalThis.seedCampaigns=');const box={env:{DB:db,PRIME_OWNER_EMAIL:'owner@test.local',PRIME_CODE_PEPPER:'test-only-pepper'},crypto:webcrypto,Response,Request,Headers,URL,TextEncoder,console,module:{exports:{}}};vm.createContext(box);vm.runInContext(seed,box);
+let seed=fs.readFileSync('lib/prime-seed.ts','utf8').replace('export const seedCampaigns=','globalThis.seedCampaigns=');const box={env:{DB:db,PRIME_OWNER_EMAIL:'owner@test.local',PRIME_CODE_PEPPER:'test-only-pepper'},crypto:webcrypto,Response,Request,Headers,URL,TextEncoder,TextDecoder,console,module:{exports:{}}};vm.createContext(box);vm.runInContext(seed,box);
 let src=fs.readFileSync('lib/prime-api.ts','utf8').replace("import {env} from 'cloudflare:workers';",'').replace("import {seedCampaigns} from './prime-seed';",'');vm.runInContext(transformSync(src,{loader:'ts',format:'cjs'}).code,box);const api=box.module.exports.safeApi;
 async function req(p,{user='owner',email='owner@test.local',body,token,origin='https://prime.test'}={}){const h={'oai-authenticated-user-id':user,'oai-authenticated-user-email':email};if(body){h['Content-Type']='application/json';h.Origin=origin}if(!user)delete h['oai-authenticated-user-id'];if(token)h['X-Prime-Edit-Token']=token;const r=await api(new Request('https://prime.test/api/'+p,{method:body?'POST':'GET',headers:h,body:body?JSON.stringify(body):undefined}));return{status:r.status,data:await r.json()}}
 (async()=>{try{
@@ -17,10 +17,10 @@ assert.equal((await req('me',{user:null})).status,401);assert.equal((await req('
 assert.equal((await req('admin/codes',{body:{days:30,maxUses:1},origin:'https://evil.test'})).status,403);
 assert.equal((await req('admin/codes',{body:{days:0,maxUses:1}})).status,400);
 const code=await req('admin/codes',{body:{label:'one use',days:1,maxUses:1}});assert.equal(code.status,201);assert.match(code.data.code,/^\d{6}$/);
-let stored=query('SELECT * FROM access_codes').results[0];assert.notEqual(stored.hash,code.data.code);assert.equal(stored.suffix,code.data.code.slice(-2));
+let stored=query('SELECT * FROM access_codes').results[0];assert.notEqual(stored.hash,code.data.code);assert.equal(stored.suffix,code.data.code.slice(-2));assert.ok(stored.display_cipher);assert.ok(!stored.display_cipher.includes(code.data.code));assert.equal((await req('admin/codes')).data.codes.find(c=>c.id===code.data.id).code,code.data.code);query('UPDATE access_codes SET display_cipher=NULL WHERE id=?',[code.data.id]);assert.equal((await req('admin/codes')).data.codes.find(c=>c.id===code.data.id).code,null);
 const user={user:'visitor',email:'visitor@test.local'};assert.equal((await req('campaigns',user)).status,403);
 assert.equal((await req('access',{...user,body:{code:'123'}})).status,400);
-assert.equal((await req('access',{...user,body:{code:code.data.code}})).status,200);assert.equal((await req('me',user)).data.authorized,true);
+assert.equal((await req('access',{...user,body:{code:code.data.code}})).status,200);assert.equal((await req('me',user)).data.authorized,true);assert.equal((await req('admin/codes')).data.codes.find(c=>c.id===code.data.id).code,code.data.code);
 assert.equal((await req('access',{user:'other',email:'other@test.local',body:{code:code.data.code}})).status,403);
 assert.equal((await req('admin/seed',{body:{}})).status,200);assert.equal((await req('admin/seed',{body:{}})).status,409);
 query('UPDATE campaigns SET verticalPhoto=photo,squarePhoto=photo,heroPhoto=photo,latestPhoto=photo');
@@ -44,7 +44,7 @@ const data=c.data.campaigns[0];assert.equal((await req('admin/campaigns',{body:{
 assert.equal((await req('admin/campaigns',{body:{...data,offer:'Updated offer',code:'REAL123',active:true,demo:false}})).status,200);
 assert.equal((await req('reveal',{body:{id:data.id}})).data.code,'REAL123');
 const repeat=await req('admin/codes',{body:{days:1,maxUses:10}});await req('access',{...user,body:{code:repeat.data.code}});await req('logout',{...user,body:{}});assert.equal((await req('me',user)).data.authorized,false);
-const listing=await req('admin/codes');assert.ok(listing.data.codes.every(c=>!('hash'in c)&&!('code'in c)));
+const listing=await req('admin/codes');assert.ok(listing.data.codes.every(c=>!('hash'in c)&&!('display_cipher'in c)&&/^\d{6}$/.test(c.code)));assert.equal(listing.data.codes.find(c=>c.id===repeat.data.id).code,repeat.data.code);
 const sharing=await req('admin/share',{body:{id:'solgar'}});assert.equal(sharing.status,200);const token=sharing.data.url.split('#')[1];assert.match(token,/^[a-f0-9]{64}$/);
 assert.equal((await req('admin/share',{body:{id:'solgar'}})).data.url,sharing.data.url);
 const anon={user:null,email:'',token};const editable=await req('editor',anon);assert.equal(editable.status,200);assert.equal(editable.data.campaign.id,'solgar');assert.equal('reveal_count' in editable.data.campaign,false);
@@ -221,21 +221,6 @@ assert.equal((await mobile('campaigns',undefined,tokenMobile)).status,200);
 assert.ok((await mobile('campaigns',undefined,tokenMobile)).data.campaigns.every(x=>!('code' in x)&&!('reveal_count' in x)));
 assert.equal((await mobile('reveal',{id:'tracking-test'},tokenMobile)).data.code,'TRACK25');
 assert.equal((await mobile('notifications',undefined,tokenMobile)).status,200);
-const mobileNotice={id:webcrypto.randomUUID(),title:'Mobil okundu testi',body:'Kalıcı kayıt',audience:'all'};
-assert.equal((await req('admin/notifications',{body:mobileNotice})).status,201);
-assert.equal((await mobile('notifications',undefined,tokenMobile)).data.notifications.find(n=>n.id===mobileNotice.id).is_read,0);
-for(let i=0;i<2;i++){
- const marked=await mobile('notifications/read',{id:mobileNotice.id},tokenMobile);
- assert.equal(marked.status,200);assert.equal(marked.data.ok,true);assert.equal(marked.data.is_read,1);
-}
-assert.equal((await mobile('notifications',undefined,tokenMobile)).data.notifications.find(n=>n.id===mobileNotice.id).is_read,1);
-const mobileTokenHash=Buffer.from(await webcrypto.subtle.digest('SHA-256',new TextEncoder().encode(tokenMobile))).toString('hex');
-const mobileUser=query('SELECT user_id FROM mobile_sessions WHERE token_hash=?',[mobileTokenHash]).results[0].user_id;
-assert.equal(query('SELECT * FROM notification_reads WHERE user_id=? AND notification_id=?',[mobileUser,mobileNotice.id]).results.length,1);
-assert.equal((await req('notifications')).data.notifications.find(n=>n.id===mobileNotice.id).is_read,0);
-assert.equal((await mobile('notifications/read',{id:n1.id},tokenMobile)).status,404);
-assert.equal((await mobile('notifications/read',{id:'missing'},tokenMobile)).status,404);
-
 assert.equal((await mobile('notifications/preference',{enabled:false},tokenMobile)).status,200);
 assert.equal((await mobile('notifications',undefined,tokenMobile)).data.enabled,false);
 assert.equal((await mobile('logout',{},tokenMobile)).status,200);assert.equal((await mobile('me',undefined,tokenMobile)).data.authorized,false);

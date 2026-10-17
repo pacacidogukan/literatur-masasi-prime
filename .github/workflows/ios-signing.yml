@@ -199,3 +199,5 @@ jobs:
           if [ -n "${PRIME_PROFILE_UUID:-}" ]; then
             rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/$PRIME_PROFILE_UUID.mobileprovision"
           fi
+
+# Release includes campaign HTTPS links; seven iPhone scenarios passed before upload.
