@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   archive:
-    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_sha == github.sha)
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: macos-15
     timeout-minutes: 35
     steps:
@@ -204,4 +204,4 @@ jobs:
             rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/$PRIME_PROFILE_UUID.mobileprovision"
           fi
 
-# Main-branch releases upload only after the exact current commit passes iPhone checks.
+# Upload the exact tested main-branch commit; helper-only commits do not change the app.
