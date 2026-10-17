@@ -63,6 +63,7 @@ jobs:
           mkdir -p ci-artifacts
           xcodebuild -project ios/Prime.xcodeproj -scheme Prime -configuration Debug -destination "platform=iOS Simulator,id=$DEVICE_ID" -derivedDataPath build-ci -resultBundlePath ci-artifacts/PrimeUI.xcresult -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY="-" test
       - name: Collect isolated UI trace
+        timeout-minutes: 1
         if: always()
         run: |
           DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(x["udid"] for group in d["devices"].values() for x in group if x["name"].startswith("iPhone")))')
