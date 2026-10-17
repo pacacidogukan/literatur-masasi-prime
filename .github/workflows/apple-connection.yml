@@ -45,6 +45,7 @@ jobs:
           const now = Math.floor(Date.now() / 1000);
           const routes = [
             '/v1/apps/6823890365',
+            '/v1/apps/6823890365/betaGroups?include=builds&limit=50',
             '/v1/bundleIds?filter[identifier]=com.literaturmasasi.prime',
             '/v1/certificates?filter[certificateType]=DISTRIBUTION&limit=200',
             '/v1/profiles?filter[profileType]=IOS_APP_STORE&limit=200',
@@ -67,7 +68,10 @@ jobs:
               process.exitCode = 1;
               continue;
             }
-            if (label.startsWith('/v1/apps/')) {
+            if (label.endsWith('/betaGroups')) {
+              for (const group of data.data ?? []) report.push('BETA_GROUP ' + JSON.stringify({id:group.id,name:group.attributes.name,internal:group.attributes.isInternalGroup,allBuilds:group.attributes.hasAccessToAllBuilds,builds:group.relationships?.builds?.data?.map(x=>x.id) ?? []}));
+              for (const build of data.included ?? []) if(build.type==='builds') report.push('GROUP_BUILD ' + JSON.stringify({id:build.id,version:build.attributes.version}));
+            } else if (label.startsWith('/v1/apps/')) {
               if (data.data?.attributes?.bundleId !== 'com.literaturmasasi.prime') {
                 report.push('FAIL: Apple app bundle ID does not match the project.');
                 process.exitCode = 1;
