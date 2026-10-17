@@ -51,22 +51,14 @@ final class PrimeFlowTests: XCTestCase {
         XCTAssertTrue(button("Giriş yap").waitForExistence(timeout: 15))
         XCTAssertFalse(button("Ana Sayfa").exists)
     }
-    func testCampaignWebsiteOpensSafariAndPreservesSession() {
+    func testCampaignWebsiteIsDisplayedWithoutNavigation() {
         login(); home(); tap("Markalar"); tap("Solgar kampanyasını aç")
-        let link = app.webViews.links["Solgar web sitesini aç"].firstMatch
-        XCTAssertTrue(link.waitForExistence(timeout: 15))
-        link.tap()
-        let safari = XCUIApplication(bundleIdentifier: "com.apple.mobilesafari")
-        let foreground = NSPredicate(format: "state == %d", XCUIApplication.State.runningForeground.rawValue)
-        let safariOpened = expectation(for: foreground, evaluatedWith: safari)
-        let result = XCTWaiter.wait(for: [safariOpened], timeout: 20)
-        if result != .completed { print("EXTERNAL_APP_STATE: \(app.debugDescription)"); print("SAFARI_STATE: \(safari.debugDescription)") }
-        XCTAssertEqual(result, .completed)
-        app.activate()
-        XCTAssertTrue(button("Kodu açmak için sağa kaydır veya Enter tuşuna bas").waitForExistence(timeout: 15))
-        let opened = app.staticTexts["prime-test-external-url"]
-        XCTAssertTrue(opened.waitForExistence(timeout: 15))
-        XCTAssertEqual(opened.label, "https://example.com/prime-test")
+        let address = app.webViews.staticTexts["https://example.com/prime-test"].firstMatch
+        XCTAssertTrue(address.waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertEqual(app.webViews.links.matching(NSPredicate(format: "label CONTAINS %@", "web sitesini aç")).count, 0)
+        address.tap()
+        XCTAssertEqual(app.state, .runningForeground)
+        XCTAssertTrue(button("Kodu açmak için sağa kaydır veya Enter tuşuna bas").exists)
         tap("Geri"); home()
     }
     func testNotificationsAreHidden() {

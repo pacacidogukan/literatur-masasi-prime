@@ -9,16 +9,9 @@ inputs.forEach((x,i)=>x.value='654321'[i]);await get('login-form').listeners.sub
 run("selected=brands[0];go('detail')");get('slide-thumb').clientWidth=50;get('slide-track').clientWidth=350;get('slide-thumb').listeners.pointerdown({clientX:0,pointerId:1});get('slide-thumb').listeners.pointermove({clientX:100});get('slide-thumb').listeners.pointerup();assert.equal(requests.filter(r=>r.url==='/api/reveal').length,0);
 get('slide-thumb').listeners.pointerdown({clientX:0,pointerId:1});get('slide-thumb').listeners.pointermove({clientX:300});get('slide-thumb').listeners.pointerup();await new Promise(r=>setImmediate(r));assert.match(get('slide-track').innerHTML,/SERVER-CODE/);
 run("selected=brands[0];selected.channel='https://example.com/offer?a=1&b=2';go('detail')");
-assert.match(get('app').innerHTML,/href="https:\/\/example.com\/offer\?a=1&amp;b=2"/);
-assert.match(get('app').innerHTML,/target="_blank" rel="noopener noreferrer"/);
-assert.match(get('app').innerHTML,/web sitesini aç/);
-assert.equal(run("campaignWebsite(' www.example.com/path ')"),'https://www.example.com/path');
-let prevented=false;
-await get('app').listeners.click({preventDefault(){prevented=true},target:{closest:()=>({dataset:{action:'open-website'},getAttribute:()=> 'https://example.com/offer?a=1&b=2',closest:()=>null})}});
-assert.equal(prevented,true);assert.equal(box.openedWebsite,'https://example.com/offer?a=1&b=2');
-let captured=false;get('sheet-drag-area').setPointerCapture=()=>{captured=true};
-get('sheet-drag-area').listeners.pointerdown({target:{closest:()=>({tagName:'A'})},pointerType:'touch',pointerId:1,clientY:0});
-assert.equal(captured,false);
+assert.match(get('app').innerHTML,/https:\/\/example.com\/offer\?a=1&amp;b=2/);
+assert.doesNotMatch(get('app').innerHTML,/data-action="open-website"|class="campaign-website"/);
+assert.equal(box.openedWebsite,undefined);
 
 for(const channel of ['Online alışveriş','javascript:alert(1)','http://example.com','https://user:password@example.com','<img src=x>']){
  run('selected.channel='+JSON.stringify(channel)+';go("detail")');
