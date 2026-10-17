@@ -1,9 +1,10 @@
 name: Prime TestFlight upload
 
 on:
-  push:
+  workflow_run:
+    workflows: ['Prime iOS checks']
+    types: [completed]
     branches: [main]
-    paths: ['.github/workflows/ios-signing.yml']
   workflow_dispatch:
 
 permissions:
@@ -15,10 +16,13 @@ concurrency:
 
 jobs:
   archive:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_sha == github.sha)
     runs-on: macos-15
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - name: Select supported App Store Xcode
         run: |
           python3 - <<'PY'
@@ -200,4 +204,4 @@ jobs:
             rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/$PRIME_PROFILE_UUID.mobileprovision"
           fi
 
-# Release includes campaign HTTPS links; seven iPhone scenarios passed before upload.
+# Main-branch releases upload only after the exact current commit passes iPhone checks.
