@@ -51,6 +51,19 @@ final class PrimeFlowTests: XCTestCase {
         XCTAssertTrue(button("Giriş yap").waitForExistence(timeout: 15))
         XCTAssertFalse(button("Ana Sayfa").exists)
     }
+    func testCampaignWebsiteOpensSafariAndPreservesSession() {
+        login(); home(); tap("Markalar"); tap("Solgar kampanyasını aç")
+        let link = app.webViews.links["Solgar web sitesini aç"].firstMatch
+        XCTAssertTrue(link.waitForExistence(timeout: 15))
+        link.tap()
+        let safari = XCUIApplication(bundleIdentifier: "com.apple.mobilesafari")
+        let foreground = NSPredicate(format: "state == %d", XCUIApplication.State.runningForeground.rawValue)
+        expectation(for: foreground, evaluatedWith: safari)
+        waitForExpectations(timeout: 20)
+        app.activate()
+        XCTAssertTrue(button("Kodu açmak için sağa kaydır veya Enter tuşuna bas").waitForExistence(timeout: 15))
+        tap("Geri"); home()
+    }
     func testInvalidCodeIsRejected() {
         login("000000")
         XCTAssertTrue(app.webViews.staticTexts["Kod geçersiz."].waitForExistence(timeout: 15))

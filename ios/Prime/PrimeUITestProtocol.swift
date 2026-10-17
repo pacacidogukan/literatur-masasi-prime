@@ -30,7 +30,7 @@ final class PrimeUITestProtocol: URLProtocol {
         else if route == "campaigns" {
             result = ["campaigns": [["id": "solgar", "name": "Solgar", "asset": "solgar.png",
                 "offer": "Test ayrıcalığı", "tag": "Test markası", "type": "Vitamin",
-                "photo": "solgar-detail.jpg", "channel": "Online", "description": "Test kampanyası açıklaması",
+                "photo": "solgar-detail.jpg", "channel": "https://example.com/prime-test", "description": "Test kampanyası açıklaması",
                 "conditions": "Yalnızca otomatik test verisi.", "expires": 2000000000, "demo": 1]]]
         } else if route == "reveal" { result = ["code": "SPRING26", "demo": 1] }
         else if route == "notifications" {
