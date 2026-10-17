@@ -1,0 +1,139 @@
+name: Prime signed archive
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ios-signing.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prime-distribution-signing
+  cancel-in-progress: false
+
+jobs:
+  archive:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install signing identity and matching App Store profile
+        env:
+          P12_BASE64: ${{ secrets.APPLE_DISTRIBUTION_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.APPLE_DISTRIBUTION_P12_PASSWORD }}
+          ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          node --input-type=module <<'JS'
+          import { createPrivateKey, sign, randomBytes, X509Certificate } from 'node:crypto';
+          import { writeFileSync, appendFileSync, mkdirSync } from 'node:fs';
+          import { spawnSync } from 'node:child_process';
+          import path from 'node:path';
+          const team = 'X4U9PDJ3X7', bundle = 'com.literaturmasasi.prime';
+          function fail(message) { console.error(message); process.exit(1); }
+          for (const name of ['P12_BASE64', 'P12_PASSWORD', 'ASC_KEY', 'ASC_KEY_ID', 'ASC_ISSUER'])
+            if (!process.env[name]) fail('Missing signing secret: ' + name);
+          function command(file, args) {
+            const result = spawnSync(file, args, { encoding: 'utf8' });
+            if (result.status !== 0) fail('Signing command failed: ' + path.basename(file) + ' ' + args[0] + '. Check certificate format/password and private key.');
+            return result.stdout;
+          }
+          const temp = process.env.RUNNER_TEMP;
+          const p12 = path.join(temp, 'prime-distribution.p12');
+          const keychain = path.join(temp, 'prime-signing.keychain-db');
+          const password = randomBytes(32).toString('hex');
+          console.log('::add-mask::' + password);
+          const encoded = process.env.P12_BASE64.replace(/\s/g, '');
+          if (!/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)) fail('P12 secret is not base64.');
+          writeFileSync(p12, Buffer.from(encoded, 'base64'), { mode: 0o600 });
+          const pem = command('/usr/bin/openssl', ['pkcs12', '-in', p12, '-clcerts', '-nokeys', '-passin', 'env:P12_PASSWORD']);
+          const cert = new X509Certificate(pem);
+          if (!cert.subject.split('\n').includes('OU=' + team)) fail('Distribution certificate belongs to a different Apple team.');
+          if (!cert.subject.includes('CN=Apple Distribution:')) fail('P12 does not contain an Apple Distribution certificate.');
+          if (Date.parse(cert.validTo) <= Date.now() || Date.parse(cert.validFrom) > Date.now()) fail('Distribution certificate is not currently valid.');
+          command('/usr/bin/security', ['create-keychain', '-p', password, keychain]);
+          command('/usr/bin/security', ['set-keychain-settings', '-lut', '21600', keychain]);
+          command('/usr/bin/security', ['unlock-keychain', '-p', password, keychain]);
+          command('/usr/bin/security', ['import', p12, '-P', process.env.P12_PASSWORD, '-A', '-t', 'cert', '-f', 'pkcs12', '-k', keychain]);
+          command('/usr/bin/security', ['set-key-partition-list', '-S', 'apple-tool:,apple:,codesign:', '-k', password, keychain]);
+          const identity = cert.fingerprint.replaceAll(':', '');
+          const identities = command('/usr/bin/security', ['find-identity', '-v', '-p', 'codesigning', keychain]);
+          if (!identities.includes(identity)) fail('No usable signing identity with private key was imported.');
+          command('/usr/bin/security', ['list-keychains', '-d', 'user', '-s', keychain]);
+          console.log('PASS: valid distribution certificate and private key imported for the expected team.');
+          const key = createPrivateKey(process.env.ASC_KEY.trim());
+          const b64 = value => Buffer.from(JSON.stringify(value)).toString('base64url');
+          async function api(route, method = 'GET', body) {
+            const now = Math.floor(Date.now() / 1000);
+            const unsigned = b64({ alg: 'ES256', kid: process.env.ASC_KEY_ID.trim(), typ: 'JWT' }) + '.' +
+              b64({ iss: process.env.ASC_ISSUER.trim(), iat: now - 10, exp: now + 300, aud: 'appstoreconnect-v1' });
+            const token = unsigned + '.' + sign('sha256', Buffer.from(unsigned), { key, dsaEncoding: 'ieee-p1363' }).toString('base64url');
+            console.log('::add-mask::' + token);
+            const response = await fetch('https://api.appstoreconnect.apple.com' + route, {
+              method, headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+              body: body ? JSON.stringify(body) : undefined,
+              redirect: 'error', signal: AbortSignal.timeout(30000),
+            });
+            const result = await response.json();
+            if (!response.ok) fail('Apple ' + method + ' ' + route.split('?')[0] + ': HTTP ' + response.status + ' ' +
+              (result.errors ?? []).map(x => String(x.code).replace(/[^A-Z0-9_.-]/gi, '')).join(','));
+            return result.data;
+          }
+          const registered = await api('/v1/certificates?filter[certificateType]=DISTRIBUTION&limit=200');
+          const registeredCert = registered.find(x => {
+            try { return new X509Certificate(Buffer.from(x.attributes.certificateContent, 'base64')).fingerprint256 === cert.fingerprint256; }
+            catch { return false; }
+          });
+          if (!registeredCert) fail('Imported certificate was not found in this Apple API team.');
+          const bundles = await api('/v1/bundleIds?filter[identifier]=' + bundle);
+          const bundleRecord = bundles.find(x => x.attributes.identifier === bundle);
+          if (!bundleRecord) fail('Expected bundle ID is not registered.');
+          const profileName = 'Prime App Store ' + registeredCert.id;
+          const profiles = await api('/v1/profiles?filter[profileType]=IOS_APP_STORE&filter[name]=' + encodeURIComponent(profileName) + '&include=bundleId,certificates&limit=200');
+          let profile = profiles.find(x => x.attributes.profileState === 'ACTIVE' && Date.parse(x.attributes.expirationDate) > Date.now() &&
+            x.relationships?.bundleId?.data?.id === bundleRecord.id &&
+            x.relationships?.certificates?.data?.some(c => c.id === registeredCert.id));
+          if (!profile) {
+            profile = await api('/v1/profiles', 'POST', { data: {
+              type: 'profiles', attributes: { name: profileName, profileType: 'IOS_APP_STORE' },
+              relationships: { bundleId: { data: { type: 'bundleIds', id: bundleRecord.id } },
+                certificates: { data: [{ type: 'certificates', id: registeredCert.id }] } },
+            } });
+            console.log('PASS: matching App Store provisioning profile created.');
+          } else console.log('PASS: existing matching App Store provisioning profile reused.');
+          const uuid = profile.attributes.uuid;
+          if (!/^[A-Fa-f0-9-]{36}$/.test(uuid)) fail('Invalid profile UUID.');
+          const profileDir = path.join(process.env.HOME, 'Library/MobileDevice/Provisioning Profiles');
+          mkdirSync(profileDir, { recursive: true });
+          const profilePath = path.join(profileDir, uuid + '.mobileprovision');
+          writeFileSync(profilePath, Buffer.from(profile.attributes.profileContent, 'base64'), { mode: 0o600 });
+          const plist = command('/usr/bin/security', ['cms', '-D', '-i', profilePath]);
+          const decoded = path.join(temp, 'prime-profile.plist');
+          writeFileSync(decoded, plist, { mode: 0o600 });
+          command('/usr/bin/python3', ['-c', 'import plistlib,sys; p=plistlib.load(open(sys.argv[1],"rb")); assert p["TeamIdentifier"]==["X4U9PDJ3X7"]; assert p["Entitlements"]["application-identifier"]=="X4U9PDJ3X7.com.literaturmasasi.prime"; assert not p["Entitlements"].get("get-task-allow",False)', decoded]);
+          appendFileSync(process.env.GITHUB_ENV, 'PRIME_PROFILE_UUID=' + uuid + '\nPRIME_SIGNING_IDENTITY=' + identity + '\n');
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY, 'Signing identity and App Store profile verified for team X4U9PDJ3X7 and com.literaturmasasi.prime.\n');
+          JS
+      - name: Archive signed iPhone Release
+        run: |
+          set -euo pipefail
+          xcodebuild -project ios/Prime.xcodeproj -scheme Prime -configuration Release             -destination 'generic/platform=iOS' -archivePath build-signed/Prime.xcarchive             -derivedDataPath build-signed/DerivedData             DEVELOPMENT_TEAM=X4U9PDJ3X7 CODE_SIGN_STYLE=Manual             CODE_SIGN_IDENTITY="$PRIME_SIGNING_IDENTITY"             PROVISIONING_PROFILE_SPECIFIER="$PRIME_PROFILE_UUID" archive
+      - name: Verify archived app signature
+        run: |
+          set -euo pipefail
+          codesign --verify --deep --strict build-signed/Prime.xcarchive/Products/Applications/Prime.app
+          echo "PASS: signed iPhone Release archive verified. No TestFlight upload performed." >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove temporary signing material
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/prime-signing.keychain-db" 2>/dev/null || true
+          rm -f "$RUNNER_TEMP/prime-distribution.p12" "$RUNNER_TEMP/prime-profile.plist"
+          if [ -n "${PRIME_PROFILE_UUID:-}" ]; then
+            rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/$PRIME_PROFILE_UUID.mobileprovision"
+          fi
