@@ -63,3 +63,29 @@ jobs:
           path: ci-artifacts/
           if-no-files-found: ignore
           retention-days: 7
+
+  release:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build unsigned iPhone Release archive
+        run: >-
+          xcodebuild -project ios/Prime.xcodeproj -scheme Prime
+          -configuration Release -destination 'generic/platform=iOS'
+          -archivePath build-release/Prime.xcarchive
+          -derivedDataPath build-release/DerivedData
+          CODE_SIGNING_ALLOWED=NO archive
+      - name: Verify test controls are absent from Release executable
+        run: |
+          python3 - <<'PY'
+          import pathlib, plistlib
+          app = pathlib.Path("build-release/Prime.xcarchive/Products/Applications/Prime.app")
+          info = plistlib.loads((app / "Info.plist").read_bytes())
+          executable = (app / info["CFBundleExecutable"]).read_bytes()
+          for marker in (b"--prime-ui-tests", b"--reset-test-state", b"prime-test-clipboard", b"ui-trace.log", b"Test: bildirim kaydedilemedi."):
+              assert marker not in executable, f"Test control leaked into Release: {marker!r}"
+          assert (app / "Web/index.html").is_file(), "Bundled UI missing"
+          assert (app / "PrivacyInfo.xcprivacy").is_file(), "Privacy manifest missing"
+          print("PASS: unsigned iPhone Release archive built; test controls absent; bundled UI and privacy manifest present.")
+          PY
