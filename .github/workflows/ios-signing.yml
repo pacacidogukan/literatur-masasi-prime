@@ -1,4 +1,4 @@
-name: Prime signed archive
+name: Prime TestFlight upload
 
 on:
   push:
@@ -16,9 +16,28 @@ concurrency:
 jobs:
   archive:
     runs-on: macos-15
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
+      - name: Select supported App Store Xcode
+        run: |
+          python3 - <<'PY'
+          import glob, os, re, subprocess
+          choices=[]
+          for app in glob.glob('/Applications/Xcode*.app'):
+              developer=app+'/Contents/Developer'
+              try:
+                  out=subprocess.check_output([developer+'/usr/bin/xcodebuild','-version'],text=True,stderr=subprocess.DEVNULL)
+                  version=re.search(r'Xcode (\d+(?:\.\d+)*)',out).group(1)
+                  if any(s in app.lower() for s in ['beta','release_candidate','rc.app']): continue
+                  parts=tuple(map(int,version.split('.')))
+                  if parts[0]>=26: choices.append((parts,developer))
+              except Exception: continue
+          if not choices: raise SystemExit('No stable Xcode 26+ is installed on this runner.')
+          selected=max(choices)[1]
+          with open(os.environ['GITHUB_ENV'],'a') as f: f.write('DEVELOPER_DIR='+selected+'\n')
+          print('Selected supported Xcode:',selected)
+          PY
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -123,17 +142,60 @@ jobs:
       - name: Archive signed iPhone Release
         run: |
           set -euo pipefail
-          xcodebuild -project ios/Prime.xcodeproj -scheme Prime -configuration Release             -destination 'generic/platform=iOS' -archivePath build-signed/Prime.xcarchive             -derivedDataPath build-signed/DerivedData             DEVELOPMENT_TEAM=X4U9PDJ3X7 CODE_SIGN_STYLE=Manual             CODE_SIGN_IDENTITY="$PRIME_SIGNING_IDENTITY"             PROVISIONING_PROFILE_SPECIFIER="$PRIME_PROFILE_UUID" archive
+          xcodebuild -project ios/Prime.xcodeproj -scheme Prime -configuration Release             -destination 'generic/platform=iOS' -archivePath build-signed/Prime.xcarchive             -derivedDataPath build-signed/DerivedData             DEVELOPMENT_TEAM=X4U9PDJ3X7 CODE_SIGN_STYLE=Manual             CODE_SIGN_IDENTITY="$PRIME_SIGNING_IDENTITY"             PROVISIONING_PROFILE_SPECIFIER="$PRIME_PROFILE_UUID" CURRENT_PROJECT_VERSION="$((100 + GITHUB_RUN_NUMBER)).$GITHUB_RUN_ATTEMPT" archive
       - name: Verify archived app signature
         run: |
           set -euo pipefail
           codesign --verify --deep --strict build-signed/Prime.xcarchive/Products/Applications/Prime.app
-          echo "PASS: signed iPhone Release archive verified. No TestFlight upload performed." >> "$GITHUB_STEP_SUMMARY"
+          echo "PASS: signed iPhone Release archive verified. Preparing TestFlight package." >> "$GITHUB_STEP_SUMMARY"
+      - name: Export App Store IPA
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os, plistlib
+          options={
+            'method':'app-store-connect','destination':'export',
+            'teamID':'X4U9PDJ3X7','signingStyle':'manual',
+            'signingCertificate':os.environ['PRIME_SIGNING_IDENTITY'],
+            'provisioningProfiles':{'com.literaturmasasi.prime':os.environ['PRIME_PROFILE_UUID']},
+            'manageAppVersionAndBuildNumber':False,'stripSwiftSymbols':True,
+          }
+          with open(os.environ['RUNNER_TEMP']+'/prime-export.plist','wb') as f: plistlib.dump(options,f)
+          PY
+          xcodebuild -exportArchive -archivePath build-signed/Prime.xcarchive -exportPath build-signed/export -exportOptionsPlist "$RUNNER_TEMP/prime-export.plist"
+      - name: Validate and upload to App Store Connect
+        timeout-minutes: 15
+        env:
+          ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          node --input-type=module <<'JS'
+          import { mkdirSync, writeFileSync, readdirSync, appendFileSync } from 'node:fs';
+          import { spawnSync } from 'node:child_process';
+          import path from 'node:path';
+          const id=process.env.ASC_KEY_ID.trim(), issuer=process.env.ASC_ISSUER.trim();
+          if (!/^[A-Z0-9]{10}$/.test(id)) throw new Error('Invalid Apple API key ID format.');
+          const dir=path.join(process.env.HOME,'.appstoreconnect/private_keys');
+          mkdirSync(dir,{recursive:true,mode:0o700});
+          writeFileSync(path.join(dir,'AuthKey_'+id+'.p8'),process.env.ASC_KEY.trim()+'\n',{mode:0o600});
+          const exportDir='build-signed/export';
+          const ipa=readdirSync(exportDir).filter(x=>x.endsWith('.ipa'));
+          if (ipa.length!==1) throw new Error('Expected exactly one exported IPA.');
+          for (const operation of ['--validate-app','--upload-app']) {
+            const result=spawnSync('xcrun',['altool',operation,'-f',path.join(exportDir,ipa[0]),'-t','ios','--apiKey',id,'--apiIssuer',issuer],{encoding:'utf8',timeout:600000});
+            if (result.stdout) console.log(result.stdout);
+            if (result.stderr) console.error(result.stderr);
+            if (result.status!==0) process.exit(1);
+          }
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY,'App Store Connect upload accepted for app 6823890365. Apple processing must finish before TestFlight availability.\n');
+          JS
       - name: Remove temporary signing material
         if: always()
         run: |
           security delete-keychain "$RUNNER_TEMP/prime-signing.keychain-db" 2>/dev/null || true
-          rm -f "$RUNNER_TEMP/prime-distribution.p12" "$RUNNER_TEMP/prime-profile.plist"
+          rm -f "$RUNNER_TEMP/prime-distribution.p12" "$RUNNER_TEMP/prime-profile.plist" "$RUNNER_TEMP/prime-export.plist"
+          rm -rf "$HOME/.appstoreconnect/private_keys"
           if [ -n "${PRIME_PROFILE_UUID:-}" ]; then
             rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/$PRIME_PROFILE_UUID.mobileprovision"
           fi
