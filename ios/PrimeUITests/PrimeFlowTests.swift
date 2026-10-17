@@ -62,7 +62,19 @@ final class PrimeFlowTests: XCTestCase {
         waitForExpectations(timeout: 20)
         app.activate()
         XCTAssertTrue(button("Kodu açmak için sağa kaydır veya Enter tuşuna bas").waitForExistence(timeout: 15))
+        let opened = app.staticTexts["prime-test-external-url"]
+        XCTAssertTrue(opened.waitForExistence(timeout: 15))
+        XCTAssertEqual(opened.label, "https://example.com/prime-test")
         tap("Geri"); home()
+    }
+    func testNotificationsAreHidden() {
+        login(); home()
+        XCTAssertEqual(app.webViews.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bildirimlerim")).count, 0)
+        tap("Ayarları aç")
+        XCTAssertEqual(app.webViews.switches.matching(NSPredicate(format: "label CONTAINS %@", "Bildirim")).count, 0)
+        XCTAssertFalse(button("Bildirimlerim").exists)
+        relaunch(); home()
+        XCTAssertEqual(app.webViews.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bildirimlerim")).count, 0)
     }
     func testInvalidCodeIsRejected() {
         login("000000")
@@ -91,21 +103,5 @@ final class PrimeFlowTests: XCTestCase {
         let clipboard = app.staticTexts["prime-test-clipboard"]
         XCTAssertTrue(clipboard.waitForExistence(timeout: 15), app.debugDescription)
         XCTAssertEqual(clipboard.label, "SPRING26")
-    }
-    func testNotificationReadPersistsAfterRefreshAndRelaunch() {
-        login(); home(); openInbox(); tap("Test bildirimi, okunmamış")
-        XCTAssertTrue(button("Test bildirimi").waitForExistence(timeout: 15))
-        tap("Yenile")
-        XCTAssertFalse(button("Test bildirimi, okunmamış").exists)
-        relaunch(); home(); openInbox()
-        XCTAssertTrue(button("Test bildirimi").waitForExistence(timeout: 15))
-        XCTAssertFalse(button("Test bildirimi, okunmamış").exists)
-    }
-    func testFailedNotificationReadShowsErrorAndStaysUnread() {
-        app.terminate(); app.launchArguments.append("--fail-notification-read"); app.launch()
-        login(); home(); openInbox(); tap("Test bildirimi, okunmamış")
-        XCTAssertTrue(app.webViews.staticTexts["Test: bildirim kaydedilemedi."].waitForExistence(timeout: 15))
-        tap("Yenile")
-        XCTAssertTrue(button("Test bildirimi, okunmamış").waitForExistence(timeout: 15))
     }
 }

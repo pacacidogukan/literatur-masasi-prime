@@ -1,7 +1,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 class El{constructor(){this.value='';this.innerHTML='';this.textContent='';this.listeners={};this.style={};this.classList={add(){},remove(){}};this.clientWidth=350;this.parentElement={clientHeight:850};this.dataset={};this.scrollLeft=0;this.scrollTop=0}addEventListener(k,f){this.listeners[k]=f}focus(){}setAttribute(){}setPointerCapture(){}scrollTo({left}){this.scrollLeft=left}querySelector(k){return get(k)}}
 const els=new Map,get=k=>{if(!els.has(k))els.set(k,new El);return els.get(k)},inputs=Array.from({length:6},()=>new El);let seed;const seedBox={};vm.createContext(seedBox);vm.runInContext(fs.readFileSync('lib/prime-seed.ts','utf8').replace('export const seedCampaigns=','globalThis.seed='),seedBox);seed=JSON.parse(JSON.stringify(seedBox.seed)).map(c=>({...c,asset:'assets/'+c.asset,photo:'assets/'+c.photo,conditions:'Seçili ürünlerde geçerlidir.',channel:'Online alışveriş',expires:2000000000,demo:1}));
-const requests=[];const box={URL,ResizeObserver:class{observe(){}disconnect(){}},setTimeout:()=>1,setInterval:()=>1,clearTimeout(){},localStorage:{getItem(){return null},setItem(){}},window:{scrollTo(){},scrollY:0},navigator:{clipboard:{writeText:async()=>{}}},document:{addEventListener(){},getElementById:get,querySelector:get,querySelectorAll:s=>s==='[data-rail]'?[]:inputs},async fetch(url,opts){requests.push({url,opts});const body=opts?.body?JSON.parse(opts.body):null;if(url==='/api/notifications')return{ok:true,json:async()=>({notifications:[],enabled:true})};if(url==='/api/me')return{ok:true,json:async()=>({authorized:false,owner:false})};if(url==='/api/access')return{ok:body.code==='654321',json:async()=>body.code==='654321'?{}:{error:'Kod geçersiz.'}};if(url==='/api/campaigns')return{ok:true,json:async()=>({campaigns:seed})};if(url==='/api/reveal')return{ok:true,json:async()=>({code:'SERVER-CODE',demo:1})};throw Error(url)}};vm.createContext(box);vm.runInContext(fs.readFileSync('public/app.js','utf8').replace(/^\(\(\)=>\{\n/,'').replace(/\n\}\)\(\);\n$/,''),box);const run=s=>vm.runInContext(s,box);
+const requests=[];const box={URL,ResizeObserver:class{observe(){}disconnect(){}},setTimeout:()=>1,setInterval:()=>1,clearTimeout(){},localStorage:{getItem(){return null},setItem(){}},window:{open(url){box.openedWebsite=url},scrollTo(){},scrollY:0},navigator:{clipboard:{writeText:async()=>{}}},document:{addEventListener(){},getElementById:get,querySelector:get,querySelectorAll:s=>s==='[data-rail]'?[]:inputs},async fetch(url,opts){requests.push({url,opts});const body=opts?.body?JSON.parse(opts.body):null;if(url==='/api/notifications')return{ok:true,json:async()=>({notifications:[],enabled:true})};if(url==='/api/me')return{ok:true,json:async()=>({authorized:false,owner:false})};if(url==='/api/access')return{ok:body.code==='654321',json:async()=>body.code==='654321'?{}:{error:'Kod geçersiz.'}};if(url==='/api/campaigns')return{ok:true,json:async()=>({campaigns:seed})};if(url==='/api/reveal')return{ok:true,json:async()=>({code:'SERVER-CODE',demo:1})};throw Error(url)}};vm.createContext(box);vm.runInContext(fs.readFileSync('public/app.js','utf8').replace(/^\(\(\)=>\{\n/,'').replace(/\n\}\)\(\);\n$/,''),box);const run=s=>vm.runInContext(s,box);
 (async()=>{
 await new Promise(r=>setImmediate(r));assert.equal((get('app').innerHTML.match(/data-digit=/g)||[]).length,6);assert.doesNotMatch(get('app').innerHTML,/123456/);
 inputs.forEach(x=>x.value='0');await get('login-form').listeners.submit({preventDefault(){}});assert.equal(run('loggedIn'),false);assert.match(get('login-error').textContent,/geçersiz/);
@@ -12,6 +12,14 @@ run("selected=brands[0];selected.channel='https://example.com/offer?a=1&b=2';go(
 assert.match(get('app').innerHTML,/href="https:\/\/example.com\/offer\?a=1&amp;b=2"/);
 assert.match(get('app').innerHTML,/target="_blank" rel="noopener noreferrer"/);
 assert.match(get('app').innerHTML,/web sitesini aç/);
+assert.equal(run("campaignWebsite(' www.example.com/path ')"),'https://www.example.com/path');
+let prevented=false;
+await get('app').listeners.click({preventDefault(){prevented=true},target:{closest:()=>({dataset:{action:'open-website'},getAttribute:()=> 'https://example.com/offer?a=1&b=2',closest:()=>null})}});
+assert.equal(prevented,true);assert.equal(box.openedWebsite,'https://example.com/offer?a=1&b=2');
+let captured=false;get('sheet-drag-area').setPointerCapture=()=>{captured=true};
+get('sheet-drag-area').listeners.pointerdown({target:{closest:()=>({tagName:'A'})},pointerType:'touch',pointerId:1,clientY:0});
+assert.equal(captured,false);
+
 for(const channel of ['Online alışveriş','javascript:alert(1)','http://example.com','https://user:password@example.com','<img src=x>']){
  run('selected.channel='+JSON.stringify(channel)+';go("detail")');
  assert.doesNotMatch(get('app').innerHTML,/class="campaign-website"/);
@@ -35,8 +43,9 @@ assert.doesNotMatch(get('app').innerHTML,/view-switch|card-copy|<h3>|<small>|bra
 assert.equal((get('app').innerHTML.match(/data-action="save"/g)||[]).length,2);
 run("favorites=new Set();go('favorites')");assert.match(get('app').innerHTML,/Henüz favorin yok/);
 run("go('home')");assert.equal((run('nav()').match(/data-page=/g)||[]).length,3);assert.doesNotMatch(run('nav()'),/>Profil</);
-run("go('preferences')");for(const label of ['Ayarlar','Bildirimler','Kullanıcı Sözleşmesi'])assert.ok(get('app').innerHTML.includes(label));assert.doesNotMatch(get('app').innerHTML,/Lokasyon Ayarları|Sağlık Verisi Ayarları|Kişisel Bilgileri|Kişisel [Aa]yarlar/);assert.match(get('app').innerHTML, /profile-card[^>]+data-page="personal"/);
+run("go('preferences')");for(const label of ['Ayarlar','Kullanıcı Sözleşmesi'])assert.ok(get('app').innerHTML.includes(label));assert.doesNotMatch(get('app').innerHTML,/Lokasyon Ayarları|Sağlık Verisi Ayarları|Kişisel Bilgileri|Kişisel [Aa]yarlar/);assert.match(get('app').innerHTML, /profile-card[^>]+data-page="personal"/);
 run("go('personal')");assert.match(get('app').innerHTML,/profile-upload/);assert.match(get('app').innerHTML,/Misafir tercihleri/);run("profilePhoto='data:image/jpeg;base64,test';render()");assert.match(get('app').innerHTML,/Fotoğraf değiştir/);assert.match(get('app').innerHTML,/Fotoğrafı kaldır/);
+if(run('notificationsAvailable')){
 run("inboxLoaded=true;inbox=[{id:'test',title:'<script>',body:'<img src=x>',created:1,is_read:0}];go('notifications')");assert.match(get('app').innerHTML,/&lt;script&gt;/);assert.doesNotMatch(get('app').innerHTML,/<img src=x>|<script>/);
 // Exercise the actual delegated click handler, including a concurrent feed refresh.
 const originalFetch=box.fetch;let storedRead=false,failRead=false,resolveFeed,resolveRead;
@@ -76,6 +85,13 @@ failRead=false;run("inbox[0].campaign_id=brands[0].id;go('notifications')");
 await clickNotice();assert.equal(run('page'),'detail');assert.equal(run('selected.id'),run('brands[0].id'));
 box.fetch=originalFetch;
 console.log('PASS: notification click, native request body, concurrent refresh, persisted read reload and visible request errors.');
+}else{
+run("go('home')");assert.doesNotMatch(get('app').innerHTML,/notification-button|data-page=\"notifications\"/);
+run("go('preferences')");assert.doesNotMatch(get('app').innerHTML,/toggle-notifications|Bildirimlerim/);
+run("go('notifications')");assert.equal(run('page'),'home');
+assert.equal(requests.filter(r=>r.url.startsWith('/api/notifications')).length,0);
+}
+
 run("go('terms')");assert.match(get('app').innerHTML,/Literatür Masası Prime Kullanıcı Sözleşmesi/);assert.doesNotMatch(get('app').innerHTML,/532|TURKCELL/);run("go('cookies')");assert.match(get('app').innerHTML,/Çerez Tercihleri/);
 run("go('home')");assert.match(get('app').innerHTML,/home-search-form/);assert.match(get('app').innerHTML,/home-settings/);assert.doesNotMatch(get('app').innerHTML,/avatar-button|header-spacer/);
 get('home-search-input').value=seed[1].name;get('home-search-form').listeners.submit({preventDefault(){}});assert.equal(run('page'),'brands');assert.equal(run('query'),seed[1].name);assert.equal(run('filtered().length'),1);

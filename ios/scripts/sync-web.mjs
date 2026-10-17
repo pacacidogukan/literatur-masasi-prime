@@ -8,7 +8,7 @@ let js=await readFile(path.join(root,'public/app.js'),'utf8');
 const old="async function server(path,body){const r=await fetch('/api/'+path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});const d=await r.json();if(!r.ok)throw new Error(d.error||'İşlem tamamlanamadı.');return d}";
 const bridge="async function server(path,body){const bridge=window.webkit?.messageHandlers?.primeAPI;if(!bridge)throw new Error('Mobil bağlantı başlatılamadı.');const r=await bridge.postMessage({path,body:body||null});if(r.status<200||r.status>=300)throw new Error(r.data?.error||'İşlem tamamlanamadı.');return r.data}";
 if(!js.includes(old))throw Error('Shared API function changed; review the native adapter.');
-js=js.replace(old,bridge).replaceAll('href="/assets/','href="assets/');
+js=js.replace(old,bridge).replace('const notificationsAvailable=true;','const notificationsAvailable=false;').replace("window.open(url,'_blank','noopener,noreferrer')","await server('open-external',{url})").replaceAll('href="/assets/','href="assets/');
 const copy='await navigator.clipboard.writeText(selected.code)';
 if(!js.includes(copy))throw Error('Shared clipboard handler changed; review native copy.');
 js=js.replace(copy,"await server('copy',{text:selected.code})");

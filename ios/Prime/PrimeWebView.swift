@@ -76,6 +76,30 @@ struct PrimeWebView: UIViewRepresentable {
                 if path == "uitest/trace" { replyHandler(["status":200, "data":["ok":true]], nil); return }
             }
             #endif
+            if path == "open-external" {
+                guard let body = payload["body"] as? [String: Any],
+                      let value = body["url"] as? String, value.count <= 2048,
+                      let url = URL(string: value), url.scheme?.lowercased() == "https",
+                      let host = url.host, !host.isEmpty, url.user == nil, url.password == nil else {
+                    replyHandler(nil, "Kampanyanın web adresi geçerli değil."); return
+                }
+                Task { @MainActor in
+                    UIApplication.shared.open(url, options: [:]) { opened in
+                        #if DEBUG
+                        if opened, ProcessInfo.processInfo.arguments.contains("--prime-ui-tests"), let view = message.webView {
+                            let container = view.window ?? view
+                            let label = UILabel(frame: CGRect(x: 8, y: 95, width: 360, height: 24))
+                            label.accessibilityIdentifier = "prime-test-external-url"
+                            label.text = url.absoluteString
+                            container.addSubview(label)
+                        }
+                        #endif
+                        if opened { replyHandler(["status":200, "data":["ok":true]], nil) }
+                        else { replyHandler(nil, "Web sitesi açılamadı. Lütfen tekrar dene.") }
+                    }
+                }
+                return
+            }
             if path == "copy" {
                 guard let body = payload["body"] as? [String: Any], let text = body["text"] as? String, text.count <= 1000 else {
                     replyHandler(nil, "Kopyalanacak metin geçersiz."); return
