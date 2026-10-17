@@ -17,7 +17,13 @@ final class PrimeFlowTests: XCTestCase {
     func toggleFavorite(_ label: String) {
         let element = app.webViews.switches[label].firstMatch
         XCTAssertTrue(element.waitForExistence(timeout: 15), app.debugDescription)
-        element.tap()
+        app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: element.frame.midX, dy: element.frame.midY)).tap()
+        let nextLabel = label.contains("favorilerden çıkar")
+            ? label.replacingOccurrences(of: "favorilerden çıkar", with: "favorilere ekle")
+            : label.replacingOccurrences(of: "favorilere ekle", with: "favorilerden çıkar")
+        XCTAssertTrue(app.webViews.switches[nextLabel].firstMatch.waitForExistence(timeout: 15),
+                      "Favorite state did not change after the tap.")
     }
     func login(_ code: String = "654321") {
         for (index, digit) in code.enumerated() {
@@ -55,6 +61,7 @@ final class PrimeFlowTests: XCTestCase {
         toggleFavorite("Solgar favorilere ekle"); relaunch(); home(); tap("Favoriler")
         tap("Solgar kampanyasını aç"); toggleFavorite("Solgar favorilerden çıkar")
         relaunch(); home(); tap("Favoriler")
+        XCTAssertTrue(app.webViews.staticTexts["Henüz favorin yok"].waitForExistence(timeout: 15))
         XCTAssertFalse(button("Solgar kampanyasını aç").exists)
     }
     func testSwipeRevealsAndCopiesCampaignCode() {
