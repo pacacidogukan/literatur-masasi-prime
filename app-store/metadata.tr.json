@@ -6,7 +6,7 @@
   "keywords": "kampanya,ayrıcalık,marka,favori,indirim,kupon,alışveriş,literatür,masası",
   "locale": "tr",
   "supportUrl": "https://literaturmasasi.com/destek",
-  "privacyPolicyUrl": null,
+  "privacyPolicyUrl": "https://literaturmasasi.com/gizlilik",
   "marketingUrl": "https://literaturmasasi.com/prime",
-  "status": "DRAFT_REQUIRES_PRIVACY_AND_REVIEW_DETAILS"
+  "status": "DRAFT_REQUIRES_FINAL_BUILD_AND_REVIEW_ACCESS"
 }
