@@ -41,6 +41,8 @@ final class PrimeUITestProtocol: URLProtocol {
             if ProcessInfo.processInfo.arguments.contains("--fail-notification-read") {
                 status = 503; result = ["error": "Test: bildirim kaydedilemedi."]
             } else { defaults.set(true, forKey: "read"); result = ["ok": true, "is_read": 1] }
+        } else if route == "delete-account" {
+            result = ["ok": true, "deleted": true]
         } else if route != "logout" && route != "notifications/preference" {
             status = 404; result = ["error": "Bilinmeyen test isteği."]
         }
