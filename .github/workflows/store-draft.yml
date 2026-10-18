@@ -57,7 +57,7 @@ jobs:
           if(!v)throw Error('Editable 1.0 draft not found; refusing to change any other version');
           const locs=await api('/v1/appStoreVersions/'+v.id+'/appStoreVersionLocalizations');
           const l=locs.data.find(x=>x.attributes.locale==='tr');if(!l)throw Error('Turkish version locale missing');
-          const attrs=Object.fromEntries(['description','keywords','promotionalText'].map(k=>[k,draft[k]]));
+          const attrs=Object.fromEntries(['description','keywords','promotionalText','supportUrl','marketingUrl'].filter(k=>draft[k]).map(k=>[k,draft[k]]));
           await api('/v1/appStoreVersionLocalizations/'+l.id,'PATCH',{type:'appStoreVersionLocalizations',id:l.id,attributes:attrs});
           const info=(await api('/v1/apps/6823890365/appInfos')).data.find(x=>x.attributes.appStoreState==='PREPARE_FOR_SUBMISSION');
           if(!info)throw Error('Editable app info not found');
