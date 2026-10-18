@@ -48,7 +48,7 @@ jobs:
           const token=unsigned+'.'+sign('sha256',Buffer.from(unsigned),{key,dsaEncoding:'ieee-p1363'}).toString('base64url');console.log('::add-mask::'+token);
           async function api(route,method='GET',data){
             const r=await fetch('https://api.appstoreconnect.apple.com'+route,{method,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:data?JSON.stringify({data}):undefined,redirect:'error',signal:AbortSignal.timeout(30000)});
-            const d=await r.json();if(!r.ok)throw Error('Apple API '+r.status+' '+JSON.stringify(d.errors?.map(x=>({code:x.code,detail:x.detail}))));return d;
+            const text=await r.text();const d=text?JSON.parse(text):{};if(!r.ok)throw Error('Apple API '+r.status+' '+JSON.stringify(d.errors?.map(x=>({code:x.code,detail:x.detail}))));return d;
           }
           const versions=await api('/v1/apps/6823890365/appStoreVersions?filter[platform]=IOS');
           const v=versions.data.find(x=>x.attributes.versionString==='1.0'&&x.attributes.appStoreState==='PREPARE_FOR_SUBMISSION');
