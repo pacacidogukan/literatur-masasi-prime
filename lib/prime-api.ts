@@ -174,7 +174,7 @@ export async function safeApi(request:Request){try{return await api(request)}cat
 function campaignValues(b:any){
  const clean=(k:string,len:number)=>String(b[k]||'').trim().slice(0,len);
  const publishing=b.saveAction!=='save';
- const requiredFields:any={name:'Marka adı',tag:'Kısa marka açıklaması',offer:'Teklif başlığı',description:'Teklif açıklaması',code:'Kampanya kodu',asset:'Logo adresi',photo:'Kampanya görseli adresi',verticalPhoto:'Dikey kart görseli',squarePhoto:'Kare kart görseli',latestPhoto:'Yeni Ayrıcalıkları Keşfet görseli',conditions:'Kullanım koşulları',channel:'Geçerli alışveriş kanalı'};
+ const requiredFields:any={name:'Marka adı',tag:'Kısa marka açıklaması',offer:'Teklif başlığı',description:'Teklif açıklaması',code:'Kampanya kodu',asset:'Logo adresi',photo:'Kampanya görseli adresi',verticalPhoto:'Dikey kart görseli',squarePhoto:'Kare kart görseli',latestPhoto:'Yeni Ayrıcalıkları Keşfet görseli',channel:'Geçerli alışveriş kanalı'};
  const missing=Object.keys(requiredFields).filter(key=>!String(b[key]??'').trim());
  if(publishing&&missing.length)return json({error:'Lütfen zorunlu alanları doldurun: '+missing.map(key=>requiredFields[key]).join(', ')+'.'},400);
  const name=clean('name',80),offer=clean('offer',180),code=clean('code',120);

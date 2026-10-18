@@ -81,12 +81,14 @@ let live=(await req('campaigns')).data.campaigns.find(x=>x.id==='solgar');assert
 assert.equal((await req('admin/campaigns',{body:{...assets,heroPhoto:'javascript:alert(1)'}})).status,400);
 assert.equal((await req('admin/campaigns',{body:{...assets,latestPhoto:''}})).status,400);
 assert.equal((await req('campaigns')).data.campaigns.find(x=>x.id==='solgar').latestPhoto,assets.latestPhoto);
-for(const key of ['name','tag','offer','description','code','asset','photo','verticalPhoto','squarePhoto','latestPhoto','conditions','channel']){
+for(const key of ['name','tag','offer','description','code','asset','photo','verticalPhoto','squarePhoto','latestPhoto','channel']){
  for(const value of ['', '   ']){
   assert.equal((await req('admin/campaigns',{body:{...assets,[key]:value}})).status,400,key);
   const result=await req('editor/save',{user:null,token:partnerToken,body:{...shared,[key]:value}});assert.equal(result.status,400,key);assert.match(result.data.error,/zorunlu/);
  }
 }
+assert.equal((await req('admin/campaigns',{body:{...assets,conditions:''}})).status,200);
+assert.equal((await req('editor/save',{user:null,token:partnerToken,body:{...shared,conditions:''}})).status,200);
 assert.equal((await req('admin/campaigns',{body:{...assets,expires:null}})).status,400);
 assert.equal((await req('admin/campaigns',{body:{...assets,active:false}})).status,200);
 assert.ok(!(await req('campaigns')).data.campaigns.some(x=>x.id==='solgar'));
@@ -266,7 +268,7 @@ console.log('PASS: isolated empty-form links, partner fills/saves, owner-only un
 console.log('PASS: incomplete save accepted, partial partner updates reload, publish rejects missing data, completed draft publishes.');
 console.log('PASS: Save preserves live status for admin/partner, new Save stays unpublished, data reloads correctly.');
 console.log('PASS: save-only hides campaign and code; save-and-publish exposes campaign; shared editor can save draft.');
-console.log('PASS: all campaign fields mandatory on admin and shared edit, including whitespace-only values; existing records unchanged after rejected saves.');
+console.log('PASS: remaining campaign fields mandatory on admin and shared edit; conditions optional, including whitespace-only checks; existing records unchanged after rejected saves.');
 console.log('PASS: four independent image URLs roundtrip, scoped editing, invalid URL rejection, blank-image rejection, admin-only position.');
 console.log('PASS: existing description fallback, admin/public roundtrip, partner edits, legacy preservation, blank-description rejection.');
 console.log('PASS: unique persistent campaign links, anonymous scoped edit, cross-campaign rejection, rotation, owner-only link creation, CSRF.');
