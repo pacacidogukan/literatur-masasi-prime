@@ -67,6 +67,10 @@ export async function api(request:Request){
   await db.prepare('DELETE FROM attempts WHERE expires<?').bind(now()-86400).run();
   return json({authorized:true});
  }
+ if(path==='delete-account'&&method==='POST'){
+  if(owner)return json({error:'Yönetici hesabını bu ekrandan silemezsin.'},403);
+  await erasePrimeAccess(db,user);return json({ok:true,deleted:true});
+ }
  if(path==='logout'&&method==='POST'){await db.prepare('DELETE FROM grants WHERE user_id=?').bind(user).run();return json({ok:true});}
  if(path.startsWith('admin/')){
   if(!owner)return json({error:'Bu alan yalnızca uygulama sahibine açık.'},403);
@@ -257,7 +261,7 @@ async function purchaseAdmin(request:Request,db:any,path:string){
 
 // App sessions are separate from Sites identity; admin routes retain Sites owner auth.
 async function mobileApi(request:Request,db:any,path:string):Promise<Response>{
- const route=path.slice('mobile/'.length),allowed:any={me:'GET',access:'POST',campaigns:'GET',reveal:'POST',notifications:'GET','notifications/read':'POST','notifications/preference':'POST',logout:'POST'};
+ const route=path.slice('mobile/'.length),allowed:any={'delete-account':'POST',me:'GET',access:'POST',campaigns:'GET',reveal:'POST',notifications:'GET','notifications/read':'POST','notifications/preference':'POST',logout:'POST'};
  if(!Object.prototype.hasOwnProperty.call(allowed,route))return json({error:'Mobil işlem bulunamadı.'},404);
  if(request.method!==allowed[route])return json({error:'Geçersiz işlem.'},405);
  let raw:string|undefined;
@@ -290,6 +294,11 @@ async function mobileApi(request:Request,db:any,path:string):Promise<Response>{
  }
  const token=request.headers.get('X-Prime-Mobile-Session')||'';
  if(!/^[a-f0-9]{64}$/.test(token))return route==='logout'?json({ok:true}):route==='me'?json({authorized:false,owner:false}):json({error:'Kodunla tekrar giriş yap.'},401);
+ if(route==='delete-account'){
+  const record=await db.prepare('SELECT user_id FROM mobile_sessions WHERE token_hash=?').bind(await digest(token)).first();
+  if(record)await erasePrimeAccess(db,record.user_id);
+  return json({ok:true,deleted:true});
+ }
  const session=await db.prepare('SELECT s.user_id,s.expires FROM mobile_sessions s JOIN grants g ON g.user_id=s.user_id JOIN access_codes c ON c.id=g.code_id WHERE s.token_hash=? AND s.expires>? AND c.active=1 AND c.expires>?').bind(await digest(token),now(),now()).first();
  if(!session)return route==='logout'?json({ok:true}):route==='me'?json({authorized:false,owner:false}):json({error:'Oturumun sona erdi. Kodunla tekrar giriş yap.'},401);
  if(route==='logout'){
@@ -299,4 +308,13 @@ async function mobileApi(request:Request,db:any,path:string):Promise<Response>{
  const target=new URL('/api/'+route,request.url),headers=new Headers({'oai-authenticated-user-id':session.user_id});
  if(raw!==undefined){headers.set('Content-Type','application/json');headers.set('Origin',target.origin)}
  return api(new Request(target,{method:request.method,headers,body:raw}));
+}
+
+async function erasePrimeAccess(db:any,userId:string){
+ await db.batch([
+  db.prepare('DELETE FROM notification_reads WHERE user_id=?').bind(userId),
+  db.prepare('DELETE FROM notification_preferences WHERE user_id=?').bind(userId),
+  db.prepare('DELETE FROM mobile_sessions WHERE user_id=?').bind(userId),
+  db.prepare('DELETE FROM grants WHERE user_id=?').bind(userId)
+ ]);
 }

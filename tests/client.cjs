@@ -88,5 +88,25 @@ assert.equal(requests.filter(r=>r.url.startsWith('/api/notifications')).length,0
 run("go('terms')");assert.match(get('app').innerHTML,/Literatür Masası Prime Kullanıcı Sözleşmesi/);assert.doesNotMatch(get('app').innerHTML,/532|TURKCELL/);run("go('cookies')");assert.match(get('app').innerHTML,/Çerez Tercihleri/);
 run("go('home')");assert.match(get('app').innerHTML,/home-search-form/);assert.match(get('app').innerHTML,/home-settings/);assert.doesNotMatch(get('app').innerHTML,/avatar-button|header-spacer/);
 get('home-search-input').value=seed[1].name;get('home-search-form').listeners.submit({preventDefault(){}});assert.equal(run('page'),'brands');assert.equal(run('query'),seed[1].name);assert.equal(run('filtered().length'),1);
+
+// Deletion requires explicit confirmation and a successful server acknowledgement.
+run("loggedIn=true;favorites=new Set(['solgar']);profilePhoto='data:image/png;base64,test';go('preferences')");
+assert.match(get('app').innerHTML,/Erişimimi ve verilerimi sil/);
+const beforeDelete=requests.length;run("go('deleteAccount')");assert.match(get('app').innerHTML,/geri alınamaz/);
+run("go('preferences')");assert.equal(requests.length,beforeDelete);
+const deletionFetch=box.fetch;let deletionMode='offline';
+box.localStorage.removeItem=key=>{(box.removedKeys??=[]).push(key)};
+box.fetch=async(url,opts)=>{
+ if(url==='/api/delete-account'){
+  if(deletionMode==='offline')throw Error('Bağlantı kesildi.');
+  return {ok:true,json:async()=>deletionMode==='ack'?{ok:true}:{ok:true,deleted:true}};
+ }
+ return deletionFetch(url,opts);
+};
+const confirmDelete=()=>get('app').listeners.click({target:{closest:selector=>selector==='[data-action]'?{dataset:{action:'confirm-delete-account'},closest:()=>null}:null}});
+run("go('deleteAccount')");await confirmDelete();assert.equal(run('loggedIn'),true);assert.equal(run('favorites.size'),1);assert.equal(box.removedKeys,undefined);
+deletionMode='ack';await confirmDelete();assert.equal(run('loggedIn'),true);assert.match(get('toast').textContent,/doğrulanamadı/);
+deletionMode='ok';await confirmDelete();assert.equal(run('loggedIn'),false);assert.equal(run('page'),'login');assert.equal(run('favorites.size'),0);assert.equal(run('profilePhoto'),null);assert.ok(box.removedKeys.includes('lmprime-photo'));assert.ok(box.removedKeys.includes('lmprime-favorites'));assert.equal(run('deletingAccount'),false);
+console.log('PASS: deletion confirmation, cancellation, offline failure, missing server acknowledgement and local data removal.');
 console.log('PASS: server-validated login, no demo bypass, six-slide carousel, short/full swipe, server-only campaign code, escaped campaign content.');
 })().catch(e=>{console.error(e);process.exitCode=1});

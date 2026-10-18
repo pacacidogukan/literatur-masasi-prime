@@ -51,6 +51,19 @@ final class PrimeFlowTests: XCTestCase {
         XCTAssertTrue(button("Giriş yap").waitForExistence(timeout: 15))
         XCTAssertFalse(button("Ana Sayfa").exists)
     }
+    func testDeleteAccessAndLocalData() {
+        login(); home(); tap("Markalar"); tap("Solgar kampanyasını aç")
+        toggleFavorite("Solgar favorilere ekle")
+        tap("Geri"); tap("Ana Sayfa"); tap("Ayarları aç")
+        tap("Erişimimi ve verilerimi sil")
+        tap("Vazgeç")
+        XCTAssertTrue(button("Çıkış Yap").waitForExistence(timeout: 15))
+        tap("Erişimimi ve verilerimi sil"); tap("Erişimi ve verileri sil")
+        XCTAssertTrue(button("Giriş yap").waitForExistence(timeout: 15))
+        relaunch(); XCTAssertTrue(button("Giriş yap").waitForExistence(timeout: 15))
+        login(); home(); tap("Favoriler")
+        XCTAssertTrue(app.webViews.staticTexts["Henüz favorin yok"].waitForExistence(timeout: 15))
+    }
     func testCampaignWebsiteIsDisplayedWithoutNavigation() {
         login(); home(); tap("Markalar"); tap("Solgar kampanyasını aç")
         let address = app.webViews.staticTexts["https://example.com/prime-test"].firstMatch

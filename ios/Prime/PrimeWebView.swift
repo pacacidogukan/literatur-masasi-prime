@@ -61,7 +61,7 @@ struct PrimeWebView: UIViewRepresentable {
             return URLSession(configuration: config, delegate: redirectGuard, delegateQueue: nil)
         }()
         private let methods = ["me":"GET", "access":"POST", "campaigns":"GET", "reveal":"POST",
-            "notifications":"GET", "notifications/read":"POST", "notifications/preference":"POST", "logout":"POST"]
+            "notifications":"GET", "notifications/read":"POST", "notifications/preference":"POST", "logout":"POST", "delete-account":"POST"]
 
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage,
                                    replyHandler: @escaping (Any?, String?) -> Void) {
@@ -143,6 +143,10 @@ struct PrimeWebView: UIViewRepresentable {
                     if (200..<300).contains(http.statusCode), path == "access" {
                         guard let token = result.removeValue(forKey: "sessionToken") as? String else { throw BridgeError.invalidResponse }
                         try SecureStore.write(token, account: "session")
+                    }
+                    if path == "delete-account", (200..<300).contains(http.statusCode), result["deleted"] as? Bool == true {
+                        SecureStore.clear("session")
+                        SecureStore.clear("installation")
                     }
                     if http.statusCode == 401 || path == "logout" || (path == "me" && result["authorized"] as? Bool == false) {
                         SecureStore.clear("session")
