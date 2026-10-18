@@ -68,3 +68,41 @@ jobs:
             report('ageRating',await get('/v1/appInfos/'+i.id+'/ageRatingDeclaration'),['advertising','medicalOrTreatmentInformation','healthOrWellnessTopics','userGeneratedContent','messagingAndChat','unrestrictedWebAccess','gambling','contests','ageAssurance','socialMedia','socialMediaAgeRestricted']);
           }
           JS
+
+  screenshots:
+    runs-on: macos-15
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Capture actual native app screens with isolated example data
+        run: |
+          python3 - <<'PY'
+          import pathlib
+          pathlib.Path("ios/PrimeUITests/PrimeFlowTests.swift").write_text("import XCTest\nfinal class PrimeFlowTests: XCTestCase {\n let app = XCUIApplication()\n func capture(_ name: String) { let a = XCTAttachment(screenshot: app.screenshot()); a.name = name; a.lifetime = .keepAlways; add(a) }\n func tap(_ name: String) { let e=app.webViews.buttons[name].firstMatch; XCTAssertTrue(e.waitForExistence(timeout:20)); e.tap() }\n func testStoreScreenshots() {\n  app.launchArguments=[\"--prime-ui-tests\",\"--reset-test-state\"]; app.launch()\n  XCTAssertTrue(app.webViews.buttons[\"Giriş yap\"].waitForExistence(timeout:20))\n  capture(\"store-01-login\")\n  for (i,d) in \"654321\".enumerated() {\n   let f=app.webViews.textFields[\"Kodun \\(i+1). hanesi\"]; XCTAssertTrue(f.waitForExistence(timeout:20)); f.tap(); f.typeText(String(d))\n   let value=NSPredicate(format:\"value == %@\",String(d)); expectation(for:value,evaluatedWith:f); waitForExpectations(timeout:10)\n  }\n  tap(\"Giriş yap\"); XCTAssertTrue(app.webViews.buttons[\"Ana Sayfa\"].waitForExistence(timeout:20))\n  capture(\"store-02-home\")\n  tap(\"Markalar\"); capture(\"store-03-brands\")\n  tap(\"Solgar kampanyasını aç\"); XCTAssertTrue(app.webViews.buttons[\"Kodu açmak için sağa kaydır veya Enter tuşuna bas\"].waitForExistence(timeout:20)); capture(\"store-04-detail\")\n  let favorite=app.webViews.switches[\"Solgar favorilere ekle\"].firstMatch\n  XCTAssertTrue(favorite.waitForExistence(timeout:20))\n  app.coordinate(withNormalizedOffset:.zero).withOffset(CGVector(dx:favorite.frame.midX,dy:favorite.frame.midY)).tap()\n  tap(\"Geri\"); tap(\"Favoriler\"); capture(\"store-05-favorites\")\n }\n}\n")
+          PY
+          DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(x["udid"] for group in d["devices"].values() for x in group if x["name"]=="iPhone 16 Pro"))')
+          xcrun simctl boot "$DEVICE_ID"
+          xcrun simctl bootstatus "$DEVICE_ID" -b
+          xcrun simctl status_bar "$DEVICE_ID" override --time "9:41" --dataNetwork wifi --wifiMode active --wifiBars 3 --batteryState charged --batteryLevel 100
+          xcodebuild -project ios/Prime.xcodeproj -scheme Prime -configuration Debug -destination "platform=iOS Simulator,id=$DEVICE_ID" -derivedDataPath build-store -resultBundlePath "$RUNNER_TEMP/Store.xcresult" -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY="-" test
+      - name: Export screen attachments
+        run: |
+          xcrun xcresulttool export attachments --path "$RUNNER_TEMP/Store.xcresult" --output-path "$RUNNER_TEMP/store-assets"
+          ls -lh "$RUNNER_TEMP/store-assets"
+      - uses: actions/upload-artifact@v4
+        timeout-minutes: 2
+        with:
+          name: app-store-screen-captures
+          path: ${{ runner.temp }}/store-assets/
+      - name: Save generated preview assets on an isolated branch
+        env:
+          ASSET_BRANCH: app-store-assets-${{ github.run_id }}
+        run: |
+          git checkout --orphan "$ASSET_BRANCH"
+          git rm -rf .
+          cp -R "$RUNNER_TEMP/store-assets/." .
+          git add .
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Native App Store screenshot drafts from isolated sample data'
+          git push origin "HEAD:refs/heads/$ASSET_BRANCH"
