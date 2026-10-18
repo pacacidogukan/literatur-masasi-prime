@@ -1,0 +1,70 @@
+name: App Store preparation audit
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/store-preparation.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-15
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read current App Store draft metadata
+        env:
+          ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          node --input-type=module <<'JS'
+          import { createPrivateKey, sign } from 'node:crypto';
+          import { appendFileSync } from 'node:fs';
+          const required = ['ASC_KEY', 'ASC_KEY_ID', 'ASC_ISSUER'];
+          for (const name of required) {
+            if (!process.env[name]?.trim()) {
+              console.error('Missing repository secret: ' + name);
+              process.exit(1);
+            }
+          }
+          let key;
+          try {
+            key = createPrivateKey(process.env.ASC_KEY.trim());
+            if (key.asymmetricKeyType !== 'ec' || key.asymmetricKeyDetails?.namedCurve !== 'prime256v1') throw new Error();
+          } catch {
+            console.error('API key is not a valid P-256 private key. Check the complete .p8 secret.');
+            process.exit(1);
+          }
+          const b64 = value => Buffer.from(JSON.stringify(value)).toString('base64url');
+          const now = Math.floor(Date.now() / 1000);
+          const unsigned = b64({alg:'ES256',kid:process.env.ASC_KEY_ID.trim(),typ:'JWT'})+'.'+b64({iss:process.env.ASC_ISSUER.trim(),iat:now-10,exp:now+300,aud:'appstoreconnect-v1'});
+          const token=unsigned+'.'+sign('sha256',Buffer.from(unsigned),{key,dsaEncoding:'ieee-p1363'}).toString('base64url');
+          console.log('::add-mask::'+token);
+          async function get(route){
+            const r=await fetch('https://api.appstoreconnect.apple.com'+route,{headers:{Authorization:'Bearer '+token,Accept:'application/json'},redirect:'error',signal:AbortSignal.timeout(30000)});
+            const d=await r.json();if(!r.ok){console.log('AUDIT_ERROR '+JSON.stringify({route,status:r.status,codes:d.errors?.map(x=>x.code)}));return null}return d;
+          }
+          function report(label,d,fields){if(!d)return;for(const x of Array.isArray(d.data)?d.data:[d.data])if(x)console.log('STORE_AUDIT '+JSON.stringify({label,id:x.id,type:x.type,attributes:Object.fromEntries(fields.map(k=>[k,x.attributes?.[k]]))}));}
+          report('app',await get('/v1/apps/6823890365'),['name','bundleId','primaryLocale','contentRightsDeclaration']);
+          const versions=await get('/v1/apps/6823890365/appStoreVersions?filter[platform]=IOS&limit=20');
+          report('versions',versions,['versionString','appStoreState','releaseType','copyright']);
+          for(const v of versions?.data??[]){
+            const locs=await get('/v1/appStoreVersions/'+v.id+'/appStoreVersionLocalizations');
+            report('versionLocalizations',locs,['locale','description','keywords','marketingUrl','promotionalText','supportUrl','whatsNew']);
+            for(const l of locs?.data??[])report('screenshots',await get('/v1/appStoreVersionLocalizations/'+l.id+'/appScreenshotSets'),['screenshotDisplayType']);
+            const review=await get('/v1/appStoreVersions/'+v.id+'/appStoreReviewDetail');
+            if(review?.data)console.log('REVIEW_COMPLETENESS '+JSON.stringify({id:review.data.id,fields:Object.fromEntries(['contactFirstName','contactLastName','contactPhone','contactEmail','demoAccountName','demoAccountPassword','notes'].map(k=>[k,Boolean(review.data.attributes?.[k])])),demoAccountRequired:review.data.attributes?.demoAccountRequired}));
+            report('selectedBuild',await get('/v1/appStoreVersions/'+v.id+'/build'),['version','processingState','usesNonExemptEncryption']);
+          }
+          const infos=await get('/v1/apps/6823890365/appInfos');report('appInfos',infos,['appStoreState']);
+          for(const i of infos?.data??[]){
+            report('appInfoLocalizations',await get('/v1/appInfos/'+i.id+'/appInfoLocalizations'),['locale','name','subtitle','privacyPolicyUrl','privacyChoicesUrl']);
+            report('ageRating',await get('/v1/appInfos/'+i.id+'/ageRatingDeclaration'),['advertising','medicalOrTreatmentInformation','healthOrWellnessTopics','userGeneratedContent','messagingAndChat','unrestrictedWebAccess','gambling','contests','ageAssurance','socialMedia','socialMediaAgeRestricted']);
+          }
+          JS
