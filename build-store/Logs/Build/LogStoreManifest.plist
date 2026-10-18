@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>logFormatVersion</key>
+	<integer>11</integer>
+	<key>logs</key>
+	<dict>
+		<key>09BF81B1-62CD-496B-8E10-4885E59A6111</key>
+		<dict>
+			<key>className</key>
+			<string>IDECommandLineBuildLog</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>09BF81B1-62CD-496B-8E10-4885E59A6111.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>8</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>Prime project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>Prime</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Testing project Prime with scheme Prime</string>
+			<key>timeStartedRecording</key>
+			<real>814001966.19075704</real>
+			<key>timeStoppedRecording</key>
+			<real>814002081.567909</real>
+			<key>title</key>
+			<string>Testing project Prime with scheme Prime</string>
+			<key>uniqueIdentifier</key>
+			<string>09BF81B1-62CD-496B-8E10-4885E59A6111</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

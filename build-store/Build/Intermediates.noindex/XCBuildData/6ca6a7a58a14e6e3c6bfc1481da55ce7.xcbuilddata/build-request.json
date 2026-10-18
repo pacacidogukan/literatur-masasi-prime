@@ -1,0 +1,73 @@
+{
+  "buildCommand" : {
+    "command" : "build",
+    "skipDependencies" : false,
+    "style" : "buildAndRun"
+  },
+  "configuredTargets" : [
+    {
+      "guid" : "3eac3ee2f8182a5b295af8864de78eaab3ce11dc68a5847e0ea08ee5bad43d4f"
+    },
+    {
+      "guid" : "3eac3ee2f8182a5b295af8864de78eaae897642ff9875f947437dbf22d528c3f"
+    }
+  ],
+  "containerPath" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/ios/Prime.xcodeproj",
+  "continueBuildingAfterErrors" : false,
+  "dependencyScope" : "workspace",
+  "enableIndexBuildArena" : false,
+  "hideShellScriptEnvironment" : false,
+  "parameters" : {
+    "action" : "build",
+    "activeArchitecture" : "arm64",
+    "activeRunDestination" : {
+      "disableOnlyActiveArch" : false,
+      "platform" : "iphonesimulator",
+      "sdk" : "iphonesimulator18.5",
+      "sdkVariant" : "iphonesimulator",
+      "supportedArchitectures" : [
+        "arm64",
+        "x86_64"
+      ],
+      "targetArchitecture" : "arm64"
+    },
+    "arenaInfo" : {
+      "buildIntermediatesPath" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex",
+      "buildProductsPath" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Products",
+      "derivedDataPath" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store",
+      "indexDataStoreFolderPath" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Index.noindex/DataStore",
+      "indexEnableDataStore" : true,
+      "indexPCHPath" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Index.noindex/PrecompiledHeaders",
+      "pchPath" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/PrecompiledHeaders"
+    },
+    "configurationName" : "Debug",
+    "overrides" : {
+      "commandLine" : {
+        "table" : {
+          "CODE_SIGN_IDENTITY" : "-",
+          "CODE_SIGNING_ALLOWED" : "YES"
+        }
+      },
+      "synthesized" : {
+        "table" : {
+          "ASSETCATALOG_FILTER_FOR_DEVICE_MODEL" : "iPhone17,1",
+          "ASSETCATALOG_FILTER_FOR_DEVICE_OS_VERSION" : "18.5",
+          "ASSETCATALOG_FILTER_FOR_THINNING_DEVICE_CONFIGURATION" : "iPhone17,1",
+          "BUILD_ACTIVE_RESOURCES_ONLY" : "YES",
+          "ENABLE_PREVIEWS" : "NO",
+          "ENABLE_XOJIT_PREVIEWS" : "YES",
+          "TARGET_DEVICE_IDENTIFIER" : "DC4CD8B3-4457-4153-9087-A0D7A2F9BFD9",
+          "TARGET_DEVICE_MODEL" : "iPhone17,1",
+          "TARGET_DEVICE_OS_VERSION" : "18.5",
+          "TARGET_DEVICE_PLATFORM_NAME" : "iphonesimulator"
+        }
+      }
+    }
+  },
+  "schemeCommand" : "test",
+  "showNonLoggedProgress" : true,
+  "useDryRun" : false,
+  "useImplicitDependencies" : true,
+  "useLegacyBuildLocations" : false,
+  "useParallelTargets" : true
+}

@@ -1,0 +1,18 @@
+{
+  "" : {
+    "diagnostics" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/PrimeUITests.build/Objects-normal/x86_64/PrimeUITests-master.dia",
+    "emit-module-dependencies" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/PrimeUITests.build/Objects-normal/x86_64/PrimeUITests-master-emit-module.d",
+    "emit-module-diagnostics" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/PrimeUITests.build/Objects-normal/x86_64/PrimeUITests-master-emit-module.dia",
+    "swift-dependencies" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/PrimeUITests.build/Objects-normal/x86_64/PrimeUITests-master.swiftdeps"
+  },
+  "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/ios/PrimeUITests/PrimeFlowTests.swift" : {
+    "const-values" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/PrimeUITests.build/Objects-normal/x86_64/PrimeFlowTests.swiftconstvalues",
+    "dependencies" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/PrimeUITests.build/Objects-normal/x86_64/PrimeFlowTests.d",
+    "diagnostics" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/PrimeUITests.build/Objects-normal/x86_64/PrimeFlowTests.dia",
+    "index-unit-output-path" : "/Prime.build/Debug-iphonesimulator/PrimeUITests.build/Objects-normal/x86_64/PrimeFlowTests.o",
+    "llvm-bc" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/PrimeUITests.build/Objects-normal/x86_64/PrimeFlowTests.bc",
+    "object" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/PrimeUITests.build/Objects-normal/x86_64/PrimeFlowTests.o",
+    "swift-dependencies" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/PrimeUITests.build/Objects-normal/x86_64/PrimeFlowTests.swiftdeps",
+    "swiftmodule" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/PrimeUITests.build/Objects-normal/x86_64/PrimeFlowTests~partial.swiftmodule"
+  }
+}

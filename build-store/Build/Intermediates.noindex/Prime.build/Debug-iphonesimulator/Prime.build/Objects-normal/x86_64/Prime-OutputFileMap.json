@@ -1,0 +1,58 @@
+{
+  "" : {
+    "diagnostics" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/Prime-master.dia",
+    "emit-module-dependencies" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/Prime-master-emit-module.d",
+    "emit-module-diagnostics" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/Prime-master-emit-module.dia",
+    "swift-dependencies" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/Prime-master.swiftdeps"
+  },
+  "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/GeneratedAssetSymbols.dia",
+    "index-unit-output-path" : "/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/GeneratedAssetSymbols.swiftdeps",
+    "swiftmodule" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/GeneratedAssetSymbols~partial.swiftmodule"
+  },
+  "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/ios/Prime/PrimeApp.swift" : {
+    "const-values" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeApp.swiftconstvalues",
+    "dependencies" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeApp.d",
+    "diagnostics" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeApp.dia",
+    "index-unit-output-path" : "/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeApp.o",
+    "llvm-bc" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeApp.bc",
+    "object" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeApp.o",
+    "swift-dependencies" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeApp.swiftdeps",
+    "swiftmodule" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeApp~partial.swiftmodule"
+  },
+  "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/ios/Prime/PrimeUITestProtocol.swift" : {
+    "const-values" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeUITestProtocol.swiftconstvalues",
+    "dependencies" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeUITestProtocol.d",
+    "diagnostics" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeUITestProtocol.dia",
+    "index-unit-output-path" : "/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeUITestProtocol.o",
+    "llvm-bc" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeUITestProtocol.bc",
+    "object" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeUITestProtocol.o",
+    "swift-dependencies" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeUITestProtocol.swiftdeps",
+    "swiftmodule" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeUITestProtocol~partial.swiftmodule"
+  },
+  "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/ios/Prime/PrimeWebView.swift" : {
+    "const-values" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeWebView.swiftconstvalues",
+    "dependencies" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeWebView.d",
+    "diagnostics" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeWebView.dia",
+    "index-unit-output-path" : "/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeWebView.o",
+    "llvm-bc" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeWebView.bc",
+    "object" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeWebView.o",
+    "swift-dependencies" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeWebView.swiftdeps",
+    "swiftmodule" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/PrimeWebView~partial.swiftmodule"
+  },
+  "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/ios/Prime/SecureStore.swift" : {
+    "const-values" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/SecureStore.swiftconstvalues",
+    "dependencies" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/SecureStore.d",
+    "diagnostics" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/SecureStore.dia",
+    "index-unit-output-path" : "/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/SecureStore.o",
+    "llvm-bc" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/SecureStore.bc",
+    "object" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/SecureStore.o",
+    "swift-dependencies" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/SecureStore.swiftdeps",
+    "swiftmodule" : "/Users/runner/work/literatur-masasi-prime/literatur-masasi-prime/build-store/Build/Intermediates.noindex/Prime.build/Debug-iphonesimulator/Prime.build/Objects-normal/x86_64/SecureStore~partial.swiftmodule"
+  }
+}

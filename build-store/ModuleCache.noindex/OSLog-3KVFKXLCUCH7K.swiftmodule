@@ -1,0 +1,124 @@
+---
+path:            '/Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphonesimulator/prebuilt-modules/18.5/OSLog.swiftmodule/x86_64-apple-ios-simulator.swiftmodule'
+dependencies:
+  - mtime:           1788754267541151195
+    path:            '/Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphonesimulator/prebuilt-modules/18.5/OSLog.swiftmodule/x86_64-apple-ios-simulator.swiftmodule'
+    size:            50160
+  - mtime:           1788754267218443549
+    path:            'usr/lib/swift/Swift.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            1961957
+    sdk_relative:    true
+  - mtime:           1788754146525329585
+    path:            'usr/include/_time.apinotes'
+    size:            1132
+    sdk_relative:    true
+  - mtime:           1788754267249233269
+    path:            'usr/lib/swift/_errno.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            3854
+    sdk_relative:    true
+  - mtime:           1788754267218700011
+    path:            'usr/lib/swift/_signal.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            1065
+    sdk_relative:    true
+  - mtime:           1788754267256303928
+    path:            'usr/lib/swift/sys_time.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            1066
+    sdk_relative:    true
+  - mtime:           1788754267220752578
+    path:            'usr/lib/swift/_time.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            1029
+    sdk_relative:    true
+  - mtime:           1788754267225115967
+    path:            'usr/lib/swift/_stdio.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            1477
+    sdk_relative:    true
+  - mtime:           1788754267257961923
+    path:            'usr/lib/swift/unistd.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            817
+    sdk_relative:    true
+  - mtime:           1788754267252718053
+    path:            'usr/lib/swift/_math.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            22592
+    sdk_relative:    true
+  - mtime:           1788754267206724026
+    path:            'usr/lib/swift/_Builtin_float.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            5738
+    sdk_relative:    true
+  - mtime:           1788754267197674545
+    path:            'usr/lib/swift/Darwin.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            18219
+    sdk_relative:    true
+  - mtime:           1788754267235033548
+    path:            'usr/lib/swift/_Concurrency.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            230594
+    sdk_relative:    true
+  - mtime:           1788754267255509614
+    path:            'usr/lib/swift/_StringProcessing.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            22871
+    sdk_relative:    true
+  - mtime:           1788754267236605542
+    path:            'System/Library/Frameworks/Combine.framework/Modules/Combine.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            167798
+    sdk_relative:    true
+  - mtime:           1788754118203675260
+    path:            'usr/include/ObjectiveC.apinotes'
+    size:            11147
+    sdk_relative:    true
+  - mtime:           1788754087100854435
+    path:            'usr/include/Dispatch.apinotes'
+    size:            19
+    sdk_relative:    true
+  - mtime:           1788754267251232810
+    path:            'usr/lib/swift/ObjectiveC.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            6561
+    sdk_relative:    true
+  - mtime:           1788754267251997901
+    path:            'usr/lib/swift/Dispatch.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            57134
+    sdk_relative:    true
+  - mtime:           1788754267248217887
+    path:            'usr/lib/swift/CoreFoundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            22917
+    sdk_relative:    true
+  - mtime:           1788754126800784267
+    path:            'System/Library/Frameworks/Security.framework/Headers/Security.apinotes'
+    size:            162
+    sdk_relative:    true
+  - mtime:           1788754142732210988
+    path:            'usr/include/XPC.apinotes'
+    size:            123
+    sdk_relative:    true
+  - mtime:           1788754087810670459
+    path:            'System/Library/Frameworks/Foundation.framework/Headers/Foundation.apinotes'
+    size:            81098
+    sdk_relative:    true
+  - mtime:           1788754267237586282
+    path:            'usr/lib/swift/XPC.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            33618
+    sdk_relative:    true
+  - mtime:           1788754267248463301
+    path:            'usr/lib/swift/Observation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            3452
+    sdk_relative:    true
+  - mtime:           1788754267208904907
+    path:            'usr/lib/swift/System.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            95468
+    sdk_relative:    true
+  - mtime:           1788754267219077116
+    path:            'System/Library/Frameworks/Foundation.framework/Modules/Foundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            991699
+    sdk_relative:    true
+  - mtime:           1788754252337887526
+    path:            'usr/include/os.apinotes'
+    size:            1658
+    sdk_relative:    true
+  - mtime:           1788754267208136440
+    path:            'usr/lib/swift/os.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            108072
+    sdk_relative:    true
+  - mtime:           1788754267250201837
+    path:            'usr/lib/swift/OSLog.swiftmodule/x86_64-apple-ios-simulator.swiftinterface'
+    size:            1262
+    sdk_relative:    true
+version:         1
+...

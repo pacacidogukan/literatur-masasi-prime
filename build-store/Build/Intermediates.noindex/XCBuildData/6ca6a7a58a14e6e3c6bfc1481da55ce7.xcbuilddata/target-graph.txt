@@ -1,0 +1,4 @@
+Target dependency graph (2 targets)
+Target 'PrimeUITests' in project 'Prime'
+➜ Explicit dependency on target 'Prime' in project 'Prime'
+Target 'Prime' in project 'Prime' (no dependencies)

@@ -1,0 +1,53 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "DC4CD8B3-4457-4153-9087-A0D7A2F9BFD9",
+        "deviceName" : "iPhone 16 Pro",
+        "exportedFileName" : "02D6CF5D-A901-4692-9A81-EC16BAD53C4F.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "store-05-favorites_0_8B5B0325-D197-4869-BD28-57BC9E8323CF.png",
+        "timestamp" : 1792309680.341
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "DC4CD8B3-4457-4153-9087-A0D7A2F9BFD9",
+        "deviceName" : "iPhone 16 Pro",
+        "exportedFileName" : "69733433-3A50-4E5B-BC4A-0ADF87D47B8A.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "store-04-detail_0_784311F7-FD33-4F4E-9970-E1ABA4D6CE4F.png",
+        "timestamp" : 1792309675.485
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "DC4CD8B3-4457-4153-9087-A0D7A2F9BFD9",
+        "deviceName" : "iPhone 16 Pro",
+        "exportedFileName" : "7DBDF2AC-A3E4-40C8-B109-50F19C781649.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "store-03-brands_0_93AB5B25-4666-49BB-958C-8E505DA50855.png",
+        "timestamp" : 1792309672.313
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "DC4CD8B3-4457-4153-9087-A0D7A2F9BFD9",
+        "deviceName" : "iPhone 16 Pro",
+        "exportedFileName" : "94A83BCE-0A3D-4AE3-A65C-A66D011B3945.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "store-02-home_0_89607CA0-E64E-4646-BD3D-12B4422C0F50.png",
+        "timestamp" : 1792309670.72
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "DC4CD8B3-4457-4153-9087-A0D7A2F9BFD9",
+        "deviceName" : "iPhone 16 Pro",
+        "exportedFileName" : "F86E56AB-24E0-4D36-8269-96D9753233B2.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "store-01-login_0_FDF4A11D-2A25-46AB-A954-CF347D3CEE41.png",
+        "timestamp" : 1792309642.05
+      }
+    ],
+    "testIdentifier" : "PrimeFlowTests/testStoreScreenshots()",
+    "testIdentifierURL" : "test://com.apple.xcode/Prime/PrimeUITests/PrimeFlowTests/testStoreScreenshots"
+  }
+]
