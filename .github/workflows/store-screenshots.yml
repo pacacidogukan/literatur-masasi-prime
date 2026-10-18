@@ -1,0 +1,89 @@
+name: Upload selected App Store screenshots
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/store-screenshots.yml', 'app-store/screenshots/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-15
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Upload and verify the three selected screenshots
+        env:
+          ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          node --input-type=module <<'JS'
+          import { createPrivateKey, sign, createHash } from 'node:crypto';
+          import { readFileSync } from 'node:fs';
+          const required = ['ASC_KEY', 'ASC_KEY_ID', 'ASC_ISSUER'];
+          for (const name of required) {
+            if (!process.env[name]?.trim()) {
+              console.error('Missing repository secret: ' + name);
+              process.exit(1);
+            }
+          }
+          let key;
+          try {
+            key = createPrivateKey(process.env.ASC_KEY.trim());
+            if (key.asymmetricKeyType !== 'ec' || key.asymmetricKeyDetails?.namedCurve !== 'prime256v1') throw new Error();
+          } catch {
+            console.error('API key is not a valid P-256 private key. Check the complete .p8 secret.');
+            process.exit(1);
+          }
+          const b64 = value => Buffer.from(JSON.stringify(value)).toString('base64url');
+          const now = Math.floor(Date.now() / 1000);
+          const unsigned=b64({alg:'ES256',kid:process.env.ASC_KEY_ID.trim(),typ:'JWT'})+'.'+b64({iss:process.env.ASC_ISSUER.trim(),iat:now-10,exp:now+300,aud:'appstoreconnect-v1'});
+          const token=unsigned+'.'+sign('sha256',Buffer.from(unsigned),{key,dsaEncoding:'ieee-p1363'}).toString('base64url');console.log('::add-mask::'+token);
+          async function api(route,method='GET',data){
+            const r=await fetch('https://api.appstoreconnect.apple.com'+route,{method,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:data?JSON.stringify({data}):undefined,redirect:'error',signal:AbortSignal.timeout(30000)});
+            const d=await r.json();if(!r.ok)throw Error('Apple API '+r.status+' '+JSON.stringify(d.errors?.map(x=>({code:x.code,detail:x.detail}))));return d;
+          }
+          const versions=await api('/v1/apps/6823890365/appStoreVersions?filter[platform]=IOS');
+          const v=versions.data.find(x=>x.attributes.versionString==='1.0'&&x.attributes.appStoreState==='PREPARE_FOR_SUBMISSION');
+          if(!v)throw Error('Editable 1.0 draft not found');
+          const l=(await api('/v1/appStoreVersions/'+v.id+'/appStoreVersionLocalizations')).data.find(x=>x.attributes.locale==='tr');if(!l)throw Error('Turkish locale missing');
+          const sets=await api('/v1/appStoreVersionLocalizations/'+l.id+'/appScreenshotSets');
+          let set=sets.data.find(x=>x.attributes.screenshotDisplayType==='APP_IPHONE_67');
+          if(!set)set=(await api('/v1/appScreenshotSets','POST',{type:'appScreenshotSets',attributes:{screenshotDisplayType:'APP_IPHONE_67'},relationships:{appStoreVersionLocalization:{data:{type:'appStoreVersionLocalizations',id:l.id}}}})).data;
+          const existing=(await api('/v1/appScreenshotSets/'+set.id+'/appScreenshots')).data;
+          const names=['prime-app-store-01.jpg','prime-app-store-02.jpg','prime-app-store-03.jpg'];
+          if(existing.some(x=>!names.includes(x.attributes.fileName)))throw Error('Other screenshots already exist; refusing to replace or reorder unrelated assets');
+          const ids=[];
+          for(const name of names){
+            const bytes=readFileSync('app-store/screenshots/'+name),checksum=createHash('md5').update(bytes).digest('hex');
+            let item=existing.find(x=>x.attributes.fileName===name);
+            if(item&&item.attributes.sourceFileChecksum!==checksum)throw Error('Existing screenshot differs; refusing to replace it automatically: '+name);
+            if(!item){
+              item=(await api('/v1/appScreenshots','POST',{type:'appScreenshots',attributes:{fileName:name,fileSize:bytes.length},relationships:{appScreenshotSet:{data:{type:'appScreenshotSets',id:set.id}}}})).data;
+              for(const op of item.attributes.uploadOperations??[]){
+                const dest=new URL(op.url);if(dest.protocol!=='https:')throw Error('Unsafe upload destination');
+                const r=await fetch(dest,{method:op.method,headers:Object.fromEntries(op.requestHeaders.map(x=>[x.name,x.value])),body:bytes.subarray(op.offset,op.offset+op.length),redirect:'error',signal:AbortSignal.timeout(60000)});
+                if(!r.ok)throw Error('Asset upload failed HTTP '+r.status);
+              }
+              await api('/v1/appScreenshots/'+item.id,'PATCH',{type:'appScreenshots',id:item.id,attributes:{uploaded:true,sourceFileChecksum:checksum}});
+            }
+            ids.push(item.id);
+          }
+          await api('/v1/appScreenshotSets/'+set.id+'/relationships/appScreenshots','PATCH',ids.map(id=>({type:'appScreenshots',id})));
+          for(let attempt=0;attempt<18;attempt++){
+            const shots=(await api('/v1/appScreenshotSets/'+set.id+'/appScreenshots')).data;
+            const summary=shots.map(x=>({file:x.attributes.fileName,id:x.id,state:x.attributes.assetDeliveryState?.state,errors:x.attributes.assetDeliveryState?.errors}));
+            console.log('SCREENSHOT_STATUS '+JSON.stringify(summary));
+            if(summary.some(x=>x.state==='FAILED'))throw Error('Apple rejected a screenshot');
+            if(shots.length===3&&summary.every(x=>x.state==='COMPLETE')){console.log('SCREENSHOTS_READY: three selected images saved in order; no review submitted.');break;}
+            if(attempt===17)throw Error('Screenshot processing not complete; check later');
+            await new Promise(r=>setTimeout(r,10000));
+          }
+          JS
