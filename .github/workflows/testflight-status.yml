@@ -19,7 +19,8 @@ permissions:
 jobs:
   status:
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
-    runs-on: macos-15
+    # This step only calls the Apple API; no Xcode or macOS tools are required.
+    runs-on: ubuntu-latest
     timeout-minutes: 7
     steps:
       - uses: actions/setup-node@v4
