@@ -26,15 +26,19 @@ final class PrimeFlowTests: XCTestCase {
                       "Favorite state did not change after the tap.")
     }
     func login(_ code: String = "654321") {
-        let field = app.webViews.textFields["Kodun 1. hanesi"]
-        XCTAssertTrue(field.waitForExistence(timeout: 45))
-        field.tap()
-        let keyboard = app.keyboards.firstMatch
-        if !keyboard.waitForExistence(timeout: 10) { field.tap() }
-        XCTAssertTrue(keyboard.waitForExistence(timeout: 15), "Login keyboard did not become ready.")
-        field.tap()
-        // Type naturally across auto-advancing PIN fields without binding typing to a previous field.
-        app.typeText(code)
+        for (index, digit) in code.enumerated() {
+            let field = app.webViews.textFields["Kodun \(index + 1). hanesi"]
+            XCTAssertTrue(field.waitForExistence(timeout: index == 0 ? 45 : 15))
+            field.tap()
+            if index == 0 {
+                let keyboard = app.keyboards.firstMatch
+                if !keyboard.waitForExistence(timeout: 10) { field.tap() }
+                XCTAssertTrue(keyboard.waitForExistence(timeout: 15), "Login keyboard did not become ready.")
+                // Retap after the first keyboard/viewport transition before typing.
+                field.tap()
+            }
+            field.typeText(String(digit))
+        }
         tap("Giriş yap")
     }
     func relaunch() {
