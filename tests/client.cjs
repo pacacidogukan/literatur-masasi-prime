@@ -6,6 +6,21 @@ const requests=[];const box={URL,ResizeObserver:class{observe(){}disconnect(){}}
 await new Promise(r=>setImmediate(r));assert.equal((get('app').innerHTML.match(/data-digit=/g)||[]).length,6);assert.doesNotMatch(get('app').innerHTML,/123456/);
 inputs.forEach(x=>x.value='0');await get('login-form').listeners.submit({preventDefault(){}});assert.equal(run('loggedIn'),false);assert.match(get('login-error').textContent,/geçersiz/);
 inputs.forEach((x,i)=>x.value='654321'[i]);await get('login-form').listeners.submit({preventDefault(){}});assert.equal(run('loggedIn'),true);assert.match(get('app').innerHTML,/Ana Sayfa/);assert.equal(run('heroSlides.length'),6);
+// Re-entering each list changes its order, even if randomness repeats; rerenders/search stay stable.
+const order=()=>run('JSON.stringify(brands.map(b=>b.id))');
+const campaignIds=()=>JSON.parse(order()).sort();
+const idsBeforeShuffle=campaignIds();
+run('var savedShuffleRandom=Math.random;Math.random=()=>0.999999');
+assert.equal(run('shuffleCampaigns([]).length'),0);assert.equal(run('shuffleCampaigns([{id:"only"}])[0].id'),'only');
+run("go('brands')");const firstBrandsOrder=order();run('render()');assert.equal(order(),firstBrandsOrder);
+run("query='Sol';render()");assert.equal(order(),firstBrandsOrder);run("query='';go('home')");const firstHomeOrder=order();
+run("go('brands')");assert.notEqual(order(),firstBrandsOrder);assert.deepEqual(campaignIds(),idsBeforeShuffle);
+run("go('home')");assert.notEqual(order(),firstHomeOrder);assert.equal(run('heroIndex'),0);
+assert.equal(run('JSON.stringify(heroSlides.map(s=>s.brand.id))'),run('JSON.stringify(brands.slice(0,6).map(b=>b.id))'));
+run("favorites=new Set(brands.slice(0,2).map(b=>b.id));go('favorites')");const favoriteOrder=()=>run('JSON.stringify(brands.filter(b=>favorites.has(b.id)).map(b=>b.id))');const firstFavoritesOrder=favoriteOrder();run('render()');assert.equal(favoriteOrder(),firstFavoritesOrder);
+run("go('home');go('favorites')");assert.notEqual(favoriteOrder(),firstFavoritesOrder);assert.equal(run('favorites.size'),2);
+run("favorites=new Set();go('home');Math.random=savedShuffleRandom");
+console.log('PASS: page-entry shuffle changes each list, preserves all campaigns/favorites and stays stable during rerender/search.');
 run("selected=brands[0];go('detail')");get('slide-thumb').clientWidth=50;get('slide-track').clientWidth=350;get('slide-thumb').listeners.pointerdown({clientX:0,pointerId:1});get('slide-thumb').listeners.pointermove({clientX:100});get('slide-thumb').listeners.pointerup();assert.equal(requests.filter(r=>r.url==='/api/reveal').length,0);
 get('slide-thumb').listeners.pointerdown({clientX:0,pointerId:1});get('slide-thumb').listeners.pointermove({clientX:300});get('slide-thumb').listeners.pointerup();await new Promise(r=>setImmediate(r));assert.match(get('slide-track').innerHTML,/SERVER-CODE/);
 run("selected=brands[0];selected.channel='https://example.com/offer?a=1&b=2';go('detail')");
@@ -19,10 +34,10 @@ for(const channel of ['Online alışveriş','javascript:alert(1)','http://exampl
  assert.doesNotMatch(get('app').innerHTML,/<img src=x>/);
 }
 run("brands[0].offer='<img src=x onerror=alert(1)>';go('home')");assert.doesNotMatch(get('app').innerHTML,/<img src=x/);
-run("selected=brands[0];selected.description='Özel açıklama <script>\\nİkinci satır';go('detail')");
+run("selected=brands[0];selected.offer='<img src=x onerror=alert(1)>';selected.description='Özel açıklama <script>\\nİkinci satır';go('detail')");
 assert.match(get('app').innerHTML,/Özel açıklama &lt;script&gt;/);assert.match(get('app').innerHTML,/&lt;img/);
 assert.match(get('app').innerHTML,/İkinci satır/);assert.doesNotMatch(get('app').innerHTML,/<details>/);
-run("brands[0].verticalPhoto='https://example.com/v.png';brands[0].heroPhoto='https://example.com/h.png';brands[1].squarePhoto='https://example.com/s.png';brands[1].latestPhoto='https://example.com/l.png';go('home')");
+run("go('home');brands[0].verticalPhoto='https://example.com/v.png';brands[0].heroPhoto='https://example.com/h.png';brands[1].squarePhoto='https://example.com/s.png';brands[1].latestPhoto='https://example.com/l.png';render()");
 for(const file of ['v','s','l'])assert.ok(get('app').innerHTML.includes('https://example.com/'+file+'.png'));
 assert.doesNotMatch(get('app').innerHTML,/Öne Çıkan Markalar/);
 assert.ok(!get('app').innerHTML.includes('https://example.com/h.png'));assert.ok(get('app').innerHTML.includes(run('assetUrl(brands[0].photo)')));
