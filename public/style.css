@@ -126,3 +126,8 @@ h1{line-height:1.25}h2{line-height:1.3}
 .detail-top .save .icon{width:18px;height:18px}
 .detail-top .save.active{color:var(--red);background:transparent}
 .detail-top .save.active .icon{fill:currentColor;stroke:none}
+
+/* Approved campaign cleanup: one divider, compact date row and neutral date text. */
+.detail-sheet .date{margin:0}
+.detail-sheet .date>.icon{width:26px;height:26px}
+.detail-sheet .date strong{color:var(--muted)}
