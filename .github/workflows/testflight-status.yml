@@ -25,7 +25,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Check latest uploaded build processing
+      - name: Verify processing and distribute to existing internal testers
         env:
           SOURCE_RUN_NUMBER: ${{ github.event.workflow_run.run_number }}
           SOURCE_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
@@ -40,6 +40,30 @@ jobs:
           const expected=process.env.SOURCE_RUN_NUMBER?String(100+Number(process.env.SOURCE_RUN_NUMBER))+'.'+process.env.SOURCE_RUN_ATTEMPT:process.env.EXPECTED_BUILD;
           const key=createPrivateKey(process.env.ASC_KEY.trim());
           const b64=x=>Buffer.from(JSON.stringify(x)).toString('base64url');
+          async function api(route, method='GET', body) {
+            const now=Math.floor(Date.now()/1000);
+            const unsigned=b64({alg:'ES256',kid:process.env.ASC_KEY_ID.trim(),typ:'JWT'})+'.'+b64({iss:process.env.ASC_ISSUER.trim(),iat:now-10,exp:now+120,aud:'appstoreconnect-v1'});
+            const token=unsigned+'.'+sign('sha256',Buffer.from(unsigned),{key,dsaEncoding:'ieee-p1363'}).toString('base64url');
+            console.log('::add-mask::'+token);
+            const response=await fetch('https://api.appstoreconnect.apple.com'+route,{
+              method, headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+              body:body?JSON.stringify(body):undefined,redirect:'error',signal:AbortSignal.timeout(30000)});
+            if(!response.ok)throw new Error('TestFlight '+method+' '+route.split('?')[0]+': HTTP '+response.status);
+            return response.status===204?null:response.json();
+          }
+          async function distribute(build) {
+            const groups=(await api('/v1/apps/6823890365/betaGroups?limit=200')).data.filter(g=>g.attributes.isInternalGroup);
+            if(!groups.length)throw new Error('No existing internal TestFlight group; upload is valid but tester setup is required.');
+            for(const group of groups){
+              if(!group.attributes.hasAccessToAllBuilds){
+                const linked=(await api('/v1/builds/'+build.id+'/betaGroups?limit=200')).data;
+                if(!linked.some(g=>g.id===group.id))await api('/v1/betaGroups/'+group.id+'/relationships/builds','POST',{data:[{type:'builds',id:build.id}]});
+              }
+              const testers=(await api('/v1/betaGroups/'+group.id+'/betaTesters?limit=200')).data;
+              console.log('INTERNAL_DISTRIBUTION '+JSON.stringify({build:build.attributes.version,groupId:group.id,automatic:group.attributes.hasAccessToAllBuilds,testerCount:testers.length}));
+            }
+            appendFileSync(process.env.GITHUB_STEP_SUMMARY,'Build '+build.attributes.version+' is available to existing internal TestFlight groups. No App Store review submission was changed.\n');
+          }
           let finished=false;
           for(let attempt=0;attempt<12;attempt++){
             const now=Math.floor(Date.now()/1000);
@@ -55,6 +79,7 @@ jobs:
               console.log('BUILD_STATUS '+JSON.stringify({id:build.id,version:a.version,processingState:a.processingState,uploadedDate:a.uploadedDate,expired:a.expired}));
               if(a.processingState==='VALID'){
                 appendFileSync(process.env.GITHUB_STEP_SUMMARY,'Apple processing complete: build '+a.version+' is VALID for app 6823890365. Tester assignment and device installation are separate steps.\n');
+                await distribute(build);
                 finished=true;break;
               }
               if(['FAILED','INVALID'].includes(a.processingState))throw new Error('Apple processing failed for build '+a.version+': '+a.processingState);
