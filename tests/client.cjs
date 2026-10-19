@@ -6,6 +6,8 @@ const requests=[];const box={URL,ResizeObserver:class{observe(){}disconnect(){}}
 await new Promise(r=>setImmediate(r));assert.equal((get('app').innerHTML.match(/data-digit=/g)||[]).length,6);assert.doesNotMatch(get('app').innerHTML,/123456/);
 inputs.forEach(x=>x.value='0');await get('login-form').listeners.submit({preventDefault(){}});assert.equal(run('loggedIn'),false);assert.match(get('login-error').textContent,/geçersiz/);
 inputs.forEach((x,i)=>x.value='654321'[i]);await get('login-form').listeners.submit({preventDefault(){}});assert.equal(run('loggedIn'),true);assert.match(get('app').innerHTML,/Ana Sayfa/);assert.equal(run('heroSlides.length'),6);
+run("selected=brands[0];selected.expires=0;go('detail')");assert.match(get('app').innerHTML,/Kampanya bitiş tarihi<strong>Belirtilmedi<\/strong>/);assert.doesNotMatch(get('app').innerHTML,/1970/);
+run("selected.expires=2000000000;render()");assert.doesNotMatch(get('app').innerHTML,/Belirtilmedi/);run("go('home')");
 // Re-entering each list changes its order, even if randomness repeats; rerenders/search stay stable.
 const order=()=>run('JSON.stringify(brands.map(b=>b.id))');
 const campaignIds=()=>JSON.parse(order()).sort();

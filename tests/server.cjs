@@ -90,6 +90,15 @@ for(const key of ['name','tag','offer','description','code','asset','photo','ver
 assert.equal((await req('admin/campaigns',{body:{...assets,conditions:''}})).status,200);
 assert.equal((await req('editor/save',{user:null,token:partnerToken,body:{...shared,conditions:''}})).status,200);
 assert.equal((await req('admin/campaigns',{body:{...assets,expires:null}})).status,400);
+assert.equal((await req('admin/campaigns',{body:{...assets,expires:0}})).status,200);
+assert.equal((await req('campaigns')).data.campaigns.find(c=>c.id===assets.id).expires,0);
+assert.equal((await req('reveal',{body:{id:assets.id}})).status,200);
+assert.equal((await req('editor/save',{user:null,token:partnerToken,body:{...shared,expires:0}})).status,200);
+assert.equal((await req('editor/delete',{user:null,token:partnerToken,body:{id:shared.id}})).data.action,'unpublished');
+assert.equal((await req('editor',{user:null,token:partnerToken})).data.campaign.name,shared.name);
+assert.equal((await req('admin/campaigns',{body:{...assets,expires:1}})).status,400);
+assert.equal((await req('admin/campaigns',{body:assets})).status,200);
+
 assert.equal((await req('admin/campaigns',{body:{...assets,active:false}})).status,200);
 assert.ok(!(await req('campaigns')).data.campaigns.some(x=>x.id==='solgar'));
 assert.equal((await req('reveal',{body:{id:'solgar'}})).status,404);

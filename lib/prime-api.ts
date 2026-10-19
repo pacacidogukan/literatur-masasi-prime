@@ -81,7 +81,7 @@ export async function api(request:Request){
    const title=typeof b.title==='string'?b.title.trim():'',body=typeof b.body==='string'?b.body.trim():'';
    if(!title||title.length>120||!body||body.length>1000||!['admin','all'].includes(b.audience)||!/^[a-f0-9-]{36}$/.test(b.id||''))return json({error:'Başlık (1–120), metin (1–1000) ve geçerli hedef seçimi gerekli.'},400);
    const campaignId=b.campaignId?String(b.campaignId):null;
-   if(campaignId&&!await db.prepare('SELECT id FROM campaigns WHERE id=? AND active=1 AND expires>?').bind(campaignId,now()).first())return json({error:'Bağlantı için aktif bir kampanya seç.'},400);
+   if(campaignId&&!await db.prepare('SELECT id FROM campaigns WHERE id=? AND active=1 AND (expires=0 OR expires>?)').bind(campaignId,now()).first())return json({error:'Bağlantı için aktif bir kampanya seç.'},400);
    const existing=await db.prepare('SELECT id FROM notifications WHERE id=?').bind(b.id).first();
    if(existing)return json({ok:true,id:b.id,duplicate:true});
    await db.prepare('INSERT INTO notifications(id,title,body,audience,campaign_id,created,active,created_by) VALUES (?,?,?,?,?,?,1,?)').bind(b.id,title,body,b.audience,campaignId,now(),user).run();
@@ -165,8 +165,8 @@ export async function api(request:Request){
   const b=await request.json() as any;if(typeof b.enabled!=='boolean')return json({error:'Geçersiz tercih.'},400);
   await db.prepare('INSERT INTO notification_preferences(user_id,enabled) VALUES (?,?) ON CONFLICT(user_id) DO UPDATE SET enabled=excluded.enabled').bind(user,b.enabled?1:0).run();return json({ok:true});
  }
- if(path==='campaigns'&&method==='GET')return json({campaigns:(await db.prepare('SELECT id,name,asset,photo,offer,tag,description,verticalPhoto,squarePhoto,heroPhoto,latestPhoto,conditions,channel,expires,demo FROM campaigns WHERE active=1 AND expires>? ORDER BY position,name').bind(now()).all()).results.map(campaignContent)});
- if(path==='reveal'&&method==='POST'){const b=await request.json() as any;const id=String(b.id),time=now();const results=await db.batch([db.prepare('UPDATE campaigns SET reveal_count=reveal_count+1 WHERE id=? AND active=1 AND expires>? RETURNING code,demo').bind(id,time),db.prepare('INSERT INTO campaign_reveals(id,campaign_id,created) SELECT ?,id,? FROM campaigns WHERE id=? AND active=1 AND expires>?').bind(crypto.randomUUID(),time,id,time)]);const c=results[0].results[0];return c?json(c):json({error:'Kampanya aktif değil.'},404);}
+ if(path==='campaigns'&&method==='GET')return json({campaigns:(await db.prepare('SELECT id,name,asset,photo,offer,tag,description,verticalPhoto,squarePhoto,heroPhoto,latestPhoto,conditions,channel,expires,demo FROM campaigns WHERE active=1 AND (expires=0 OR expires>?) ORDER BY position,name').bind(now()).all()).results.map(campaignContent)});
+ if(path==='reveal'&&method==='POST'){const b=await request.json() as any;const id=String(b.id),time=now();const results=await db.batch([db.prepare('UPDATE campaigns SET reveal_count=reveal_count+1 WHERE id=? AND active=1 AND (expires=0 OR expires>?) RETURNING code,demo').bind(id,time),db.prepare('INSERT INTO campaign_reveals(id,campaign_id,created) SELECT ?,id,? FROM campaigns WHERE id=? AND active=1 AND (expires=0 OR expires>?)').bind(crypto.randomUUID(),time,id,time)]);const c=results[0].results[0];return c?json(c):json({error:'Kampanya aktif değil.'},404);}
  return json({error:'İşlem bulunamadı.'},404);
 }
 export async function safeApi(request:Request){try{return await api(request)}catch{return json({error:'İşlem tamamlanamadı. Tekrar dene.'},500)}}
@@ -178,7 +178,7 @@ function campaignValues(b:any){
  const missing=Object.keys(requiredFields).filter(key=>!String(b[key]??'').trim());
  if(publishing&&missing.length)return json({error:'Lütfen zorunlu alanları doldurun: '+missing.map(key=>requiredFields[key]).join(', ')+'.'},400);
  const name=clean('name',80),offer=clean('offer',180),code=clean('code',120);
- if(publishing&&(!name||!offer||!code||!Number.isFinite(Number(b.expires))||Number(b.expires)<=now()))return json({error:'Marka, teklif, kod ve gelecekteki bitiş tarihi gerekli.'},400);
+ if(publishing&&(!name||!offer||!code||!Number.isInteger(b.expires)||(b.expires!==0&&b.expires<=now())))return json({error:'Marka, teklif, kod ve geçerli bitiş bilgisi gerekli.'},400);
  const valid=(v:string)=>/^assets\/[\w.\-]+$/.test(v)||(()=>{try{return new URL(v).protocol==='https:'}catch{return false}})();
  const asset=clean('asset',2000),photo=clean('photo',2000);if((asset&&!valid(asset))||(photo&&!valid(photo)))return json({error:'Görseller için assets/dosya veya HTTPS adresi kullan.'},400);
  const images:any={};
@@ -187,7 +187,7 @@ function campaignValues(b:any){
 }
 
 async function unpublishOrClear(db:any,id:string,campaign:any){
-   if(campaign.active&&campaign.expires>now()){
+   if(campaign.active&&(campaign.expires===0||campaign.expires>now())){
     await db.prepare('UPDATE campaigns SET active=0 WHERE id=?').bind(id).run();
     return json({ok:true,action:'unpublished'});
    }
