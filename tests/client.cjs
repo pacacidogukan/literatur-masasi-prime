@@ -5,7 +5,7 @@ const requests=[];const box={URL,ResizeObserver:class{observe(){}disconnect(){}}
 (async()=>{
 await new Promise(r=>setImmediate(r));assert.equal((get('app').innerHTML.match(/data-digit=/g)||[]).length,6);assert.doesNotMatch(get('app').innerHTML,/123456/);
 inputs.forEach(x=>x.value='0');await get('login-form').listeners.submit({preventDefault(){}});assert.equal(run('loggedIn'),false);assert.match(get('login-error').textContent,/geçersiz/);
-inputs.forEach((x,i)=>x.value='654321'[i]);await get('login-form').listeners.submit({preventDefault(){}});assert.equal(run('loggedIn'),true);assert.match(get('app').innerHTML,/Ana Sayfa/);assert.equal(run('heroSlides.length'),6);
+inputs.forEach((x,i)=>x.value='654321'[i]);await get('login-form').listeners.submit({preventDefault(){}});assert.equal(run('loggedIn'),true);assert.match(get('app').innerHTML,/Ana Sayfa/);assert.equal(run('heroSlides.length'),Math.min(20,seed.length));
 run("selected=brands[0];selected.expires=0;go('detail')");assert.match(get('app').innerHTML,/Kampanya bitiş tarihi<strong>Belirtilmedi<\/strong>/);assert.doesNotMatch(get('app').innerHTML,/1970/);
 run("selected.expires=2000000000;render()");assert.doesNotMatch(get('app').innerHTML,/Belirtilmedi/);run("go('home')");
 // Re-entering each list changes its order, even if randomness repeats; rerenders/search stay stable.
@@ -18,11 +18,25 @@ run("go('brands')");const firstBrandsOrder=order();run('render()');assert.equal(
 run("query='Sol';render()");assert.equal(order(),firstBrandsOrder);run("query='';go('home')");const firstHomeOrder=order();
 run("go('brands')");assert.notEqual(order(),firstBrandsOrder);assert.deepEqual(campaignIds(),idsBeforeShuffle);
 run("go('home')");assert.notEqual(order(),firstHomeOrder);assert.equal(run('heroIndex'),0);
-assert.equal(run('JSON.stringify(heroSlides.map(s=>s.brand.id))'),run('JSON.stringify(brands.slice(0,6).map(b=>b.id))'));
+assert.equal(run('JSON.stringify(heroSlides.map(s=>s.brand.id))'),run('JSON.stringify(brands.slice(0,20).map(b=>b.id))'));
 run("favorites=new Set(brands.slice(0,2).map(b=>b.id));go('favorites')");const favoriteOrder=()=>run('JSON.stringify(brands.filter(b=>favorites.has(b.id)).map(b=>b.id))');const firstFavoritesOrder=favoriteOrder();run('render()');assert.equal(favoriteOrder(),firstFavoritesOrder);
 run("go('home');go('favorites')");assert.notEqual(favoriteOrder(),firstFavoritesOrder);assert.equal(run('favorites.size'),2);
 run("favorites=new Set();go('home');Math.random=savedShuffleRandom");
 console.log('PASS: page-entry shuffle changes each list, preserves all campaigns/favorites and stays stable during rerender/search.');
+// More than twenty campaigns are capped; the twentieth remains reachable without overflowing the pager.
+run("brands=Array.from({length:25},(_,i)=>({...brands[0],id:'carousel-'+i}));refreshCampaignOrder('home');render()");
+assert.equal(run('heroSlides.length'),20);
+assert.equal((get('app').innerHTML.match(/class="hero-slide"/g)||[]).length,20);
+assert.equal((run('heroDots()').match(/data-action="hero"/g)||[]).length,20);
+assert.match(get('app').innerHTML,/pager--many/);
+await get('app').listeners.click({target:{closest:()=>({dataset:{action:'hero',index:'19'},closest:()=>null})}});
+assert.equal(run('heroIndex'),19);assert.equal(get('hero-carousel').scrollLeft,19*get('hero-carousel').clientWidth);
+get('hero-carousel').listeners.scroll();assert.equal(run('heroIndex'),19);
+get('hero-carousel').listeners.keydown({target:get('hero-carousel'),key:'ArrowRight',preventDefault(){}});
+assert.equal(get('hero-carousel').scrollLeft,19*get('hero-carousel').clientWidth);
+await run('loadCampaigns()');run("go('brands');go('home')");
+assert.equal(run('heroSlides.length'),Math.min(20,seed.length));
+console.log('PASS: twenty-card cap, twenty pager controls, last-slide navigation and fewer-campaign fallback.');
 run("selected=brands[0];go('detail')");get('slide-thumb').clientWidth=50;get('slide-track').clientWidth=350;get('slide-thumb').listeners.pointerdown({clientX:0,pointerId:1});get('slide-thumb').listeners.pointermove({clientX:100});get('slide-thumb').listeners.pointerup();assert.equal(requests.filter(r=>r.url==='/api/reveal').length,0);
 get('slide-thumb').listeners.pointerdown({clientX:0,pointerId:1});get('slide-thumb').listeners.pointermove({clientX:300});get('slide-thumb').listeners.pointerup();await new Promise(r=>setImmediate(r));assert.match(get('slide-track').innerHTML,/SERVER-CODE/);
 run("selected=brands[0];selected.channel='https://example.com/offer?a=1&b=2';go('detail')");
@@ -132,5 +146,5 @@ run("go('deleteAccount')");await confirmDelete();assert.equal(run('loggedIn'),tr
 deletionMode='ack';await confirmDelete();assert.equal(run('loggedIn'),true);assert.match(get('toast').textContent,/doğrulanamadı/);
 deletionMode='ok';await confirmDelete();assert.equal(run('loggedIn'),false);assert.equal(run('page'),'login');assert.equal(run('favorites.size'),0);assert.equal(run('profilePhoto'),null);assert.ok(box.removedKeys.includes('lmprime-photo'));assert.ok(box.removedKeys.includes('lmprime-favorites'));assert.equal(run('deletingAccount'),false);
 console.log('PASS: deletion confirmation, cancellation, offline failure, missing server acknowledgement and local data removal.');
-console.log('PASS: server-validated login, no demo bypass, six-slide carousel, short/full swipe, server-only campaign code, escaped campaign content.');
+console.log('PASS: server-validated login, no demo bypass, up-to-20-slide carousel, short/full swipe, server-only campaign code, escaped campaign content.');
 })().catch(e=>{console.error(e);process.exitCode=1});
