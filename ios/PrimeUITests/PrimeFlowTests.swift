@@ -12,7 +12,13 @@ final class PrimeFlowTests: XCTestCase {
     func tap(_ label: String) {
         let element = button(label)
         XCTAssertTrue(element.waitForExistence(timeout: 15), "Missing button: \(label)")
-        element.tap()
+        if label == "Ayarları aç" {
+            // Use a physical touch for the freshly rendered WKWebView header control.
+            app.coordinate(withNormalizedOffset: .zero)
+                .withOffset(CGVector(dx: element.frame.midX, dy: element.frame.midY)).tap()
+        } else {
+            element.tap()
+        }
     }
     func toggleFavorite(_ label: String) {
         let element = app.webViews.switches[label].firstMatch
