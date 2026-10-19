@@ -43,7 +43,7 @@ jobs:
 
   simulator:
     runs-on: macos-26
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - name: Build iOS Simulator app
@@ -52,16 +52,22 @@ jobs:
           -configuration Debug -sdk iphonesimulator
           -destination 'generic/platform=iOS Simulator'
           -derivedDataPath build-ci CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY="-" build
-      - name: Run iPhone UI tests
-        timeout-minutes: 15
+      - name: Boot iPhone simulator
+        timeout-minutes: 12
         run: |
           set -euo pipefail
+          defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool NO
           DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(x["udid"] for group in d["devices"].values() for x in group if x["name"].startswith("iPhone")))')
           xcrun simctl boot "$DEVICE_ID"
           xcrun simctl bootstatus "$DEVICE_ID" -b
           printf 'prime-ci-empty' | xcrun simctl pbcopy "$DEVICE_ID"
+          echo "PRIME_SIMULATOR_ID=$DEVICE_ID" >> "$GITHUB_ENV"
+      - name: Run iPhone UI tests
+        timeout-minutes: 15
+        run: |
+          set -euo pipefail
           mkdir -p ci-artifacts
-          xcodebuild -project ios/Prime.xcodeproj -scheme Prime -configuration Debug -destination "platform=iOS Simulator,id=$DEVICE_ID" -derivedDataPath build-ci -resultBundlePath ci-artifacts/PrimeUI.xcresult -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY="-" test
+          xcodebuild -project ios/Prime.xcodeproj -scheme Prime -configuration Debug -destination "platform=iOS Simulator,id=$PRIME_SIMULATOR_ID" -derivedDataPath build-ci -resultBundlePath ci-artifacts/PrimeUI.xcresult -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY="-" test
       - name: Collect isolated UI trace
         timeout-minutes: 1
         if: always()
