@@ -120,3 +120,9 @@ h1{line-height:1.25}h2{line-height:1.3}
 .home-header .notification-button{color:var(--muted)}
 
 .latest-card .save{background:transparent;border:0;box-shadow:none}
+
+/* Campaign detail: compact favorite control with neutral idle and solid selected state. */
+.detail-top .save{color:var(--muted);transform:translateX(-4px);background:transparent}
+.detail-top .save .icon{width:18px;height:18px}
+.detail-top .save.active{color:var(--red);background:transparent}
+.detail-top .save.active .icon{fill:currentColor;stroke:none}
