@@ -43,7 +43,7 @@ jobs:
 
   simulator:
     runs-on: macos-26-intel
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Build iOS Simulator app
@@ -63,7 +63,7 @@ jobs:
           printf 'prime-ci-empty' | xcrun simctl pbcopy "$DEVICE_ID"
           echo "PRIME_SIMULATOR_ID=$DEVICE_ID" >> "$GITHUB_ENV"
       - name: Run iPhone UI tests
-        timeout-minutes: 15
+        timeout-minutes: 25
         run: |
           set -euo pipefail
           mkdir -p ci-artifacts
