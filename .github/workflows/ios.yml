@@ -42,7 +42,7 @@ jobs:
         run: NODE_PATH="$RUNNER_TEMP/prime-test-deps/node_modules" node tests/server.cjs
 
   simulator:
-    runs-on: macos-26
+    runs-on: macos-26-intel
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -85,7 +85,7 @@ jobs:
           retention-days: 7
 
   release:
-    runs-on: macos-26
+    runs-on: macos-26-intel
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
