@@ -26,7 +26,14 @@ console.log('PASS: page-entry shuffle changes each list, preserves all campaigns
 run("selected=brands[0];go('detail')");get('slide-thumb').clientWidth=50;get('slide-track').clientWidth=350;get('slide-thumb').listeners.pointerdown({clientX:0,pointerId:1});get('slide-thumb').listeners.pointermove({clientX:100});get('slide-thumb').listeners.pointerup();assert.equal(requests.filter(r=>r.url==='/api/reveal').length,0);
 get('slide-thumb').listeners.pointerdown({clientX:0,pointerId:1});get('slide-thumb').listeners.pointermove({clientX:300});get('slide-thumb').listeners.pointerup();await new Promise(r=>setImmediate(r));assert.match(get('slide-track').innerHTML,/SERVER-CODE/);
 run("selected=brands[0];selected.channel='https://example.com/offer?a=1&b=2';go('detail')");
-assert.match(get('app').innerHTML,/https:\/\/example.com\/offer\?a=1&amp;b=2/);
+assert.match(get('app').innerHTML,/<span>example\.com<\/span>/);
+assert.doesNotMatch(get('app').innerHTML,/https:\/\/example\.com\/offer/);
+for(const channel of ['https://example.com/','http://example.com/path/','example.com/path?x=1','https://example.com/path#section']){
+ run('selected.channel='+JSON.stringify(channel)+';go("detail")');
+ assert.match(get('app').innerHTML,/<span>example\.com<\/span>/);
+}
+run("selected.channel='Online alışveriş';go('detail')");
+assert.match(get('app').innerHTML,/<span>Online alışveriş<\/span>/);
 assert.doesNotMatch(get('app').innerHTML,/data-action="open-website"|class="campaign-website"/);
 assert.equal(box.openedWebsite,undefined);
 

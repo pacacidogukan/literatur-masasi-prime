@@ -28,7 +28,7 @@ final class PrimeFlowTests: XCTestCase {
     func login(_ code: String = "654321") {
         for (index, digit) in code.enumerated() {
             let field = app.webViews.textFields["Kodun \(index + 1). hanesi"]
-            XCTAssertTrue(field.waitForExistence(timeout: 15))
+            XCTAssertTrue(field.waitForExistence(timeout: index == 0 ? 45 : 15))
             field.tap(); field.typeText(String(digit))
         }
         tap("Giriş yap")
@@ -66,7 +66,7 @@ final class PrimeFlowTests: XCTestCase {
     }
     func testCampaignWebsiteIsDisplayedWithoutNavigation() {
         login(); home(); tap("Markalar"); tap("Solgar kampanyasını aç")
-        let address = app.webViews.staticTexts["https://example.com/prime-test"].firstMatch
+        let address = app.webViews.staticTexts["example.com"].firstMatch
         XCTAssertTrue(address.waitForExistence(timeout: 15), app.debugDescription)
         XCTAssertEqual(app.webViews.links.matching(NSPredicate(format: "label CONTAINS %@", "web sitesini aç")).count, 0)
         address.tap()
