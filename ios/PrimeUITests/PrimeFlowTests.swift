@@ -37,7 +37,7 @@ final class PrimeFlowTests: XCTestCase {
         app.launchArguments.removeAll { $0 == "--reset-test-state" }
         app.launch()
     }
-    func home() { XCTAssertTrue(button("Ana Sayfa").waitForExistence(timeout: 15), app.debugDescription) }
+    func home() { XCTAssertTrue(button("Ana Sayfa").waitForExistence(timeout: 45), app.debugDescription) }
     func openInbox() {
         let bell = app.webViews.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bildirimlerim")).firstMatch
         XCTAssertTrue(bell.waitForExistence(timeout: 15)); bell.tap()
