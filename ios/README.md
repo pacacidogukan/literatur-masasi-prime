@@ -4,10 +4,8 @@ Mevcut ekranları koruyan SwiftUI + WKWebView projesidir. HTML/CSS/JS ve marka v
 
 ## Hazır olanlar
 
-- Altı haneli kodla, ChatGPT hesabı gerektirmeyen mobil giriş.
 - Native URLSession üzerinden yalnızca izin verilen mobil API işlemleri.
 - Oturum anahtarı Keychain'de, bu cihaza bağlı ve yalnızca cihaz kilidi açıkken erişilebilir tutulur. JavaScript'e veya web depolamasına gönderilmez.
-- Kod süresi/iptali ve mobil oturumun 30 günlük üst sınırı sunucuda kontrol edilir.
 - Çıkış oturumu sunucuda iptal eder; Keychain'deki anahtarı kaldırır.
 - Native panoya kod kopyalama ve kod açılışında hafif dokunsal geri bildirim.
 - Harici HTTPS bağlantıları Safari'de açılır. Harici sayfalar native API köprüsünü kullanamaz. Oturum isteklerinde yönlendirmeler takip edilmez.
@@ -21,7 +19,6 @@ Mevcut ekranları koruyan SwiftUI + WKWebView projesidir. HTML/CSS/JS ve marka v
 2. `ios/Prime.xcodeproj` dosyasını Xcode'da aç; **Prime** scheme'ini seç.
 3. Signing & Capabilities altında kendi Apple Developer Team'ini seç. `com.literaturmasasi.prime` bundle kimliğini hesabında kullanılabilir ve sana ait bir kimlikle doğrula.
 4. İlk olarak iPhone simülatöründe çalıştır. Sonra kendi iPhone'unu seçip cihaz testi yap.
-5. Geçerli, kullanım hakkı olan bir 6 haneli admin erişim koduyla giriş yap. Admin oturumu mobil uygulamaya aktarılmaz.
 
 İmzasız simülatör derlemesi (Mac/Xcode gerekir):
 
@@ -53,7 +50,6 @@ Mobil oturumlar ayrı `mobile_sessions` tablosundadır; anahtarlar yalnızca SHA
 - 1024 px opak uygulama simgesi ve son açılış varlıkları. Bu proje henüz dağıtım simgesi içermez.
 - İşletmeci bilgileri, resmî iletişim ve son gizlilik/kullanıcı sözleşmesi. Bundled sözleşme mobil girişe göre uyarlanmıştır ama işletmeci bilgileri hâlâ taslaktır.
 - PrivacyInfo.xcprivacy teknik başlangıç beyanıdır; App Store Connect veri beyanı gerçek son veri akışıyla birlikte doğrulanmalıdır. Push/analitik/mağaza entegrasyonları eklendiğinde yeniden değerlendirilmelidir.
-- App Store ekranları ve inceleme için çalışan erişim kodu. Bu proje App Store kabul garantisi değildir; cihaz sürümü üzerinde kullanım ve içerik incelemesi tamamlanmalıdır.
 
 ## Kontroller
 
@@ -78,3 +74,5 @@ Doğrulanan son çalışma: [38933705368](https://github.com/pacacidogukan/liter
 Ekran testleri Debug sürümüne özel örnek API yanıtları kullanır; canlı backend ile uçtan uca cihaz testi değildir. Kopyalama testi uygulama sürecindeki gerçek `UIPasteboard` değerini doğrular. Ayrı backend testleri kalıcılık ve yetkilendirmeyi sınar. Test araçları Release sürümünde bulunmamalıdır.
 
 Bu sonuçlar fiziksel cihaz, fotoğraf izinleri, gerçek ağ kesintisi, Release imzalama veya TestFlight doğrulaması anlamına gelmez.
+
+Güncel açılış: beyaz zemin üzerinde kırmızı Literatür Masası Prime logosu, ardından doğrudan ana sayfa. Hesap veya kullanıcı bilgisi istenmez. Teknik oturum otomatik oluşturulur. Mağaza incelemesinde giriş hesabı gerekmiyor olarak işaretlenmelidir.

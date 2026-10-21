@@ -24,7 +24,7 @@ final class PrimeUITestProtocol: URLProtocol {
         var result: [String: Any] = ["ok": true]
         if route == "me" { result = ["authorized": authorized, "owner": false] }
         else if route == "access" {
-            if body["code"] as? String == "654321" { result = ["sessionToken": "ui-test-session"] }
+            if body["installationId"] as? String != nil { result = ["sessionToken": "ui-test-session"] }
             else { status = 403; result = ["error": "Kod geçersiz."] }
         } else if !authorized { status = 401; result = ["error": "Oturum gerekli."] }
         else if route == "campaigns" {

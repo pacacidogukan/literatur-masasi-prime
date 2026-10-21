@@ -2,11 +2,11 @@
   "name": "Literatür Masası Prime",
   "subtitle": "Sana özel marka ayrıcalıkları",
   "promotionalText": "Markaları keşfet, ilgini çeken kampanyaları favorilerine ekle ve kampanya kodlarını tek yerde görüntüle.",
-  "description": "Literatür Masası Prime, markaları ve dönemsel alışveriş ayrıcalıklarını bir arada keşfetmeni sağlar.\n\nMARKALARI KEŞFET\nMarkaların kampanyalarını incele, teklif açıklamalarını ve geçerlilik bilgilerini görüntüle.\n\nFAVORİLERİNİ BİR ARADA TUT\nİlgini çeken markaları favorilerine ekle ve daha sonra kolayca ulaş.\n\nKAMPANYA KODUNU GÖRÜNTÜLE\nKampanya detayındaki butonu sağa kaydırarak kodu aç ve tek dokunuşla kopyala. Kodun geçerliliği ilgili kampanyanın kapsamına ve koşullarına bağlıdır.\n\nALTI HANELİ KODLA GİRİŞ YAP\nUygulamaya Literatür Masası üzerinden sağlanan altı haneli erişim kodunla giriş yap. Telefon numarası veya e-posta ile üyelik gerekmez.\n\nDENEYİMİNİ KİŞİSELLEŞTİR\nİstersen profil fotoğrafı seçebilir, değiştirebilir veya kaldırabilirsin. Favorilerin ve seçtiğin fotoğraf bu cihazda saklanır.\n\nUygulama içinde ürün satışı, ödeme veya sipariş işlemi yapılmaz. Kampanyalar dönem, stok ve katılım koşullarıyla sınırlı olabilir. Örnek olarak işaretlenen içerikler gerçek bir indirim veya satın alma hakkı sağlamaz.",
+  "description": "Literatür Masası Prime, markaları ve dönemsel alışveriş ayrıcalıklarını bir arada keşfetmeni sağlar.\n\nMARKALARI KEŞFET\nMarkaların kampanyalarını incele, teklif açıklamalarını ve geçerlilik bilgilerini görüntüle.\n\nFAVORİLERİNİ BİR ARADA TUT\nİlgini çeken markaları favorilerine ekle ve daha sonra kolayca ulaş.\n\nKAMPANYA KODUNU GÖRÜNTÜLE\nKampanya detayındaki butonu sağa kaydırarak kodu aç ve tek dokunuşla kopyala. Kodun geçerliliği ilgili kampanyanın kapsamına ve koşullarına bağlıdır.\n\nHEMEN KEŞFET\nUygulama doğrudan açılır. Hesap oluşturman veya kişisel bilgi paylaşman gerekmez.\n\nDENEYİMİNİ KİŞİSELLEŞTİR\nİstersen profil fotoğrafı seçebilir, değiştirebilir veya kaldırabilirsin. Favorilerin ve seçtiğin fotoğraf bu cihazda saklanır.\n\nUygulama içinde ürün satışı, ödeme veya sipariş işlemi yapılmaz. Kampanyalar dönem, stok ve katılım koşullarıyla sınırlı olabilir. Örnek olarak işaretlenen içerikler gerçek bir indirim veya satın alma hakkı sağlamaz.",
   "keywords": "kampanya,ayrıcalık,marka,favori,indirim,kupon,alışveriş,literatür,masası",
   "locale": "tr",
   "supportUrl": "https://literaturmasasi.com/destek",
   "privacyPolicyUrl": "https://literaturmasasi.com/gizlilik",
   "marketingUrl": "https://literaturmasasi.com/prime",
-  "status": "DRAFT_REQUIRES_FINAL_BUILD_AND_REVIEW_ACCESS"
+  "status": "DRAFT_REQUIRES_PASSWORDLESS_BUILD"
 }

@@ -49,24 +49,9 @@ export async function api(request:Request){
   return json({error:'İşlem bulunamadı.'},405);
  }
  if(!user)return json({error:'Bu uygulamaya giriş yapmak için ChatGPT oturumunu aç.',signin:'/signin-with-chatgpt?return_to=/'},401);
- const granted=owner||!!await db.prepare('SELECT g.user_id FROM grants g JOIN access_codes c ON c.id=g.code_id WHERE g.user_id=? AND c.active=1 AND c.expires>?').bind(user,now()).first();
- if(path==='me'&&method==='GET')return json({authorized:granted,owner});
- if(path==='access'&&method==='POST'){
-  const body=await request.json() as {code?:string};if(!/^\d{6}$/.test(body.code||''))return json({error:'6 haneli kodu gir.'},400);
-  if(!env.PRIME_CODE_PEPPER)return json({error:'Kod doğrulaması henüz yapılandırılmadı.'},503);
-  const key=await digest(user+':'+Math.floor(now()/900));
-  await db.prepare('INSERT INTO attempts(key,count,expires) VALUES (?,1,?) ON CONFLICT(key) DO UPDATE SET count=count+1').bind(key,now()+900).run();
-  const attempt=await db.prepare('SELECT count FROM attempts WHERE key=?').bind(key).first<{count:number}>();
-  if((attempt?.count||0)>8)return json({error:'Çok fazla deneme yaptın. 15 dakika sonra tekrar dene.'},429);
-  const hash=await digest(env.PRIME_CODE_PEPPER+':'+body.code);
-  const code=await db.prepare('UPDATE access_codes SET uses=uses+1 WHERE hash=? AND active=1 AND expires>? AND uses<max_uses RETURNING id').bind(hash,now()).first<{id:string}>();
-  if(!code)return json({error:'Kod geçersiz, süresi dolmuş veya kullanım sınırına ulaşmış.'},403);
-  await rememberCode(db,code.id,body.code!);
-  await db.prepare('INSERT INTO grants(user_id,code_id,created) VALUES (?,?,?) ON CONFLICT(user_id) DO UPDATE SET code_id=excluded.code_id,created=excluded.created').bind(user,code.id,now()).run();
-  // Bounded cleanup keeps the attempt table small without changing its schema.
-  await db.prepare('DELETE FROM attempts WHERE expires<?').bind(now()-86400).run();
-  return json({authorized:true});
- }
+ const granted=true;
+ if(path==='me'&&method==='GET')return json({authorized:true,owner});
+ if(path==='access'&&method==='POST')return json({authorized:true});
  if(path==='delete-account'&&method==='POST'){
   if(owner)return json({error:'Yönetici hesabını bu ekrandan silemezsin.'},403);
   await erasePrimeAccess(db,user);return json({ok:true,deleted:true});
@@ -271,36 +256,29 @@ async function mobileApi(request:Request,db:any,path:string):Promise<Response>{
  }
  if(route==='access'){
   let b:any;try{b=JSON.parse(raw||'{}')}catch{return json({error:'Geçersiz JSON.'},400)}
-  if(!/^\d{6}$/.test(b?.code||'')||typeof b.installationId!=='string'||!/^[a-f0-9-]{36}$/i.test(b.installationId))return json({error:'6 haneli kod ve geçerli kurulum kimliği gerekli.'},400);
-  if(!env.PRIME_CODE_PEPPER)return json({error:'Giriş henüz yapılandırılmadı.'},503);
+  if(typeof b.installationId!=='string'||!/^[a-f0-9-]{36}$/i.test(b.installationId))return json({error:'Geçerli kurulum kimliği gerekli.'},400);
   const window=Math.floor(now()/900),address=request.headers.get('X-Prime-Mobile-Address')||'unknown';
-  for(const [kind,value,limit] of [['device',b.installationId,8],['network',address,address==='unknown'?100:30]] as [string,string,number][]){
+  for(const [kind,value,limit] of [['device',b.installationId,12],['network',address,address==='unknown'?500:120]] as [string,string,number][]){
    const key=await digest(env.PRIME_CODE_PEPPER+':mobile:'+kind+':'+value+':'+window);
    await db.prepare('INSERT INTO attempts(key,count,expires) VALUES (?,1,?) ON CONFLICT(key) DO UPDATE SET count=count+1').bind(key,now()+900).run();
    const count=await db.prepare('SELECT count FROM attempts WHERE key=?').bind(key).first();
-   if(count.count>limit)return json({error:'Çok fazla giriş denemesi. 15 dakika sonra tekrar dene.'},429);
+   if(count.count>limit)return json({error:'Çok fazla istek. Lütfen daha sonra tekrar dene.'},429);
   }
-  const code=await db.prepare('UPDATE access_codes SET uses=uses+1 WHERE hash=? AND active=1 AND expires>? AND uses<max_uses RETURNING id,expires').bind(await digest(env.PRIME_CODE_PEPPER+':'+b.code),now()).first();
-  if(!code)return json({error:'Kod geçersiz, süresi dolmuş veya kullanım sınırına ulaşmış.'},403);
-  await rememberCode(db,code.id,b.code);
-  const id='mobile:'+crypto.randomUUID(),token=Array.from(crypto.getRandomValues(new Uint8Array(32))).map(x=>x.toString(16).padStart(2,'0')).join(''),expires=Math.min(code.expires,now()+30*86400);
-  await db.batch([
-   db.prepare('INSERT INTO grants(user_id,code_id,created) VALUES (?,?,?)').bind(id,code.id,now()),
-   db.prepare('INSERT INTO mobile_sessions(token_hash,user_id,expires,created) VALUES (?,?,?,?)').bind(await digest(token),id,expires,now())
-  ]);
+  const id='mobile:'+crypto.randomUUID(),token=Array.from(crypto.getRandomValues(new Uint8Array(32))).map(x=>x.toString(16).padStart(2,'0')).join(''),expires=now()+30*86400;
+  await db.prepare('INSERT INTO mobile_sessions(token_hash,user_id,expires,created) VALUES (?,?,?,?)').bind(await digest(token),id,expires,now()).run();
   await db.prepare('DELETE FROM mobile_sessions WHERE expires<?').bind(now()).run();
   await db.prepare('DELETE FROM attempts WHERE expires<?').bind(now()-86400).run();
   return json({authorized:true,owner:false,sessionToken:token,expires},201);
  }
  const token=request.headers.get('X-Prime-Mobile-Session')||'';
- if(!/^[a-f0-9]{64}$/.test(token))return route==='logout'?json({ok:true}):route==='me'?json({authorized:false,owner:false}):json({error:'Kodunla tekrar giriş yap.'},401);
+ if(!/^[a-f0-9]{64}$/.test(token))return route==='logout'?json({ok:true}):route==='me'?json({authorized:false,owner:false}):json({error:'Teknik oturum yenilenemedi. Lütfen tekrar dene.'},401);
  if(route==='delete-account'){
   const record=await db.prepare('SELECT user_id FROM mobile_sessions WHERE token_hash=?').bind(await digest(token)).first();
   if(record)await erasePrimeAccess(db,record.user_id);
   return json({ok:true,deleted:true});
  }
- const session=await db.prepare('SELECT s.user_id,s.expires FROM mobile_sessions s JOIN grants g ON g.user_id=s.user_id JOIN access_codes c ON c.id=g.code_id WHERE s.token_hash=? AND s.expires>? AND c.active=1 AND c.expires>?').bind(await digest(token),now(),now()).first();
- if(!session)return route==='logout'?json({ok:true}):route==='me'?json({authorized:false,owner:false}):json({error:'Oturumun sona erdi. Kodunla tekrar giriş yap.'},401);
+ const session=await db.prepare('SELECT user_id,expires FROM mobile_sessions WHERE token_hash=? AND expires>?').bind(await digest(token),now()).first();
+ if(!session)return route==='logout'?json({ok:true}):route==='me'?json({authorized:false,owner:false}):json({error:'Oturumun sona erdi. Teknik oturum yenilenemedi. Lütfen tekrar dene.'},401);
  if(route==='logout'){
   await db.batch([db.prepare('DELETE FROM mobile_sessions WHERE token_hash=?').bind(await digest(token)),db.prepare('DELETE FROM grants WHERE user_id=?').bind(session.user_id)]);return json({ok:true});
  }

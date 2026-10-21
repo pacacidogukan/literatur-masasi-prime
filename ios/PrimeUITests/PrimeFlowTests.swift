@@ -31,22 +31,7 @@ final class PrimeFlowTests: XCTestCase {
         XCTAssertTrue(app.webViews.switches[nextLabel].firstMatch.waitForExistence(timeout: 15),
                       "Favorite state did not change after the tap.")
     }
-    func login(_ code: String = "654321") {
-        for (index, digit) in code.enumerated() {
-            let field = app.webViews.textFields["Kodun \(index + 1). hanesi"]
-            XCTAssertTrue(field.waitForExistence(timeout: index == 0 ? 45 : 15))
-            field.tap()
-            if index == 0 {
-                let keyboard = app.keyboards.firstMatch
-                if !keyboard.waitForExistence(timeout: 10) { field.tap() }
-                XCTAssertTrue(keyboard.waitForExistence(timeout: 15), "Login keyboard did not become ready.")
-                // Retap after the first keyboard/viewport transition before typing.
-                field.tap()
-            }
-            field.typeText(String(digit))
-        }
-        tap("Giriş yap")
-    }
+    func login() { home(); XCTAssertFalse(button("Giriş yap").exists); XCTAssertEqual(app.webViews.textFields.matching(NSPredicate(format: "label BEGINSWITH %@", "Kodun ")).count, 0) }
     func relaunch() {
         app.terminate()
         app.launchArguments.removeAll { $0 == "--reset-test-state" }
@@ -57,27 +42,8 @@ final class PrimeFlowTests: XCTestCase {
         let bell = app.webViews.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bildirimlerim")).firstMatch
         XCTAssertTrue(bell.waitForExistence(timeout: 15)); bell.tap()
     }
-    func testLoginPersistenceAndLogout() {
-        login(); home(); relaunch(); home()
-        tap("Ayarları aç"); tap("Çıkış Yap")
-        XCTAssertTrue(button("Giriş yap").waitForExistence(timeout: 15))
-        relaunch()
-        XCTAssertTrue(button("Giriş yap").waitForExistence(timeout: 15))
-        XCTAssertFalse(button("Ana Sayfa").exists)
-    }
-    func testDeleteAccessAndLocalData() {
-        login(); home(); tap("Markalar"); tap("Solgar kampanyasını aç")
-        toggleFavorite("Solgar favorilere ekle")
-        tap("Geri"); tap("Ana Sayfa"); tap("Ayarları aç")
-        tap("Erişimimi ve verilerimi sil")
-        tap("Vazgeç")
-        XCTAssertTrue(button("Çıkış Yap").waitForExistence(timeout: 15))
-        tap("Erişimimi ve verilerimi sil"); tap("Erişimi ve verileri sil")
-        XCTAssertTrue(button("Giriş yap").waitForExistence(timeout: 15))
-        relaunch(); XCTAssertTrue(button("Giriş yap").waitForExistence(timeout: 15))
-        login(); home(); tap("Favoriler")
-        XCTAssertTrue(app.webViews.staticTexts["Henüz favorin yok"].waitForExistence(timeout: 15))
-    }
+    func testAutomaticOpeningAndPersistence() { login(); relaunch(); home(); tap("Ayarları aç"); XCTAssertFalse(button("Çıkış Yap").exists) }
+    func testDeleteAccessAndLocalData() { login(); tap("Ayarları aç");tap("Verilerimi sil");tap("Verileri sil");home();relaunch();home();tap("Favoriler");XCTAssertTrue(app.webViews.staticTexts["Henüz favorin yok"].waitForExistence(timeout:15)) }
     func testCampaignWebsiteIsDisplayedWithoutNavigation() {
         login(); home(); tap("Markalar"); tap("Solgar kampanyasını aç")
         let address = app.webViews.staticTexts["example.com"].firstMatch
@@ -97,11 +63,7 @@ final class PrimeFlowTests: XCTestCase {
         relaunch(); home()
         XCTAssertEqual(app.webViews.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bildirimlerim")).count, 0)
     }
-    func testInvalidCodeIsRejected() {
-        login("000000")
-        XCTAssertTrue(app.webViews.staticTexts["Kod geçersiz."].waitForExistence(timeout: 15))
-        XCTAssertFalse(button("Ana Sayfa").exists)
-    }
+    func testNoCredentialInputOnOpening() { login(); XCTAssertFalse(button("Giriş yap").exists) }
     func testFavoritesPersistAndCanBeRemoved() {
         login(); home(); tap("Markalar"); tap("Solgar kampanyasını aç")
         toggleFavorite("Solgar favorilere ekle"); relaunch(); home(); tap("Favoriler")
