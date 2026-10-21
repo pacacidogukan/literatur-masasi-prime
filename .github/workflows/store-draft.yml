@@ -52,9 +52,10 @@ jobs:
           }
           const draft=JSON.parse(readFileSync('app-store/metadata.tr.json','utf8'));
           if(draft.subtitle.length>30||draft.promotionalText.length>170||draft.keywords.length>100||draft.description.length>4000)throw Error('Store text length exceeded');
+          const versionString=draft.version||'1.0.1';
           const versions=await api('/v1/apps/6823890365/appStoreVersions?filter[platform]=IOS');
-          const v=versions.data.find(x=>x.attributes.versionString==='1.0'&&['PREPARE_FOR_SUBMISSION','DEVELOPER_REJECTED'].includes(x.attributes.appStoreState));
-          if(!v)throw Error('Editable 1.0 draft not found; refusing to change any other version');
+          const v=versions.data.find(x=>x.attributes.versionString===versionString&&['PREPARE_FOR_SUBMISSION','DEVELOPER_REJECTED'].includes(x.attributes.appStoreState));
+          if(!v)throw Error('Editable target version not found; refusing to change any other version');
           const locs=await api('/v1/appStoreVersions/'+v.id+'/appStoreVersionLocalizations');
           const l=locs.data.find(x=>x.attributes.locale==='tr');if(!l)throw Error('Turkish version locale missing');
           const attrs=Object.fromEntries(['description','keywords','promotionalText','supportUrl','marketingUrl'].filter(k=>draft[k]).map(k=>[k,draft[k]]));
@@ -68,5 +69,5 @@ jobs:
           for(const k of Object.keys(attrs))if(saved.data.attributes[k]!==attrs[k])throw Error('Draft verification failed: '+k);
           const savedInfo=await api('/v1/appInfoLocalizations/'+il.id);
           if(savedInfo.data.attributes.subtitle!==draft.subtitle)throw Error('Subtitle verification failed');
-          console.log('STORE_DRAFT_SAVED '+JSON.stringify({version:'1.0',locale:'tr',name:savedInfo.data.attributes.name,subtitle:savedInfo.data.attributes.subtitle,fields:Object.keys(attrs),submitted:false}));
+          console.log('STORE_DRAFT_SAVED '+JSON.stringify({version:versionString,locale:'tr',name:savedInfo.data.attributes.name,subtitle:savedInfo.data.attributes.subtitle,fields:Object.keys(attrs),submitted:false}));
           JS

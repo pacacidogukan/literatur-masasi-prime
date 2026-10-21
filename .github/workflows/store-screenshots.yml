@@ -50,9 +50,10 @@ jobs:
             const r=await fetch('https://api.appstoreconnect.apple.com'+route,{method,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:data?JSON.stringify({data}):undefined,redirect:'error',signal:AbortSignal.timeout(30000)});
             const text=await r.text();const d=text?JSON.parse(text):{};if(!r.ok)throw Error('Apple API '+r.status+' '+JSON.stringify(d.errors?.map(x=>({code:x.code,detail:x.detail}))));return d;
           }
+          const versionString=JSON.parse(readFileSync('app-store/metadata.tr.json','utf8')).version||'1.0.1';
           const versions=await api('/v1/apps/6823890365/appStoreVersions?filter[platform]=IOS');
-          const v=versions.data.find(x=>x.attributes.versionString==='1.0'&&['PREPARE_FOR_SUBMISSION','DEVELOPER_REJECTED'].includes(x.attributes.appStoreState));
-          if(!v)throw Error('Editable 1.0 draft not found');
+          const v=versions.data.find(x=>x.attributes.versionString===versionString&&['PREPARE_FOR_SUBMISSION','DEVELOPER_REJECTED'].includes(x.attributes.appStoreState));
+          if(!v)throw Error('Editable target version not found');
           const l=(await api('/v1/appStoreVersions/'+v.id+'/appStoreVersionLocalizations')).data.find(x=>x.attributes.locale==='tr');if(!l)throw Error('Turkish locale missing');
           const sets=await api('/v1/appStoreVersionLocalizations/'+l.id+'/appScreenshotSets');
           let set=sets.data.find(x=>x.attributes.screenshotDisplayType==='APP_IPHONE_67');
