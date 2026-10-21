@@ -51,7 +51,7 @@ jobs:
             const text=await r.text();const d=text?JSON.parse(text):{};if(!r.ok)throw Error('Apple API '+r.status+' '+JSON.stringify(d.errors?.map(x=>({code:x.code,detail:x.detail}))));return d;
           }
           const versions=await api('/v1/apps/6823890365/appStoreVersions?filter[platform]=IOS');
-          const v=versions.data.find(x=>x.attributes.versionString==='1.0'&&x.attributes.appStoreState==='PREPARE_FOR_SUBMISSION');
+          const v=versions.data.find(x=>x.attributes.versionString==='1.0'&&['PREPARE_FOR_SUBMISSION','DEVELOPER_REJECTED'].includes(x.attributes.appStoreState));
           if(!v)throw Error('Editable 1.0 draft not found');
           const l=(await api('/v1/appStoreVersions/'+v.id+'/appStoreVersionLocalizations')).data.find(x=>x.attributes.locale==='tr');if(!l)throw Error('Turkish locale missing');
           const sets=await api('/v1/appStoreVersionLocalizations/'+l.id+'/appScreenshotSets');
@@ -64,7 +64,7 @@ jobs:
           for(const name of names){
             const bytes=readFileSync('app-store/screenshots/'+name),checksum=createHash('md5').update(bytes).digest('hex');
             let item=existing.find(x=>x.attributes.fileName===name);
-            if(item&&item.attributes.sourceFileChecksum!==checksum)throw Error('Existing screenshot differs; refusing to replace it automatically: '+name);
+            if(item&&item.attributes.sourceFileChecksum!==checksum){if(name!=='prime-app-store-01.jpg')throw Error('Unrelated screenshot differs: '+name);await api('/v1/appScreenshots/'+item.id,'DELETE');item=null;}
             if(!item){
               item=(await api('/v1/appScreenshots','POST',{type:'appScreenshots',attributes:{fileName:name,fileSize:bytes.length},relationships:{appScreenshotSet:{data:{type:'appScreenshotSets',id:set.id}}}})).data;
               for(const op of item.attributes.uploadOperations??[]){

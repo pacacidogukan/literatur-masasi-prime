@@ -53,13 +53,13 @@ jobs:
           const draft=JSON.parse(readFileSync('app-store/metadata.tr.json','utf8'));
           if(draft.subtitle.length>30||draft.promotionalText.length>170||draft.keywords.length>100||draft.description.length>4000)throw Error('Store text length exceeded');
           const versions=await api('/v1/apps/6823890365/appStoreVersions?filter[platform]=IOS');
-          const v=versions.data.find(x=>x.attributes.versionString==='1.0'&&x.attributes.appStoreState==='PREPARE_FOR_SUBMISSION');
+          const v=versions.data.find(x=>x.attributes.versionString==='1.0'&&['PREPARE_FOR_SUBMISSION','DEVELOPER_REJECTED'].includes(x.attributes.appStoreState));
           if(!v)throw Error('Editable 1.0 draft not found; refusing to change any other version');
           const locs=await api('/v1/appStoreVersions/'+v.id+'/appStoreVersionLocalizations');
           const l=locs.data.find(x=>x.attributes.locale==='tr');if(!l)throw Error('Turkish version locale missing');
           const attrs=Object.fromEntries(['description','keywords','promotionalText','supportUrl','marketingUrl'].filter(k=>draft[k]).map(k=>[k,draft[k]]));
           await api('/v1/appStoreVersionLocalizations/'+l.id,'PATCH',{type:'appStoreVersionLocalizations',id:l.id,attributes:attrs});
-          const info=(await api('/v1/apps/6823890365/appInfos')).data.find(x=>x.attributes.appStoreState==='PREPARE_FOR_SUBMISSION');
+          const info=(await api('/v1/apps/6823890365/appInfos')).data.find(x=>['PREPARE_FOR_SUBMISSION','DEVELOPER_REJECTED'].includes(x.attributes.appStoreState));
           if(!info)throw Error('Editable app info not found');
           const il=(await api('/v1/appInfos/'+info.id+'/appInfoLocalizations')).data.find(x=>x.attributes.locale==='tr');
           if(!il||il.attributes.name!==draft.name)throw Error('Store name differs from expected name; refusing to rename');
