@@ -151,10 +151,13 @@ h1{line-height:1.25}h2{line-height:1.3}
 .square-pager{position:absolute;z-index:2;bottom:8px;left:50%;transform:translateX(-50%);height:17px;display:flex;justify-content:center;align-items:center;gap:5px;pointer-events:none;background:none}
 .square-pager span{width:4px;height:4px;border-radius:50%;background:rgba(200,200,208,.55)}
 .square-pager span.current{background:rgba(113,117,129,.72)}
+/* B: image-led rectangular brand campaign cards, reusing square artwork. */
 .brand-offers{display:grid;gap:12px;margin-top:16px}
-.brand-offers .card-open{display:flex;align-items:center;gap:14px;width:100%;padding:18px;text-align:left;min-height:112px}
-.brand-offers .logo-box{width:60px;height:60px;flex:0 0 60px}
-.brand-offers .logo{width:100%;height:100%;object-fit:contain}
-.brand-offers .card-copy{flex:1;min-width:0}
-.brand-offers h3{font-size:15px;line-height:1.4}
-.brand-offers .chevron{width:16px}
+.brand-offers .offer-card{margin:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;box-shadow:none}
+.brand-offers .card-open{display:flex;align-items:center;gap:12px;width:100%;padding:8px;text-align:left;min-height:128px}
+.brand-offers .brand-offer-image{display:block;width:112px;height:112px;flex:0 0 112px;object-fit:contain;border-radius:9px;background:var(--gray)}
+.brand-offers .card-copy{flex:1;min-width:0;padding:0}
+.brand-offers h3{margin:0;font-size:15px;line-height:1.4;overflow-wrap:anywhere}
+.brand-offers .card-copy small{display:block;margin-top:7px;font-size:12px;line-height:1.4;color:var(--muted)}
+.brand-offers .chevron{display:flex;align-items:center;justify-content:center;width:16px;flex:0 0 16px;color:var(--muted);margin:0 2px 0 0}
+@media(max-width:360px){.brand-offers .card-open{gap:10px}.brand-offers .brand-offer-image{width:96px;height:96px;flex-basis:96px}}

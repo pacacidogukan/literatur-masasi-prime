@@ -81,7 +81,10 @@ if(run('typeof brandGroups')==='function'){
  const click=async(action,id)=>get('app').listeners.click({target:{closest:()=>({dataset:{action,id},closest:()=>null})}});
  await click('brand',run('firstBrandFixture.id'));
  assert.equal(run('page'),'brandCampaigns');assert.equal((get('app').innerHTML.match(/data-action="detail"/g)||[]).length,3);
- assert.doesNotMatch(get('app').innerHTML,/data-action="save"/);
+ assert.doesNotMatch(get('app').innerHTML,/data-action="save"|logo-box/);
+ assert.equal((get('app').innerHTML.match(/class="brand-offer-image"/g)||[]).length,3);
+ assert.match(get('app').innerHTML,/Kampanyayı incele/);
+ assert.ok(get('app').innerHTML.includes(run('assetUrl(firstBrandFixture.squarePhoto||firstBrandFixture.photo)')));
  await click('detail','group-second');assert.equal(run('selected.id'),'group-second');assert.match(get('app').innerHTML,/data-action="save"/);
  await click('back');assert.equal(run('page'),'brandCampaigns');
  await click('back');assert.equal(run('page'),'brands');assert.equal(order(),groupedOrder);
