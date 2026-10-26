@@ -3,7 +3,18 @@ class El{constructor(){this.value='';this.innerHTML='';this.textContent='';this.
 const els=new Map,get=k=>{if(!els.has(k))els.set(k,new El);return els.get(k)},inputs=Array.from({length:6},()=>new El);let seed;const seedBox={};vm.createContext(seedBox);vm.runInContext(fs.readFileSync('lib/prime-seed.ts','utf8').replace('export const seedCampaigns=','globalThis.seed='),seedBox);seed=JSON.parse(JSON.stringify(seedBox.seed)).map(c=>({...c,asset:'assets/'+c.asset,photo:'assets/'+c.photo,conditions:'Seçili ürünlerde geçerlidir.',channel:'Online alışveriş',expires:2000000000,demo:1}));
 const requests=[];const box={URL,ResizeObserver:class{observe(){}disconnect(){}},setTimeout:f=>{queueMicrotask(f);return 1},setInterval:()=>1,clearTimeout(){},localStorage:{getItem(){return null},setItem(){}},window:{open(url){box.openedWebsite=url},scrollTo(){},scrollY:0},navigator:{clipboard:{writeText:async()=>{}}},document:{addEventListener(){},getElementById:get,querySelector:get,querySelectorAll:s=>['[data-rail]','[data-brand-carousel]'].includes(s)?[]:inputs},async fetch(url,opts){requests.push({url,opts});const body=opts?.body?JSON.parse(opts.body):null;if(url==='/api/notifications')return{ok:true,json:async()=>({notifications:[],enabled:true})};if(url==='/api/me')return{ok:true,json:async()=>({authorized:false,owner:false})};if(url==='/api/access')return{ok:true,json:async()=>({authorized:true})};if(url==='/api/campaigns')return{ok:true,json:async()=>({campaigns:seed})};if(url==='/api/reveal')return{ok:true,json:async()=>({code:'SERVER-CODE',demo:1})};throw Error(url)}};vm.createContext(box);vm.runInContext(fs.readFileSync('public/app.js','utf8').replace(/^\(\(\)=>\{\n/,'').replace(/\n\}\)\(\);\n$/,''),box);const run=s=>vm.runInContext(s,box);
 (async()=>{
+
 assert.match(get('app').innerHTML,/launch-splash/);assert.doesNotMatch(get('app').innerHTML,/data-digit|login-form/);await new Promise(r=>setImmediate(r));assert.equal(run('loggedIn'),true);assert.match(get('app').innerHTML,/Ana Sayfa/);assert.ok(requests.some(r=>r.url==='/api/access'&&!JSON.parse(r.opts.body).code));
+if(run('typeof campaignExpired')==='function'){
+ await new Promise(r=>setImmediate(r));
+ run("selected=brands[0];selected.expires=1;go('detail')");
+ assert.match(run('slider()'),/Kampanya bitti/);assert.doesNotMatch(run('slider()'),/Kopyala/);
+ const before=requests.length;await run('reveal()');assert.equal(requests.length,before);
+ run("selected.expires=0;revealed.clear();var originalServer=server;server=async()=>({code:'   '});");
+ await run('reveal()');assert.equal(run('revealed.has(selected.id)'),false);assert.doesNotMatch(run('slider()'),/Kopyala/);
+ run("server=originalServer;selected.expires=2000000000;go('home')");
+ console.log('PASS: expired offers cannot reveal; empty successful responses never enable copy.');
+}
 run("selected=brands[0];selected.expires=0;go('detail')");assert.match(get('app').innerHTML,/Kampanya bitiş tarihi<strong>Belirtilmedi<\/strong>/);assert.doesNotMatch(get('app').innerHTML,/1970/);
 run("selected.expires=2000000000;render()");assert.doesNotMatch(get('app').innerHTML,/Belirtilmedi/);run("go('home')");
 // Re-entering each list changes its order, even if randomness repeats; rerenders/search stay stable.
