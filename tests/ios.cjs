@@ -1,7 +1,7 @@
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const native=fs.readFileSync('ios/Prime/Resources/Web/app.js','utf8');
 assert.ok(native.includes('window.webkit?.messageHandlers?.primeAPI'));
-assert.ok(native.includes("await server('copy',{text:selected.code})"));
+assert.ok(native.includes("await server('copy',{text:campaign.code})"));
 assert.ok(native.includes('const notificationsAvailable=false;'));
 assert.ok(native.includes("await server('open-external',{url})"));
 assert.ok(!native.includes("fetch('/api/"));
@@ -16,3 +16,4 @@ suite=suite.replace('vm.createContext(box);vm.runInContext',`box.window.webkit={
 const mockFs={...fs,readFileSync(p,...args){return p==='public/app.js'?native:fs.readFileSync(p,...args)}};
 new Function('require',suite)(name=>name==='node:fs'?mockFs:require(name));
 console.log('PASS: native UI adapter, Keychain-only session response and bridge origin restrictions checked. Shared client scenarios run against the native bundle.');
+
