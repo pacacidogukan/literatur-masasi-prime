@@ -42,10 +42,17 @@ final class PrimeFlowTests: XCTestCase {
         let bell = app.webViews.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bildirimlerim")).firstMatch
         XCTAssertTrue(bell.waitForExistence(timeout: 15)); bell.tap()
     }
+    func openSolgarCampaign() {
+        tap("Markalar")
+        tap("Solgar kampanyalarını aç, görsel 1 / 1")
+        XCTAssertTrue(app.webViews.staticTexts["Marka kampanyaları"].waitForExistence(timeout: 15))
+        XCTAssertEqual(app.webViews.switches.matching(NSPredicate(format: "label CONTAINS %@", "favorilere")).count, 0)
+        tap("Test ayrıcalığı detayları")
+    }
     func testAutomaticOpeningAndPersistence() { login(); relaunch(); home(); tap("Ayarları aç"); XCTAssertFalse(button("Çıkış Yap").exists) }
     func testDeleteAccessAndLocalData() { login(); tap("Ayarları aç");tap("Verilerimi sil");tap("Verileri sil");home();relaunch();home();tap("Favoriler");XCTAssertTrue(app.webViews.staticTexts["Henüz favorin yok"].waitForExistence(timeout:15)) }
     func testCampaignWebsiteIsDisplayedWithoutNavigation() {
-        login(); home(); tap("Markalar"); tap("Solgar kampanyasını aç")
+        login(); home(); openSolgarCampaign()
         let address = app.webViews.staticTexts["example.com"].firstMatch
         XCTAssertTrue(address.waitForExistence(timeout: 15), app.debugDescription)
         XCTAssertEqual(app.webViews.links.matching(NSPredicate(format: "label CONTAINS %@", "web sitesini aç")).count, 0)
@@ -65,7 +72,7 @@ final class PrimeFlowTests: XCTestCase {
     }
     func testNoCredentialInputOnOpening() { login(); XCTAssertFalse(button("Giriş yap").exists) }
     func testFavoritesPersistAndCanBeRemoved() {
-        login(); home(); tap("Markalar"); tap("Solgar kampanyasını aç")
+        login(); home(); openSolgarCampaign()
         toggleFavorite("Solgar favorilere ekle"); relaunch(); home(); tap("Favoriler")
         tap("Solgar kampanyasını aç"); toggleFavorite("Solgar favorilerden çıkar")
         relaunch(); home(); tap("Favoriler")
@@ -73,7 +80,7 @@ final class PrimeFlowTests: XCTestCase {
         XCTAssertFalse(button("Solgar kampanyasını aç").exists)
     }
     func testSwipeRevealsAndCopiesCampaignCode() {
-        login(); home(); tap("Markalar"); tap("Solgar kampanyasını aç")
+        login(); home(); openSolgarCampaign()
         let thumb = button("Kodu açmak için sağa kaydır veya Enter tuşuna bas")
         XCTAssertTrue(thumb.waitForExistence(timeout: 15))
         let start = thumb.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
@@ -88,3 +95,4 @@ final class PrimeFlowTests: XCTestCase {
         XCTAssertEqual(clipboard.label, "SPRING26")
     }
 }
+
