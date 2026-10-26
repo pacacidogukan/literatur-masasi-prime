@@ -1,7 +1,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 class El{constructor(){this.value='';this.innerHTML='';this.textContent='';this.listeners={};this.style={};this.classList={add(){},remove(){}};this.clientWidth=350;this.parentElement={clientHeight:850};this.dataset={};this.scrollLeft=0;this.scrollTop=0}addEventListener(k,f){this.listeners[k]=f}focus(){}setAttribute(){}setPointerCapture(){}scrollTo({left}){this.scrollLeft=left}querySelector(k){return get(k)}}
 const els=new Map,get=k=>{if(!els.has(k))els.set(k,new El);return els.get(k)},inputs=Array.from({length:6},()=>new El);let seed;const seedBox={};vm.createContext(seedBox);vm.runInContext(fs.readFileSync('lib/prime-seed.ts','utf8').replace('export const seedCampaigns=','globalThis.seed='),seedBox);seed=JSON.parse(JSON.stringify(seedBox.seed)).map(c=>({...c,asset:'assets/'+c.asset,photo:'assets/'+c.photo,conditions:'Seçili ürünlerde geçerlidir.',channel:'Online alışveriş',expires:2000000000,demo:1}));
-const requests=[];const box={URL,ResizeObserver:class{observe(){}disconnect(){}},setTimeout:f=>{queueMicrotask(f);return 1},setInterval:()=>1,clearTimeout(){},localStorage:{getItem(){return null},setItem(){}},window:{open(url){box.openedWebsite=url},scrollTo(){},scrollY:0},navigator:{clipboard:{writeText:async()=>{}}},document:{addEventListener(){},getElementById:get,querySelector:get,querySelectorAll:s=>s==='[data-rail]'?[]:inputs},async fetch(url,opts){requests.push({url,opts});const body=opts?.body?JSON.parse(opts.body):null;if(url==='/api/notifications')return{ok:true,json:async()=>({notifications:[],enabled:true})};if(url==='/api/me')return{ok:true,json:async()=>({authorized:false,owner:false})};if(url==='/api/access')return{ok:true,json:async()=>({authorized:true})};if(url==='/api/campaigns')return{ok:true,json:async()=>({campaigns:seed})};if(url==='/api/reveal')return{ok:true,json:async()=>({code:'SERVER-CODE',demo:1})};throw Error(url)}};vm.createContext(box);vm.runInContext(fs.readFileSync('public/app.js','utf8').replace(/^\(\(\)=>\{\n/,'').replace(/\n\}\)\(\);\n$/,''),box);const run=s=>vm.runInContext(s,box);
+const requests=[];const box={URL,ResizeObserver:class{observe(){}disconnect(){}},setTimeout:f=>{queueMicrotask(f);return 1},setInterval:()=>1,clearTimeout(){},localStorage:{getItem(){return null},setItem(){}},window:{open(url){box.openedWebsite=url},scrollTo(){},scrollY:0},navigator:{clipboard:{writeText:async()=>{}}},document:{addEventListener(){},getElementById:get,querySelector:get,querySelectorAll:s=>['[data-rail]','[data-brand-carousel]'].includes(s)?[]:inputs},async fetch(url,opts){requests.push({url,opts});const body=opts?.body?JSON.parse(opts.body):null;if(url==='/api/notifications')return{ok:true,json:async()=>({notifications:[],enabled:true})};if(url==='/api/me')return{ok:true,json:async()=>({authorized:false,owner:false})};if(url==='/api/access')return{ok:true,json:async()=>({authorized:true})};if(url==='/api/campaigns')return{ok:true,json:async()=>({campaigns:seed})};if(url==='/api/reveal')return{ok:true,json:async()=>({code:'SERVER-CODE',demo:1})};throw Error(url)}};vm.createContext(box);vm.runInContext(fs.readFileSync('public/app.js','utf8').replace(/^\(\(\)=>\{\n/,'').replace(/\n\}\)\(\);\n$/,''),box);const run=s=>vm.runInContext(s,box);
 (async()=>{
 assert.match(get('app').innerHTML,/launch-splash/);assert.doesNotMatch(get('app').innerHTML,/data-digit|login-form/);await new Promise(r=>setImmediate(r));assert.equal(run('loggedIn'),true);assert.match(get('app').innerHTML,/Ana Sayfa/);assert.ok(requests.some(r=>r.url==='/api/access'&&!JSON.parse(r.opts.body).code));
 run("selected=brands[0];selected.expires=0;go('detail')");assert.match(get('app').innerHTML,/Kampanya bitiş tarihi<strong>Belirtilmedi<\/strong>/);assert.doesNotMatch(get('app').innerHTML,/1970/);
@@ -64,8 +64,30 @@ assert.doesNotMatch(get('app').innerHTML,/Öne Çıkan Markalar/);
 assert.ok(!get('app').innerHTML.includes('https://example.com/h.png'));assert.ok(get('app').innerHTML.includes(run('assetUrl(brands[0].photo)')));
 
 run("filter='all';query='';go('brands')");
-assert.match(get('app').innerHTML,/brand-logo-grid/);assert.equal((get('app').innerHTML.match(/class="brand-logo-card"/g)||[]).length,seed.length);
+assert.match(get('app').innerHTML,/brand-logo-grid/);assert.equal((get('app').innerHTML.match(run('typeof brandGroups')==='function'?/class="brand-campaign-card"/g:/class="brand-logo-card"/g)||[]).length,seed.length);
 assert.doesNotMatch(get('app').innerHTML,/class="view-switch"|class="card-copy"|<h3>/);
+if(run('typeof brandGroups')==='function'){
+ run("var originalBrandFixtures=brands;var firstBrandFixture=brands[0];brands=[firstBrandFixture,{...firstBrandFixture,id:'group-second',name:'  '+firstBrandFixture.name.toLocaleUpperCase('tr-TR')+'  ',offer:'Second offer'},{...firstBrandFixture,id:'group-third',offer:'Third offer'},brands[1]];filter='all';query='';render()");
+ assert.equal(run('brandGroups().length'),2);
+ assert.equal((get('app').innerHTML.match(/class="brand-campaign-card"/g)||[]).length,2);
+ assert.equal((get('app').innerHTML.match(/class="square-campaign-slide"/g)||[]).length,4);
+ assert.equal((get('app').innerHTML.match(/class="brand-total"/g)||[]).length,1);
+ assert.match(get('app').innerHTML,/>3<\/span>/);
+ assert.doesNotMatch(get('app').innerHTML,/logo-box|card-copy|data-action="save"/);
+ assert.equal((run("brandRail('regression')").match(/class="brand-choice"/g)||[]).length,2);
+ run("query=firstBrandFixture.name;render()");assert.equal((get('app').innerHTML.match(/class="brand-campaign-card"/g)||[]).length,1);
+ run("query='';render()");
+ const groupedOrder=order();
+ const click=async(action,id)=>get('app').listeners.click({target:{closest:()=>({dataset:{action,id},closest:()=>null})}});
+ await click('brand',run('firstBrandFixture.id'));
+ assert.equal(run('page'),'brandCampaigns');assert.equal((get('app').innerHTML.match(/data-action="detail"/g)||[]).length,3);
+ assert.doesNotMatch(get('app').innerHTML,/data-action="save"/);
+ await click('detail','group-second');assert.equal(run('selected.id'),'group-second');assert.match(get('app').innerHTML,/data-action="save"/);
+ await click('back');assert.equal(run('page'),'brandCampaigns');
+ await click('back');assert.equal(run('page'),'brands');assert.equal(order(),groupedOrder);
+ run("brands=originalBrandFixtures;filter='all';query='';render()");
+ console.log('PASS: native brand grouping, all offers preserved, single count hidden, image-only cards, search and group/detail/back navigation.');
+}
 run("favorites=new Set([brands[0].id,brands[1].id]);go('favorites')");
 assert.match(get('app').innerHTML,/favorite-logo-grid/);assert.equal((get('app').innerHTML.match(/class="brand-logo-card"/g)||[]).length,2);
 assert.doesNotMatch(get('app').innerHTML,/view-switch|card-copy|<h3>|<small>|brand-filter/);
@@ -146,3 +168,4 @@ deletionMode='ok';await confirmDelete();assert.equal(run('loggedIn'),true);asser
 console.log('PASS: deletion confirmation, cancellation, offline failure, missing server acknowledgement and local data removal.');
 console.log('PASS: server-validated login, no demo bypass, up-to-20-slide carousel, short/full swipe, server-only campaign code, escaped campaign content.');
 })().catch(e=>{console.error(e);process.exitCode=1});
+
