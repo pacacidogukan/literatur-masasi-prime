@@ -142,15 +142,21 @@ async function copyCampaignCode(){
 function showCopySheet(campaign){
  if(copyDialog){copyDialog.close();copyDialog.remove()}
  const dialog=document.createElement('dialog');copyDialog=dialog;dialog.className='copy-sheet';dialog.setAttribute('aria-labelledby','copy-sheet-title');
- const url=campaignWebsite(campaign.channel);
- dialog.innerHTML='<div class="copy-sheet-handle"></div><button class="copy-sheet-close" aria-label="Kapat">×</button><div class="copy-sheet-check">'+icon('check')+'</div><h2 id="copy-sheet-title">Kod kopyalandı</h2><p>Kodunu mağazanın sepetinde kullanabilirsin.</p><strong class="copy-sheet-code">'+esc(campaign.code)+'</strong>'+(url?'<button class="primary copy-sheet-open">Mağazaya git '+icon('arrow')+'</button>':'<p>Mağaza bağlantısı bulunmuyor.</p>')+'<button class="copy-sheet-stay">Uygulamada kal</button>';
+ const destination=campaignWebsite(campaign.channel);
+ const url=destination?new URL(destination).origin+'/':'';
+ dialog.innerHTML='<div class="copy-sheet-handle"></div><div class="copy-sheet-check">'+icon('check')+'</div><h2 id="copy-sheet-title">Kod kopyalandı</h2><p>Kodunu mağazanın sepetinde kullanabilirsin.</p><strong class="copy-sheet-code">'+esc(campaign.code)+'</strong>'+(url?'<button class="primary copy-sheet-open">Mağazaya git '+icon('arrow')+'</button>':'<p>Mağaza bağlantısı bulunmuyor.</p>');
  const close=()=>{dialog.close();dialog.remove();if(copyDialog===dialog)copyDialog=null;document.querySelector('[data-action="copy"]')?.focus()};
- dialog.querySelector('.copy-sheet-close').onclick=close;dialog.querySelector('.copy-sheet-stay').onclick=close;
+ 
  dialog.addEventListener('cancel',e=>{e.preventDefault();close()});
  dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientY<r.top||e.clientX<r.left||e.clientX>r.right)close()}});
+ let startY=null;
+ dialog.addEventListener('touchstart',e=>{startY=e.touches.length===1&&!e.target.closest('button,.copy-sheet-code')?e.touches[0].clientY:null},{passive:true});
+ dialog.addEventListener('touchmove',e=>{if(startY===null)return;const dy=e.touches[0].clientY-startY;if(dy>10){e.preventDefault();dialog.style.transform='translateY('+dy+'px)'}},{passive:false});
+ dialog.addEventListener('touchend',()=>{const dy=parseFloat(dialog.style.transform.replace('translateY(',''))||0;startY=null;dialog.style.transform='';if(dy>=80)close()});
+ dialog.addEventListener('touchcancel',()=>{startY=null;dialog.style.transform=''});
  const open=dialog.querySelector('.copy-sheet-open');
  if(open)open.onclick=async()=>{if(campaignExpired(campaign)){close();render();toast('Kampanya bitti');return}open.disabled=true;try{await openWebsite(url);close()}catch(e){toast(e.message);open.disabled=false}};
- document.body.append(dialog);dialog.showModal();dialog.querySelector('.copy-sheet-close').focus();
+ document.body.append(dialog);dialog.showModal();dialog.focus();
 }
 let campaignRefreshBusy=false;
 async function refreshLiveCampaigns(){if(!loggedIn||campaignRefreshBusy)return;campaignRefreshBusy=true;try{const id=selected?.id;await loadCampaigns();if(page==='detail'){selected=brands.find(b=>b.id===id);if(!selected){page='home';toast('Kampanya artık aktif değil.')}}render()}catch{}finally{campaignRefreshBusy=false}}
