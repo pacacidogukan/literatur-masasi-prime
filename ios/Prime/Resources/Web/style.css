@@ -169,6 +169,7 @@ h1{line-height:1.25}h2{line-height:1.3}
 
 /* Copy confirmation and optional store handoff */
 .copy-sheet{position:fixed;inset:auto 0 0;margin:0 auto;width:100%;max-width:520px;max-height:85dvh;overflow:auto;box-sizing:border-box;border:0;border-radius:26px 26px 0 0;padding:14px 24px calc(20px + env(safe-area-inset-bottom));background:#fff;color:#171a21;text-align:center;box-shadow:0 -8px 36px #0001}
+.copy-sheet:focus{outline:none}
 .copy-sheet::backdrop{background:rgba(0,0,0,.4)}
 .copy-sheet[open]{animation:copy-sheet-in .18s ease-out}
 .copy-sheet-handle{width:42px;height:5px;border-radius:4px;background:#bfc2c8;margin:0 auto 26px}
