@@ -60,7 +60,7 @@ struct PrimeWebView: UIViewRepresentable {
             config.urlCache = nil
             return URLSession(configuration: config, delegate: redirectGuard, delegateQueue: nil)
         }()
-        private let methods = ["me":"GET", "access":"POST", "campaigns":"GET", "reveal":"POST",
+        private let methods = ["analytics/events":"POST","me":"GET", "access":"POST", "campaigns":"GET", "reveal":"POST",
             "notifications":"GET", "notifications/read":"POST", "notifications/preference":"POST", "logout":"POST", "delete-account":"POST"]
 
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage,
@@ -126,6 +126,8 @@ struct PrimeWebView: UIViewRepresentable {
                 var body = requestBody
                 do {
                     if path == "access" { body["installationId"] = try SecureStore.installationID() }
+                    if path == "reveal", var analytics = body["analytics"] as? [String: Any] { analytics["version"] = "\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "") (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""))"; body["analytics"] = analytics }
+                    if path == "analytics/events" { body["version"] = "\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "") (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""))" }
                     var request = URLRequest(url: apiRoot.appendingPathComponent(path))
                     request.httpMethod = method
                     request.setValue("application/json", forHTTPHeaderField: "Accept")
@@ -203,3 +205,4 @@ private final class NoRedirect: NSObject, URLSessionTaskDelegate {
         completionHandler(nil)
     }
 }
+
