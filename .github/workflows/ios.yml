@@ -36,6 +36,9 @@ jobs:
           python-version: '3.12'
       - run: node tests/client.cjs
       - run: node tests/ios.cjs
+      - run: node tests/mobile-load-failure.cjs
+      - name: Verify live mobile gateway session and campaign delivery
+        run: node scripts/mobile-healthcheck.mjs
       - name: Install isolated backend test dependency
         run: npm install --prefix "$RUNNER_TEMP/prime-test-deps" --ignore-scripts --no-audit --no-fund esbuild@0.25.12
       - name: Backend persistence and authorization tests
@@ -89,6 +92,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - name: Verify trusted redirect policy
+        run: node tests/mobile-redirect-policy.cjs
       - name: Build unsigned iPhone Release archive
         run: >-
           xcodebuild -project ios/Prime.xcodeproj -scheme Prime
@@ -109,3 +114,4 @@ jobs:
           assert (app / "PrivacyInfo.xcprivacy").is_file(), "Privacy manifest missing"
           print("PASS: unsigned iPhone Release archive built; test controls absent; bundled UI and privacy manifest present.")
           PY
+

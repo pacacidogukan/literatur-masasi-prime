@@ -46,8 +46,8 @@ struct PrimeWebView: UIViewRepresentable {
 
     final class Coordinator: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDelegate, WKUIDelegate {
         var webRoot: URL?
-        private let apiRoot = URL(string: "https://prime-campaign-editor.sunlitcreek513.chatgpt.site/api/mobile/")!
-        private let redirectGuard = NoRedirect()
+        private let apiRoot = URL(string: "https://prime-campaign-editor.pacacidogukan.chatgpt.site/api/mobile/")!
+        private let redirectGuard = PrimeAPIRedirectPolicy()
         private lazy var session: URLSession = {
             let config = URLSessionConfiguration.ephemeral
             #if DEBUG
@@ -199,10 +199,31 @@ struct PrimeWebView: UIViewRepresentable {
     }
 }
 
-private final class NoRedirect: NSObject, URLSessionTaskDelegate {
+private final class PrimeAPIRedirectPolicy: NSObject, URLSessionTaskDelegate {
+    // Only this verified alias migration belongs to the same Prime gateway.
+    // Never follow arbitrary redirects with the installation session token.
+    static func verifiedRequest(original: URLRequest?, response: HTTPURLResponse, destination: URLRequest) -> URLRequest? {
+        guard let original = original, let from = original.url, let target = destination.url,
+              let responseURL = response.url,
+              [301,302,303,307,308].contains(response.statusCode),
+              from.scheme == "https", responseURL.scheme == "https", target.scheme == "https",
+              from.host == "prime-campaign-editor.sunlitcreek513.chatgpt.site",
+              responseURL.host == from.host,
+              target.host == "prime-campaign-editor.pacacidogukan.chatgpt.site",
+              from.port == nil, target.port == nil,
+              from.user == nil, from.password == nil, target.user == nil, target.password == nil,
+              from.query == nil, from.fragment == nil, target.query == nil, target.fragment == nil,
+              from.path.hasPrefix("/api/mobile/"), from.path == target.path, responseURL.path == from.path
+        else { return nil }
+        var verified = original
+        verified.url = target
+        // 301/302 can otherwise turn an access POST into a GET. Preserve the exact request.
+        return verified
+    }
     func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
                     newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) {
-        completionHandler(nil)
+        guard let verified = Self.verifiedRequest(original: task.originalRequest, response: response, destination: request)
+        else { completionHandler(nil); return }
+        completionHandler(verified)
     }
 }
-

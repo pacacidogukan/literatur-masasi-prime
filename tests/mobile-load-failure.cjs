@@ -1,0 +1,11 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const source=fs.readFileSync('ios/Prime/Resources/Web/app.js','utf8');
+const failure=source.slice(source.indexOf('function campaignLoadFailure()'),source.indexOf('function home()'));
+const home=source.slice(source.indexOf('function home()'),source.indexOf('function home()')+160);
+assert.match(home,/campaignLoadError&&!brands.length/);
+assert.match(source,/function brandPage\(\)\{if\(campaignLoadError&&!brands.length\)return campaignLoadFailure\(\)/);
+const box={page:'home',headerBar:()=>'',module:{exports:{}}};vm.createContext(box);vm.runInContext(failure+';module.exports=campaignLoadFailure;',box);
+const html=box.module.exports();assert.ok(html.includes('Kampanyalar yüklenemedi'));assert.ok(html.includes('retry-start'));assert.ok(!html.includes('Yeni ayrıcalıklar yakında'));
+assert.match(source,/campaignLoadError=true;loggedIn=true;page='home';render\(\)/);
+assert.match(source,/brands=r.campaigns.filter\(b=>!campaignExpired\(b\)\);campaignLoadError=false/);
+console.log('PASS: connection failure stays visible on Home and Brands; valid empty feeds remain distinct; successful reload clears the error.');
