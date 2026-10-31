@@ -28,11 +28,11 @@ final class PrimeUITestProtocol: URLProtocol {
             else { status = 403; result = ["error": "Kod geçersiz."] }
         } else if !authorized { status = 401; result = ["error": "Oturum gerekli."] }
         else if route == "campaigns" {
-            result = ["campaigns": [["id": "solgar", "name": "Solgar", "asset": "solgar.png",
+            result = ["campaigns": [["id": "solgar", "name": "Solgar", "hasCode": 1, "asset": "solgar.png",
                 "offer": "Test ayrıcalığı", "tag": "Test markası", "type": "Vitamin",
                 "photo": "solgar-detail.jpg", "channel": "https://example.com/prime-test", "description": "Test kampanyası açıklaması",
-                "conditions": "Yalnızca otomatik test verisi.", "expires": 2000000000, "demo": 1]]]
-        } else if route == "reveal" { result = ["code": "SPRING26", "demo": 1] }
+                "conditions": "Yalnızca otomatik test verisi.", "expires": 2000000000, "demo": 0]]]
+        } else if route == "reveal" { result = ["code": "SPRING26", "demo": 0] }
         else if route == "notifications" {
             result = ["enabled": true, "notifications": [["id": "test-notice", "title": "Test bildirimi",
                 "body": "Okundu durumunu kontrol et.", "created": 1792150000,
