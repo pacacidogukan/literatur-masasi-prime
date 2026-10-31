@@ -44,21 +44,21 @@ final class PrimeFlowTests: XCTestCase {
     }
     func openSolgarCampaign() {
         tap("Markalar")
-        tap("Solgar kampanyalarını aç, görsel 1 / 1")
-        XCTAssertTrue(app.webViews.staticTexts["Marka kampanyaları"].waitForExistence(timeout: 15))
+        tap("Solgar kampanyalarını aç")
+        XCTAssertTrue(app.webViews.staticTexts["Markanın kampanyaları"].waitForExistence(timeout: 15))
         XCTAssertEqual(app.webViews.switches.matching(NSPredicate(format: "label CONTAINS %@", "favorilere")).count, 0)
-        tap("Test ayrıcalığı detayları")
+        tap("Solgar: Test ayrıcalığı")
     }
     func testAutomaticOpeningAndPersistence() { login(); relaunch(); home(); tap("Ayarları aç"); XCTAssertFalse(button("Çıkış Yap").exists) }
     func testDeleteAccessAndLocalData() { login(); tap("Ayarları aç");tap("Verilerimi sil");tap("Verileri sil");home();relaunch();home();tap("Favoriler");XCTAssertTrue(app.webViews.staticTexts["Henüz favorin yok"].waitForExistence(timeout:15)) }
     func testCampaignWebsiteIsDisplayedWithoutNavigation() {
         login(); home(); openSolgarCampaign()
-        let address = app.webViews.staticTexts["example.com"].firstMatch
+        let address = app.webViews.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "example.com")).firstMatch
         XCTAssertTrue(address.waitForExistence(timeout: 15), app.debugDescription)
         XCTAssertEqual(app.webViews.links.matching(NSPredicate(format: "label CONTAINS %@", "web sitesini aç")).count, 0)
         address.tap()
         XCTAssertEqual(app.state, .runningForeground)
-        XCTAssertTrue(button("Kodu açmak için sağa kaydır veya Enter tuşuna bas").exists)
+        XCTAssertTrue(app.webViews.sliders["Kodu açmak için sağa kaydır veya sağ ok tuşunu kullan"].exists)
         tap("Geri"); home()
     }
     func testNotificationsAreHidden() {
@@ -81,9 +81,9 @@ final class PrimeFlowTests: XCTestCase {
     }
     func testSwipeRevealsAndCopiesCampaignCode() {
         login(); home(); openSolgarCampaign()
-        let thumb = button("Kodu açmak için sağa kaydır veya Enter tuşuna bas")
+        let thumb = app.webViews.sliders["Kodu açmak için sağa kaydır veya sağ ok tuşunu kullan"].firstMatch
         XCTAssertTrue(thumb.waitForExistence(timeout: 15))
-        let start = thumb.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        let start = thumb.coordinate(withNormalizedOffset: CGVector(dx: 0.08, dy: 0.5))
         start.press(forDuration: 0.1, thenDragTo: start.withOffset(CGVector(dx: app.frame.width * 0.72, dy: 0)))
         XCTAssertTrue(app.webViews.staticTexts["SPRING26"].waitForExistence(timeout: 15))
         let copy = button("Kopyala")

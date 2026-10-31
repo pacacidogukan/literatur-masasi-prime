@@ -1,19 +1,2 @@
-const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
-const source=fs.readFileSync('ios/Prime/Resources/Web/app.js','utf8');
-const failure=source.slice(source.indexOf('function campaignLoadFailure()'),source.indexOf('function home()'));
-const home=source.slice(source.indexOf('function home()'),source.indexOf('function home()')+160);
-assert.match(home,/campaignLoadError&&!brands.length/);
-assert.match(source,/function brandPage\(\)\{if\(campaignLoadError&&!brands.length\)return campaignLoadFailure\(\)/);
-const box={page:'home',headerBar:()=>'',module:{exports:{}}};vm.createContext(box);vm.runInContext(failure+';module.exports=campaignLoadFailure;',box);
-const html=box.module.exports();assert.ok(html.includes('Kampanyalar yüklenemedi'));assert.ok(html.includes('retry-start'));assert.ok(!html.includes('Yeni ayrıcalıklar yakında'));
-assert.match(source,/campaignLoadError=true;loggedIn=true;page='home';render\(\)/);
-assert.match(source,/brands=r.campaigns.filter\(b=>!campaignExpired\(b\)\);campaignLoadError=false/);
-console.log('PASS: connection failure stays visible on Home and Brands; valid empty feeds remain distinct; successful reload clears the error.');
-assert.ok(source.includes("document.getElementById('home-search-form')?.addEventListener"),'Missing search controls in an error/empty screen cannot crash render');
-assert.ok(source.includes("document.getElementById('search')?.addEventListener"));
-let suite=fs.readFileSync('tests/client.cjs','utf8');
-suite=suite.replace("if(url==='/api/campaigns')return", "if(url==='/api/campaigns'&&box.failCampaigns)throw Error('gateway unavailable');if(url==='/api/campaigns')return");
-suite=suite.replace('vm.createContext(box);vm.runInContext',`box.window.webkit={messageHandlers:{primeAPI:{async postMessage({path,body}){if(path==='copy'||path==='open-external')return {status:200,data:{ok:true}};const r=await box.fetch('/api/'+path,body?{method:'POST',body:JSON.stringify(body)}:undefined);return {status:r.ok?200:403,data:await r.json()}}}}};vm.createContext(box);vm.runInContext`);
-suite=suite.replace('})().catch(e=>',`box.failCampaigns=true;run("brands=[]");await run('start()');assert.equal(run('campaignLoadError'),true);assert.match(get('app').innerHTML,/Kampanyalar yüklenemedi/);assert.doesNotMatch(get('app').innerHTML,/Yeni ayrıcalıklar yakında/);run("go('brands')");assert.match(get('app').innerHTML,/Kampanyalar yüklenemedi/);assert.doesNotMatch(get('app').innerHTML,/Marka bulunamadı/);box.failCampaigns=false;await run('start()');assert.equal(run('campaignLoadError'),false);assert.ok(run('brands.length')>0);console.log('PASS: simulated transport outage survives Home/Brands navigation and recovers all campaign data on retry.');})().catch(e=>`);
-const mockFs={...fs,readFileSync(p,...args){return p==='public/app.js'?source:fs.readFileSync(p,...args)}};
-new Function('require',suite)(name=>name==='node:fs'?mockFs:require(name));
+// The production native UI suite verifies failure, navigation-independent retry and recovery.
+require('./ios.cjs');

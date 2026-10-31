@@ -1,19 +1,16 @@
-const fs=require('node:fs'),assert=require('node:assert/strict');
-const native=fs.readFileSync('ios/Prime/Resources/Web/app.js','utf8');
-assert.ok(native.includes('window.webkit?.messageHandlers?.primeAPI'));
-assert.ok(native.includes("await server('copy',{text:campaign.code})"));
-assert.ok(native.includes('const notificationsAvailable=false;'));
-assert.ok(native.includes("await server('open-external',{url})"));
-assert.ok(!native.includes("fetch('/api/"));
-assert.ok(!native.includes('OAI-Sites-Authorization'));
-assert.ok(!native.includes('ChatGPT oturumu da gereklidir'));
-const swift=fs.readFileSync('ios/Prime/PrimeWebView.swift','utf8');
-assert.ok(swift.includes('message.frameInfo.isMainFrame'));
-assert.ok(swift.includes('result.removeValue(forKey: "sessionToken")'));
-assert.ok(swift.includes('completionHandler(nil)'));
-let suite=fs.readFileSync('tests/client.cjs','utf8');
-suite=suite.replace('vm.createContext(box);vm.runInContext',`box.window.webkit={messageHandlers:{primeAPI:{async postMessage({path,body}){if(path==='copy')return {status:200,data:{ok:true}};if(path==='open-external'){box.openedWebsite=body.url;return {status:200,data:{ok:true}};}const r=await box.fetch('/api/'+path,body?{method:'POST',body:JSON.stringify(body)}:undefined);return {status:r.ok?200:403,data:await r.json()}}}}};vm.createContext(box);vm.runInContext`);
-const mockFs={...fs,readFileSync(p,...args){return p==='public/app.js'?native:fs.readFileSync(p,...args)}};
-new Function('require',suite)(name=>name==='node:fs'?mockFs:require(name));
-console.log('PASS: native UI adapter, Keychain-only session response and bridge origin restrictions checked. Shared client scenarios run against the native bundle.');
-
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const listeners={};class El{constructor(){this.style={};this.dataset={};this.classList={contains(){return false},add(){},remove(){}};this.innerHTML='';this.scrollTop=0;this.clientHeight=800;this.isConnected=true;this.notes=[]}querySelector(s){return s==='#ps-screen'?screen:s==='.ps-slidefooter'?this:null}querySelectorAll(){return []}addEventListener(k,f){(listeners[k]??=[]).push(f)}append(x){this.notes.push(x)}setAttribute(){}focus(){}}
+const screen=new El,root=new El,store=new Map,requests=[];let fail=false,revealFailure=false,copyFailure=false;const rows=[{id:'live',name:'Solgar',offer:'%25 indirim',description:'Seçili ürünler',conditions:'Geçerli koşullar',asset:'assets/solgar.png',photo:'https://example.com/detail.png',squarePhoto:'https://example.com/square.png',verticalPhoto:'https://example.com/portrait.png',channel:'https://example.com',expires:0,hasCode:1,demo:0,benefitCategories:['Ürün İndirimleri'],discountPercent:25},{id:'no-code',name:'Other',offer:'200 TL indirim',channel:'https://example.com',photo:'https://example.com/photo.png',expires:0,hasCode:0,demo:0,benefitCategories:['Sepette İndirim']},{id:'demo',demo:1},{id:'expired',expires:1,demo:0}];
+const box={console,URL,Intl,Date,Set,Map,JSON,ResizeObserver:class{observe(){}},setInterval:()=>1,clearInterval(){},setTimeout:()=>1,localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v)},document:{hidden:false,getElementById:()=>root,querySelectorAll:()=>[],createElement:()=>new El,addEventListener(){}},window:{matchMedia:()=>({matches:false}),webkit:{messageHandlers:{primeAPI:{async postMessage({path,body}){requests.push({path,body});if(fail&&path==='campaigns')throw Error('offline');if(path==='me')return {status:200,data:{authorized:false}};if(path==='access')return {status:201,data:{authorized:true}};if(path==='campaigns')return {status:200,data:{campaigns:rows}};if(path==='reveal')return {status:200,data:revealFailure?{expired:true}:{code:'SPRING26'}};if(path==='copy'&&copyFailure)throw Error('clipboard');return {status:200,data:{ok:true}};}}}}}};
+vm.createContext(box);vm.runInContext(fs.readFileSync('ios/Prime/Resources/Web/icons.js','utf8'),box);let source=fs.readFileSync('ios/Prime/Resources/Web/app.js','utf8');vm.runInContext(source.replace(/^\(\(\)=>\{/,'').replace(/\}\)\(\);\s*$/,''),box);const run=s=>vm.runInContext(s,box);
+(async()=>{await new Promise(r=>setImmediate(r));assert.equal(run('loaded'),true);assert.equal(run('offers.length'),2);assert(requests.some(x=>x.path==='access'));assert(!source.includes('LUMA50-DEMO'));assert(!source.includes('fetch('));assert(!source.includes('unpkg.com'));assert(!screen.innerHTML.includes('Uygulamada kal'));
+run("current=offers[0];view='detail';revealed=false");assert(!run('detail()').includes('SPRING26'));assert(run('categoriesFor(current)').includes('Kampanya Kodu'));assert(!run('categoriesFor(offers[1])').includes('Kampanya Kodu'));await run('revealCode()');assert.equal(run('revealed'),true);assert(run('detail()').includes('SPRING26'));await run('copyCurrentCode()');assert.equal(requests.at(-1).body.text,'SPRING26');assert(run('copyNotice'));assert(!run('detail()').includes('Uygulamada kal'));assert(run('detail()').includes('ps-copyhandle'));
+run("copyNotice=false");copyFailure=true;await run('copyCurrentCode()');assert.equal(run('copyNotice'),false);copyFailure=false;
+run("revealed=false;current.code=''");revealFailure=true;await run('revealCode()');assert.equal(run('revealed'),false);revealFailure=false;
+run("discountThreshold='25'");assert.equal(run('discountOffers().length'),1);run("selectedCategory='Sepette İndirim'");assert(run('categorypage()').includes('no-code'));assert(!run('categorypage()').includes('data-offer-id="live"'));
+run("favorites.add('live');persistFavorites()");assert(store.get('lmprime-favorites').includes('live'));assert(run('nativeFavorites()').includes('Solgar'));
+assert(run('copySheetDismissal(100,400,360)'));assert(!run('copySheetDismissal(-90,100,360)'));assert(!run('copySheetDismissal(0,10,360)'));
+fail=true;await run('start()');assert(screen.innerHTML.includes('Kampanyalar yüklenemedi'));assert(!screen.innerHTML.includes('Yeni ayrıcalıklar yakında'));fail=false;await run('start()');assert.equal(run('loaded'),true);assert.equal(run('loadError'),false);
+run("current=offers[0];current.expires=1;revealed=false");const before=requests.length;await run('revealCode()');assert.equal(before,requests.length);
+await run('deleteData()');assert(requests.some(x=>x.path==='delete-account'));assert.equal(run('favorites.size'),0);
+assert.equal(run("website('javascript:alert(1)')"),'');assert.equal(run("website('https://user:pass@example.com')"),'');console.log('PASS: native production feed, demo/expiry exclusion, categories, thresholds, server-only reveal, native copy failures, favorites, delete, retry and sheet dismissal.');})().catch(e=>{console.error(e);process.exit(1)});
