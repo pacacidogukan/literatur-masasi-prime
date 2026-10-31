@@ -25,8 +25,8 @@ const storageKey='lmprime-favorites';
 try{const saved=JSON.parse(localStorage.getItem(storageKey));if(Array.isArray(saved))favorites=new Set(saved);}catch{}
 function persistFavorites(){try{localStorage.setItem(storageKey,JSON.stringify([...favorites]));}catch{}}
 const navigation=[];
-function capturePage(){return {view,type,usage,brand,query,current,returnView,selectedCategory,discountThreshold,campaignBrand,campaignGroup,campaignOrigin,y:screen.scrollTop,rails:[...screen.querySelectorAll('.ps-carousel,.ps-coderail,.ps-lastdayrail,.ps-rounds,.ps-brandrounds,.ps-nativerail')].map(e=>e.scrollLeft)};}
-function restorePage(p){({view,type,usage,brand,query,current,returnView,selectedCategory,discountThreshold,campaignBrand,campaignGroup,campaignOrigin}=p);render();screen.scrollTop=p.y;screen.querySelectorAll('.ps-carousel,.ps-coderail,.ps-lastdayrail,.ps-rounds,.ps-brandrounds,.ps-nativerail').forEach((e,i)=>e.scrollLeft=p.rails[i]||0);}
+function capturePage(){return {view,type,brand,query,current,returnView,selectedCategory,discountThreshold,campaignBrand,campaignGroup,campaignOrigin,y:screen.scrollTop,rails:[...screen.querySelectorAll('.ps-carousel,.ps-coderail,.ps-lastdayrail,.ps-rounds,.ps-brandrounds,.ps-nativerail')].map(e=>e.scrollLeft)};}
+function restorePage(p){({view,type,brand,query,current,returnView,selectedCategory,discountThreshold,campaignBrand,campaignGroup,campaignOrigin}=p);render();screen.scrollTop=p.y;screen.querySelectorAll('.ps-carousel,.ps-coderail,.ps-lastdayrail,.ps-rounds,.ps-brandrounds,.ps-nativerail').forEach((e,i)=>e.scrollLeft=p.rails[i]||0);}
 async function copyCurrentCode(){try{if(!current?.code||expired(current))throw Error('Kod kullanılamıyor.');await server('copy',{text:current.code});copyNotice=true;render();screen.querySelector('.ps-copyhandle')?.focus();}catch(e){showError('Kod panoya kopyalanamadı. Tekrar deneyebilirsin.');}}
 const icon=n=>iconMarkup[n]||iconMarkup.tag||'';
 const esc=s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
