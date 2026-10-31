@@ -79,6 +79,13 @@ final class PrimeFlowTests: XCTestCase {
         XCTAssertTrue(app.webViews.staticTexts["Henüz favorin yok"].waitForExistence(timeout: 15))
         XCTAssertFalse(button("Solgar kampanyasını aç").exists)
     }
+    func testCodelessCampaignHasWebsiteActionOnly() {
+        login(); tap("Markalar"); tap("Test Markası kampanyalarını aç")
+        tap("Test Markası: Kod gerektirmeyen ayrıcalık")
+        XCTAssertTrue(app.webViews.links["Web sitesine git"].firstMatch.waitForExistence(timeout: 15))
+        XCTAssertEqual(app.webViews.sliders.count, 0)
+        XCTAssertFalse(button("Kopyala").exists)
+    }
     func testSwipeRevealsAndCopiesCampaignCode() {
         login(); home(); openSolgarCampaign()
         let thumb = app.webViews.sliders["Kodu açmak için sağa kaydır veya sağ ok tuşunu kullan"].firstMatch
