@@ -82,7 +82,7 @@ final class PrimeFlowTests: XCTestCase {
     func testCodelessCampaignHasWebsiteActionOnly() {
         login(); tap("Markalar"); tap("Test Markası kampanyalarını aç")
         tap("Test Markası: Kod gerektirmeyen ayrıcalık")
-        XCTAssertTrue(app.webViews.links["Web sitesine git"].firstMatch.waitForExistence(timeout: 15))
+        XCTAssertTrue(app.webViews.links["Kampanya sayfasına git"].firstMatch.waitForExistence(timeout: 15))
         XCTAssertEqual(app.webViews.sliders.count, 0)
         XCTAssertFalse(button("Kopyala").exists)
     }
