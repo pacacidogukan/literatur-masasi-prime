@@ -381,3 +381,5 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .launch-brand>svg{width:100%;height:auto;aspect-ratio:1711/722}
 
 .ps-detailtop .ps-compare{width:auto;padding:0 10px;border-radius:10px;font-size:13px;font-weight:700;color:#a91329;background:#fff0f1}
+
+.ps-searchresults{display:grid;gap:18px;margin:12px 0 20px}.ps-searchresults h2{margin:0 0 8px;font-size:16px}.ps-searchresults .ps-nativelist button{grid-template-columns:minmax(0,1fr) 20px;min-height:44px}
