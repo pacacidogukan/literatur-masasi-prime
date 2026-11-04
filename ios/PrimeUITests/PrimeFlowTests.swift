@@ -67,7 +67,8 @@ final class PrimeFlowTests: XCTestCase {
     func testHomeLoadsOffersAndSearchOpensBrandAndCampaign() {
         login()
         XCTAssertTrue(app.webViews.staticTexts["Sana Özel Ayrıcalıklar"].waitForExistence(timeout: 15))
-        XCTAssertTrue(app.webViews.images["Solgar kampanyası"].firstMatch.exists)
+        let card = app.webViews.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Öne çıkan kampanya:")).firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 15), "The home carousel must contain an actionable live offer.")
         let label = "Marka veya kampanya ara"
         let searchField = app.webViews.searchFields[label].firstMatch
         let search = searchField.exists ? searchField : app.webViews.textFields[label].firstMatch
