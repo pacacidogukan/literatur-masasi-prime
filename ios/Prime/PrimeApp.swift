@@ -57,7 +57,7 @@ private struct CampaignComparisonView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             List {
                 if let second {
                     Section {
@@ -101,6 +101,7 @@ private struct CampaignComparisonView: View {
                 }
             }
         }
+        .navigationViewStyle(.stack)
     }
 
     private func campaignLabel(_ campaign: ComparableCampaign) -> some View {
@@ -116,17 +117,21 @@ private struct CampaignComparisonView: View {
     }
 
     private func comparisonRow(_ heading: String, _ first: String, _ second: String) -> some View {
-        let columns = typeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
-            : AnyLayout(HStackLayout(alignment: .top, spacing: 14))
-        return VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(heading).font(.subheadline.weight(.semibold)).accessibilityAddTraits(.isHeader)
-            columns {
-                comparisonValue(first, column: "Birinci kampanya")
-                comparisonValue(second, column: "İkinci kampanya")
+            if typeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 12) { comparisonValues(first, second) }
+            } else {
+                HStack(alignment: .top, spacing: 14) { comparisonValues(first, second) }
             }
         }
         .padding(.vertical, 4)
+    }
+
+    @ViewBuilder
+    private func comparisonValues(_ first: String, _ second: String) -> some View {
+        comparisonValue(first, column: "Birinci kampanya")
+        comparisonValue(second, column: "İkinci kampanya")
     }
 
     private func comparisonValue(_ value: String, column: String) -> some View {
