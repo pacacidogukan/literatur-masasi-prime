@@ -86,6 +86,19 @@ final class PrimeFlowTests: XCTestCase {
         XCTAssertEqual(app.webViews.sliders.count, 0)
         XCTAssertFalse(button("Kopyala").exists)
     }
+    func testCampaignComparisonShowsBothOffersAndReturnsToDetail() {
+        login()
+        openSolgarCampaign()
+        tap("Karşılaştır")
+        let alternative = app.buttons["compare-option-no-code"]
+        XCTAssertTrue(alternative.waitForExistence(timeout: 15), app.debugDescription)
+        alternative.tap()
+        XCTAssertTrue(app.navigationBars["Kampanya karşılaştır"].exists)
+        XCTAssertTrue(app.staticTexts["Birinci kampanya: Test ayrıcalığı"].exists)
+        XCTAssertTrue(app.staticTexts["İkinci kampanya: Kod gerektirmeyen ayrıcalık"].exists)
+        app.navigationBars.buttons["Kapat"].tap()
+        XCTAssertTrue(button("Karşılaştır").waitForExistence(timeout: 15))
+    }
     func testSwipeRevealsAndCopiesCampaignCode() {
         login(); home(); openSolgarCampaign()
         let thumb = app.webViews.sliders["Kodu açmak için sağa kaydır veya sağ ok tuşunu kullan"].firstMatch

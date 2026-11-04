@@ -379,3 +379,5 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .launch-splash{height:100%;min-height:0;background:white}
 
 #prime-square-campaigns .launch-brand>svg{width:100%;height:auto;aspect-ratio:1711/722}
+
+.ps-detailtop .ps-compare{width:auto;padding:0 10px;border-radius:10px;font-size:13px;font-weight:700;color:#a91329;background:#fff0f1}

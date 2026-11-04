@@ -3,7 +3,9 @@ import WebKit
 import UIKit
 
 struct PrimeWebView: UIViewRepresentable {
-    func makeCoordinator() -> Coordinator { Coordinator() }
+    var showComparison: (CampaignComparison) -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator(showComparison: showComparison) }
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
         #if DEBUG
@@ -46,6 +48,11 @@ struct PrimeWebView: UIViewRepresentable {
 
     final class Coordinator: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDelegate, WKUIDelegate {
         var webRoot: URL?
+        private let showComparison: (CampaignComparison) -> Void
+
+        init(showComparison: @escaping (CampaignComparison) -> Void) {
+            self.showComparison = showComparison
+        }
         private let apiRoot = URL(string: "https://prime-campaign-editor.pacacidogukan.chatgpt.site/api/mobile/")!
         private let redirectGuard = PrimeAPIRedirectPolicy()
         private lazy var session: URLSession = {
@@ -76,6 +83,20 @@ struct PrimeWebView: UIViewRepresentable {
                 if path == "uitest/trace" { replyHandler(["status":200, "data":["ok":true]], nil); return }
             }
             #endif
+            if path == "compare-campaigns" {
+                guard let body = payload["body"] as? [String: Any],
+                      let rows = body["campaigns"] as? [[String: Any]], (1...300).contains(rows.count),
+                      let data = try? JSONSerialization.data(withJSONObject: rows), data.count <= 2_000_000,
+                      let campaigns = try? JSONDecoder().decode([ComparableCampaign].self, from: data),
+                      let first = campaigns.first, first.isActive else {
+                    replyHandler(nil, "Karşılaştırma açılamadı. Lütfen tekrar dene."); return
+                }
+                Task { @MainActor in
+                    showComparison(CampaignComparison(first: first, alternatives: Array(campaigns.dropFirst())))
+                    replyHandler(["status": 200, "data": ["ok": true]], nil)
+                }
+                return
+            }
             if path == "open-external" {
                 guard let body = payload["body"] as? [String: Any],
                       let value = body["url"] as? String, value.count <= 2048,
