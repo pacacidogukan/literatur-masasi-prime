@@ -64,9 +64,46 @@ final class PrimeFlowTests: XCTestCase {
         XCTAssertEqual(app.webViews.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bildirimlerim")).count, 0)
     }
     func testNoCredentialInputOnOpening() { login(); XCTAssertFalse(button("Giriş yap").exists) }
+    func testHomeLoadsOffersAndSearchOpensBrandAndCampaign() {
+        login()
+        XCTAssertTrue(app.webViews.staticTexts["Sana Özel Ayrıcalıklar"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.webViews.images["Solgar kampanyası"].firstMatch.exists)
+        let label = "Marka veya kampanya ara"
+        let searchField = app.webViews.searchFields[label].firstMatch
+        let search = searchField.exists ? searchField : app.webViews.textFields[label].firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 15))
+        search.tap()
+        search.typeText("Solgar")
+        tap(label)
+        tap("Solgar marka sayfasını aç")
+        XCTAssertTrue(button("Solgar kampanyasını aç").waitForExistence(timeout: 15))
+        XCTAssertFalse(button("Test Markası kampanyasını aç").exists)
+        tap("Ana Sayfa")
+        search.tap()
+        search.typeText("Test ayrıcalığı")
+        tap(label)
+        tap("Solgar: Test ayrıcalığı kampanya detayını aç")
+        XCTAssertTrue(app.webViews.staticTexts["Prime Ayrıcalıkları"].waitForExistence(timeout: 15))
+    }
+    func testCampaignComparisonShowsBothOffersAndReturnsToDetail() {
+        login()
+        tap("Markalar"); tap("Solgar kampanyasını aç")
+        tap("Karşılaştır")
+        let alternative = app.buttons["compare-option-no-code"]
+        XCTAssertTrue(alternative.waitForExistence(timeout: 15), app.debugDescription)
+        alternative.tap()
+        XCTAssertTrue(app.navigationBars["Kampanya karşılaştır"].exists)
+        XCTAssertTrue(app.staticTexts["Birinci kampanya: Test ayrıcalığı"].exists)
+        XCTAssertTrue(app.staticTexts["İkinci kampanya: Kod gerektirmeyen ayrıcalık"].exists)
+        app.navigationBars.buttons["Kapat"].tap()
+        XCTAssertTrue(button("Karşılaştır").waitForExistence(timeout: 15))
+    }
     func testFavoritesPersistAndCanBeRemoved() {
         login(); home(); tap("Markalar"); tap("Solgar kampanyasını aç")
-        toggleFavorite("Solgar favorilere ekle"); relaunch(); home(); tap("Favoriler")
+        toggleFavorite("Solgar favorilere ekle")
+        tap("Geri"); tap("Favoriler")
+        XCTAssertTrue(button("Solgar kampanyasını aç").waitForExistence(timeout: 15))
+        relaunch(); home(); tap("Favoriler")
         tap("Solgar kampanyasını aç"); toggleFavorite("Solgar favorilerden çıkar")
         relaunch(); home(); tap("Favoriler")
         XCTAssertTrue(app.webViews.staticTexts["Henüz favorin yok"].waitForExistence(timeout: 15))

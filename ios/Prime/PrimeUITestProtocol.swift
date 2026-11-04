@@ -31,7 +31,9 @@ final class PrimeUITestProtocol: URLProtocol {
             result = ["campaigns": [["id": "solgar", "name": "Solgar", "asset": "solgar.png",
                 "offer": "Test ayrıcalığı", "tag": "Test markası", "type": "Vitamin",
                 "photo": "solgar-detail.jpg", "channel": "https://example.com/prime-test", "description": "Test kampanyası açıklaması",
-                "conditions": "Yalnızca otomatik test verisi.", "expires": 2000000000, "demo": 1]]]
+                "conditions": "Yalnızca otomatik test verisi.", "expires": 2000000000, "hasCode": 1, "demo": 0],
+                ["id": "no-code", "name": "Test Markası", "asset": "solgar.png", "photo": "solgar-detail.jpg",
+                 "offer": "Kod gerektirmeyen ayrıcalık", "description": "Test kampanyası açıklaması", "channel": "https://example.com/no-code", "expires": 2000000000, "hasCode": 0, "demo": 0]]]
         } else if route == "reveal" { result = ["code": "SPRING26", "demo": 1] }
         else if route == "notifications" {
             result = ["enabled": true, "notifications": [["id": "test-notice", "title": "Test bildirimi",

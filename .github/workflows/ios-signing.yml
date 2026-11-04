@@ -1,11 +1,8 @@
-name: Prime TestFlight upload
+name: Prime App Store review upload
 
 on:
-  workflow_run:
-    workflows: ['Prime iOS checks']
-    types: [completed]
-    branches: [main]
-  workflow_dispatch:
+  push:
+    branches: [release/app-store-1.0.1]
 
 permissions:
   contents: read
@@ -16,13 +13,10 @@ concurrency:
 
 jobs:
   archive:
-    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: macos-26-intel
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - name: Select supported App Store Xcode
         run: |
           python3 - <<'PY'
@@ -192,7 +186,7 @@ jobs:
             if (result.stderr) console.error(result.stderr);
             if (result.status!==0) process.exit(1);
           }
-          appendFileSync(process.env.GITHUB_STEP_SUMMARY,'App Store Connect upload accepted for app 6823890365. Apple processing must finish before TestFlight availability.\n');
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY,'App Store Connect upload accepted for app 6823890365. Apple processing must finish before the App Store build can be selected.\n');
           JS
       - name: Remove temporary signing material
         if: always()
