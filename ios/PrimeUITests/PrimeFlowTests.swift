@@ -128,7 +128,7 @@ final class PrimeFlowTests: XCTestCase {
         func capture(_ name: String) throws {
             // Allow the visible remote campaign artwork to finish decoding.
             Thread.sleep(forTimeInterval: 4)
-            let screenshot = app.screenshot()
+            let screenshot = XCUIScreen.main.screenshot()
             let directory = FileManager.default.temporaryDirectory.appendingPathComponent("prime-review-screenshots")
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             try screenshot.pngRepresentation.write(to: directory.appendingPathComponent(name + ".png"))
@@ -138,8 +138,11 @@ final class PrimeFlowTests: XCTestCase {
             add(attachment)
         }
         try capture("01-home")
-        firstOffer.tap()
-        XCTAssertTrue(app.webViews.staticTexts["Prime Ayrıcalıkları"].waitForExistence(timeout: 15))
+        // WKWebView virtual activation can miss freshly loaded image buttons.
+        // Send the same physical touch used for the native header and copy footer.
+        app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: firstOffer.frame.midX, dy: firstOffer.frame.midY)).tap()
+        XCTAssertTrue(app.webViews.staticTexts["Prime Ayrıcalıkları"].waitForExistence(timeout: 15), app.debugDescription)
         try capture("02-campaign")
         tap("Geri")
         tap("Markalar")
