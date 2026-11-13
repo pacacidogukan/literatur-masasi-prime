@@ -14,6 +14,21 @@ assert(run('copySheetDismissal(100,400,360)'));assert(!run('copySheetDismissal(-
 fail=true;await run('start()');assert(screen.innerHTML.includes('Kampanyalar yüklenemedi'));assert(!screen.innerHTML.includes('Yeni ayrıcalıklar yakında'));fail=false;await run('start()');assert.equal(run('loaded'),true);assert.equal(run('loadError'),false);
 run("current=offers[0];current.expires=1;revealed=false");const before=requests.length;await run('revealCode()');assert.equal(before,requests.length);
 
+// A photo must never appear saved after its storage write fails.
+const originalStorageWrite=box.localStorage.setItem;
+box.FileReader=class {
+ readAsDataURL(){this.result='data:image/png;base64,new-photo';this.onload();}
+};
+run("settingsPhoto='data:image/png;base64,previous-photo';view='personal';render()");
+box.localStorage.setItem=()=>{throw Error('QuotaExceededError');};
+for(const handler of listeners.change||[])handler({target:{id:'ps-settings-photo',files:[{type:'image/png',size:1024}]}});
+assert.equal(run('settingsPhoto'),'data:image/png;base64,previous-photo');
+assert(screen.notes.some(note=>note.textContent.includes('Fotoğraf kaydedilemedi')));
+box.localStorage.setItem=originalStorageWrite;
+for(const handler of listeners.change||[])handler({target:{id:'ps-settings-photo',files:[{type:'image/png',size:1024}]}});
+assert.equal(run('settingsPhoto'),'data:image/png;base64,new-photo');
+assert.match(store.get('lmprime-photo'),/new-photo/);
+
 // A successful HTTP response alone must not clear local data.
 deleteAcknowledged=false;
 await run('deleteData()');
