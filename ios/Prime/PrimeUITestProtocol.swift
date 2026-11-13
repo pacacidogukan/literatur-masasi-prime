@@ -3,7 +3,9 @@ import Foundation
 
 // Only enabled explicitly by UI tests. All requests are intercepted; no live API is used.
 final class PrimeUITestProtocol: URLProtocol {
-    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canInit(with request: URLRequest) -> Bool {
+        !ProcessInfo.processInfo.arguments.contains("--prime-live-check")
+    }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func stopLoading() {}
     override func startLoading() {

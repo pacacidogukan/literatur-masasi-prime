@@ -118,6 +118,34 @@ final class PrimeFlowTests: XCTestCase {
         tap("Kullanıcı Sözleşmesi")
         XCTAssertTrue(app.webViews.staticTexts["Literatür Masası Prime Kullanıcı Sözleşmesi"].waitForExistence(timeout: 15))
     }
+    func testLiveStoreScreenshots() throws {
+        app.terminate()
+        app.launchArguments = ["--prime-ui-tests", "--reset-test-state", "--prime-live-check"]
+        app.launch()
+        home()
+        let firstOffer = app.webViews.buttons.matching(NSPredicate(format: "label CONTAINS %@", ": ")).firstMatch
+        XCTAssertTrue(firstOffer.waitForExistence(timeout: 30), app.debugDescription)
+        func capture(_ name: String) throws {
+            // Allow the visible remote campaign artwork to finish decoding.
+            Thread.sleep(forTimeInterval: 4)
+            let screenshot = app.screenshot()
+            let directory = FileManager.default.temporaryDirectory.appendingPathComponent("prime-review-screenshots")
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            try screenshot.pngRepresentation.write(to: directory.appendingPathComponent(name + ".png"))
+            let attachment = XCTAttachment(screenshot: screenshot)
+            attachment.name = name
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
+        try capture("01-home")
+        firstOffer.tap()
+        XCTAssertTrue(app.webViews.staticTexts["Prime Ayrıcalıkları"].waitForExistence(timeout: 15))
+        try capture("02-campaign")
+        tap("Geri")
+        tap("Markalar")
+        XCTAssertTrue(app.webViews.buttons.matching(NSPredicate(format: "label ENDSWITH %@", "kampanyalarını aç")).firstMatch.waitForExistence(timeout: 15))
+        try capture("03-brands")
+    }
     func testSwipeRevealsAndCopiesCampaignCode() {
         login(); home(); openSolgarCampaign()
         let thumb = app.webViews.sliders["Kodu açmak için sağa kaydır veya sağ ok tuşunu kullan"].firstMatch
