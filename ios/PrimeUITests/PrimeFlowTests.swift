@@ -86,6 +86,38 @@ final class PrimeFlowTests: XCTestCase {
         XCTAssertEqual(app.webViews.sliders.count, 0)
         XCTAssertFalse(button("Kopyala").exists)
     }
+    func testSearchFindsBrandsAndCampaignTitles() {
+        login()
+        let search = app.webViews.textFields["Marka veya kampanya ara"].firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 15))
+        search.tap()
+        search.typeText("Test ayrıcalığı")
+        tap("Solgar: Test ayrıcalığı")
+        XCTAssertTrue(app.webViews.staticTexts["Prime Ayrıcalıkları"].waitForExistence(timeout: 15))
+        tap("Geri")
+        tap("Markalar")
+        let brandSearch = app.webViews.textFields["Marka veya kampanya ara"].firstMatch
+        brandSearch.tap()
+        brandSearch.typeText("Test ayrıcalığı")
+        tap("Solgar kampanyalarını aç")
+        tap("Solgar: Test ayrıcalığı")
+        XCTAssertTrue(app.webViews.staticTexts["Prime Ayrıcalıkları"].waitForExistence(timeout: 15))
+    }
+    func testFavoriteAppearsImmediatelyAndSettingsOpen() {
+        login()
+        openSolgarCampaign()
+        toggleFavorite("Solgar favorilere ekle")
+        tap("Geri")
+        tap("Favoriler")
+        XCTAssertTrue(button("Solgar kampanyasını aç").waitForExistence(timeout: 15))
+        tap("Ana Sayfa")
+        tap("Ayarları aç")
+        tap("Gizlilik")
+        XCTAssertTrue(app.webViews.staticTexts["Literatür Masası Prime Gizlilik Bilgilendirmesi"].waitForExistence(timeout: 15))
+        tap("Geri")
+        tap("Kullanıcı Sözleşmesi")
+        XCTAssertTrue(app.webViews.staticTexts["Literatür Masası Prime Kullanıcı Sözleşmesi"].waitForExistence(timeout: 15))
+    }
     func testSwipeRevealsAndCopiesCampaignCode() {
         login(); home(); openSolgarCampaign()
         let thumb = app.webViews.sliders["Kodu açmak için sağa kaydır veya sağ ok tuşunu kullan"].firstMatch
