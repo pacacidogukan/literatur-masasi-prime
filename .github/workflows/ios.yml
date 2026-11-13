@@ -35,6 +35,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: node tests/client.cjs
+      - run: node tests/campaign-order.cjs
       - run: node tests/ios.cjs
       - run: node tests/mobile-load-failure.cjs
       - name: Verify live mobile gateway session and campaign delivery
