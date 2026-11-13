@@ -86,6 +86,85 @@ final class PrimeFlowTests: XCTestCase {
         XCTAssertEqual(app.webViews.sliders.count, 0)
         XCTAssertFalse(button("Kopyala").exists)
     }
+    func testSearchFindsBrandsAndCampaignTitles() {
+        login()
+        let search = app.webViews.textFields["Marka veya kampanya ara"].firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 15))
+        search.tap()
+        search.typeText("Test ayrıcalığı")
+        tap("Solgar: Test ayrıcalığı")
+        XCTAssertTrue(app.webViews.staticTexts["Prime Ayrıcalıkları"].waitForExistence(timeout: 15))
+        tap("Geri")
+        tap("Markalar")
+        let brandSearch = app.webViews.textFields["Marka veya kampanya ara"].firstMatch
+        brandSearch.tap()
+        brandSearch.typeText("Test ayrıcalığı")
+        tap("Solgar kampanyalarını aç")
+        tap("Solgar: Test ayrıcalığı")
+        XCTAssertTrue(app.webViews.staticTexts["Prime Ayrıcalıkları"].waitForExistence(timeout: 15))
+    }
+    func testFavoriteAppearsImmediatelyAndSettingsOpen() {
+        login()
+        openSolgarCampaign()
+        toggleFavorite("Solgar favorilere ekle")
+        tap("Geri")
+        tap("Favoriler")
+        let favoriteCard = button("Solgar kampanyasını aç")
+        XCTAssertTrue(favoriteCard.waitForExistence(timeout: 15))
+        let favoriteSize = favoriteCard.frame.size
+        XCTAssertGreaterThan(favoriteSize.width, favoriteSize.height, "Favorite card must be landscape.")
+        XCTAssertEqual(favoriteSize.height, 108, accuracy: 2)
+        let bookmark = app.webViews.switches["Solgar favorilerden çıkar"].firstMatch
+        XCTAssertTrue(bookmark.exists)
+        XCTAssertGreaterThanOrEqual(bookmark.frame.width, 43)
+        let screenshot = XCUIScreen.main.screenshot()
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("prime-review-screenshots")
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try? screenshot.pngRepresentation.write(to: directory.appendingPathComponent("04-favorites.png"))
+        tap("Markalar")
+        let brandCard = button("Solgar kampanyalarını aç")
+        XCTAssertTrue(brandCard.waitForExistence(timeout: 15))
+        XCTAssertEqual(brandCard.frame.height, favoriteSize.height, accuracy: 2)
+        XCTAssertEqual(brandCard.frame.width, favoriteSize.width, accuracy: 2)
+        tap("Ana Sayfa")
+        tap("Ayarları aç")
+        tap("Gizlilik")
+        XCTAssertTrue(app.webViews.staticTexts["Literatür Masası Prime Gizlilik Bilgilendirmesi"].waitForExistence(timeout: 15))
+        tap("Geri")
+        tap("Kullanıcı Sözleşmesi")
+        XCTAssertTrue(app.webViews.staticTexts["Literatür Masası Prime Kullanıcı Sözleşmesi"].waitForExistence(timeout: 15))
+    }
+    func testLiveStoreScreenshots() throws {
+        app.terminate()
+        app.launchArguments = ["--prime-ui-tests", "--reset-test-state", "--prime-live-check"]
+        app.launch()
+        home()
+        let firstOffer = app.webViews.buttons.matching(NSPredicate(format: "label CONTAINS %@", ": ")).firstMatch
+        XCTAssertTrue(firstOffer.waitForExistence(timeout: 30), app.debugDescription)
+        func capture(_ name: String) throws {
+            // Allow the visible remote campaign artwork to finish decoding.
+            Thread.sleep(forTimeInterval: 4)
+            let screenshot = XCUIScreen.main.screenshot()
+            let directory = FileManager.default.temporaryDirectory.appendingPathComponent("prime-review-screenshots")
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            try screenshot.pngRepresentation.write(to: directory.appendingPathComponent(name + ".png"))
+            let attachment = XCTAttachment(screenshot: screenshot)
+            attachment.name = name
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
+        try capture("01-home")
+        // WKWebView virtual activation can miss freshly loaded image buttons.
+        // Send the same physical touch used for the native header and copy footer.
+        app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: firstOffer.frame.midX, dy: firstOffer.frame.midY)).tap()
+        XCTAssertTrue(app.webViews.staticTexts["Prime Ayrıcalıkları"].waitForExistence(timeout: 15), app.debugDescription)
+        try capture("02-campaign")
+        tap("Geri")
+        tap("Markalar")
+        XCTAssertTrue(app.webViews.buttons.matching(NSPredicate(format: "label ENDSWITH %@", "kampanyalarını aç")).firstMatch.waitForExistence(timeout: 15))
+        try capture("03-brands")
+    }
     func testSwipeRevealsAndCopiesCampaignCode() {
         login(); home(); openSolgarCampaign()
         let thumb = app.webViews.sliders["Kodu açmak için sağa kaydır veya sağ ok tuşunu kullan"].firstMatch

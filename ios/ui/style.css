@@ -379,3 +379,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .launch-splash{height:100%;min-height:0;background:white}
 
 #prime-square-campaigns .launch-brand>svg{width:100%;height:auto;aspect-ratio:1711/722}
+
+/* Favorites and Brands use the same 108px landscape logo card. Bookmark unchanged. */
+#prime-square-campaigns .ps-nativefavorite .ps-nativelogo{height:108px;min-height:108px;aspect-ratio:auto;padding:0 16px;border:0;border-radius:17px;box-shadow:0 4px 14px #1423340b;overflow:hidden}
+#prime-square-campaigns .ps-nativefavorite .ps-tilelogo{height:90px;width:100%;max-width:100%;flex-shrink:0;object-fit:contain}
+
+/* Keep Favorites and Brands on the same card grid at every supported width. */
+#prime-square-campaigns .ps-nativepage.ps-nativefavorites{padding-left:15px;padding-right:15px}
