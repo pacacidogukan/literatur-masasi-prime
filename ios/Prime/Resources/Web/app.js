@@ -23,7 +23,8 @@ const campaignArt={};
 let view='home',type='Tümü',brand='' ,query='',current=null,returnView='home',favorites=new Set(),revealed=false;
 const storageKey='lmprime-favorites';
 try{const saved=JSON.parse(localStorage.getItem(storageKey));if(Array.isArray(saved))favorites=new Set(saved);}catch{}
-function persistFavorites(){try{localStorage.setItem(storageKey,JSON.stringify([...favorites]));}catch{}}
+function persistFavorites(){return writeLocal(storageKey,[...favorites]);}
+function toggleFavorite(id){const next=new Set(favorites);next.has(id)?next.delete(id):next.add(id);if(!writeLocal(storageKey,[...next])){showError('Favori tercihin kaydedilemedi. Cihazında boş alan açıp tekrar dene.');return false;}favorites=next;return true;}
 const navigation=[];
 function capturePage(){return {view,type,brand,query,current,returnView,selectedCategory,discountThreshold,campaignBrand,campaignGroup,campaignOrigin,y:screen.scrollTop,rails:[...screen.querySelectorAll('.ps-carousel,.ps-coderail,.ps-lastdayrail,.ps-rounds,.ps-brandrounds,.ps-nativerail')].map(e=>e.scrollLeft)};}
 function restorePage(p){({view,type,brand,query,current,returnView,selectedCategory,discountThreshold,campaignBrand,campaignGroup,campaignOrigin}=p);render();screen.scrollTop=p.y;screen.querySelectorAll('.ps-carousel,.ps-coderail,.ps-lastdayrail,.ps-rounds,.ps-brandrounds,.ps-nativerail').forEach((e,i)=>e.scrollLeft=p.rails[i]||0);}
@@ -196,7 +197,7 @@ else if(d.sheetToggle){if(sheetMoved){sheetMoved=false;return;}sheetSnap=sheetSn
 else if(d.closeCopy){closeCopySheet();return;}
 else if(d.reveal){revealCode();return;}
 else if(d.type){categoryScroll=root.querySelector('.ps-rounds')?.scrollLeft||0;selectedCategory=d.type;type='Tümü';query='';view='category';}
-else if(d.like){favorites.has(d.like)?favorites.delete(d.like):favorites.add(d.like);persistFavorites();}
+else if(d.like){if(!toggleFavorite(d.like))return;}
 else if(d.action==='apply'){view=returnView;}
 else if(d.action==='reset'){type='Tümü';query='';view=returnView;}
 render();if(route)screen.scrollTop=0;else screen.scrollTop=previous.y;
