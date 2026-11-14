@@ -37,6 +37,16 @@ clickRoute({action:'back'});assert.equal(run('view'),'newest');clickRoute({actio
 assert.equal(run('newestOffers(offers,'+(publicationNow+8*86400)+').length'),0);
 assert.match(run('newestFeature([])'),/Son 7 günde yayınlanan yeni bir kampanya bulunmuyor/);
 run('hydrate('+JSON.stringify(rows)+');navigation.length=0');
+// Route the dataset extracted from actual row markup, so metadata cannot shadow offer navigation.
+for(const page of ['home','brands','campaigns']){
+ run("view="+JSON.stringify(page)+";query='Solgar';navigation.length=0;render()");screen.scrollTop=90;
+ const html=run('searchResults()');const tag=html.match(/<button[^>]+data-offer="live"[^>]*>/)[0];
+ const dataset=Object.fromEntries([...tag.matchAll(/data-([a-z-]+)="([^"]*)"/g)].map(([,key,value])=>[key.replace(/-([a-z])/g,(_,c)=>c.toUpperCase()),value]));
+ assert.equal(dataset.brand,undefined,'Campaign row must not carry a conflicting brand route');
+ clickRoute(dataset);assert.equal(run('view'),'detail');assert.equal(run('current.id'),'live');assert.match(screen.innerHTML,/Prime Ayrıcalıkları/);
+ clickRoute({action:'back'});assert.equal(run('view'),page);assert.equal(run('query'),'Solgar');assert.equal(screen.scrollTop,90);
+}
+run("view='home';query='';navigation.length=0;render()");
 const prior=run('capturePage()');assert.equal(prior.view,'home');run("current=offers[1];view='detail';restorePage(capturePage())");assert.match(screen.innerHTML,/Kampanya sayfasına git/);assert.equal(screen.style.overflowY,'hidden');run("view='home';render()");assert.equal(screen.style.overflowY,'auto');const railHtml=run("codeFeature(Array.from({length:37},(_,i)=>({...offers[0],id:'coupon-'+i,brand:'Brand '+i})))");assert.equal((railHtml.match(/data-offer=/g)||[]).length,37);assert.equal((railHtml.match(/ps-nativecount ps-codecount/g)||[]).length,37);assert.match(railHtml,/>1\/37<\/span>/);assert.match(railHtml,/>37\/37<\/span>/);assert.doesNotMatch(railHtml,/ps-codedots|data-code-slide/);assert.match(run('codeFeature([offers[0]])'),/>1\/1<\/span>/);assert.equal(run('codeFeature([offers[1]])'),'');const lastDayHtml=run("lastDayFeature([{...offers[0],expires:Math.floor(Date.now()/1000)+3600},{...offers[1],expires:Math.floor(Date.now()/1000)+7200}])");assert.match(lastDayHtml,/>1\/2<\/span>/);assert.match(lastDayHtml,/>2\/2<\/span>/);assert.doesNotMatch(lastDayHtml,/ps-codedots|ps-lastdaydots/);assert.equal(run('lastDayFeature(offers)'), '');const previousTimerIds=[...timers.keys()];run('pauseCardMotion(bannerTouch)');assert.equal(timers.size,2);assert.equal(previousTimerIds.filter(id=>!timers.has(id)).length,1,'Touch resets one timer only');assert([...timers.values()].some(t=>t.delay===7000));assert(run('cardMotionPauseUntil-Date.now()')<=7000);assert(run('cardMotionPauseUntil-Date.now()')>6900);assert.match(run('detailAction(offers[1])'),/Kampanya sayfasına git/);assert.doesNotMatch(run('detailAction(offers[1])'),/ps-reveal|sağa kaydır/);assert.match(run('detailAction(offers[0])'),/ps-reveal/);for(const hasCode of [0,1]){run('var giftFixture={...offers[0],hasCode:'+hasCode+",benefitCategories:['Hediyeli Alışveriş']};revealed=false");const h=run('detailAction(giftFixture)');assert.equal(/ps-reveal/.test(h),!!hasCode);assert.equal(/Kampanya sayfasına git/.test(h),!hasCode);}assert.doesNotMatch(run('filter()'),/Kullanım yöntemi|Kodlu|Kodsuz/);
  assert.equal(run("imagePoster(offers[0],'small')"),'https://example.com/compact.png');assert(requests.some(x=>x.path==='access'));assert(!source.includes('LUMA50-DEMO'));assert(!source.includes('fetch('));assert(!source.includes('unpkg.com'));assert(!screen.innerHTML.includes('Uygulamada kal'));
 run("current=offers[0];view='detail';revealed=false");assert(!run('detail()').includes('SPRING26'));assert(run('categoriesFor(current)').includes('Kampanya Kodu'));assert(!run('categoriesFor(offers[1])').includes('Kampanya Kodu'));await run('revealCode()');assert.equal(run('revealed'),true);assert(run('detail()').includes('SPRING26'));await run('copyCurrentCode()');assert.equal(requests.at(-1).body.text,'SPRING26');assert(run('copyNotice'));assert(!run('detail()').includes('Uygulamada kal'));assert(run('detail()').includes('ps-copyhandle'));
@@ -91,7 +101,7 @@ assert.equal(run('favorites.size'),0);
 for(const query of [' solgar ', ' %25 İNDİRİM ', ' seçili ürünler ']){
  run('query='+JSON.stringify(query));
  assert.deepEqual(Array.from(run('matchingBrands()')),['Solgar']);
- assert.match(run('brands()'),/data-brand="Solgar"[^>]*?(?<!hidden)>/);
+ assert.match(run('brands()'),/data-offer="live"[^>]*aria-label="Solgar: %25 indirim"/);
  assert.match(run('nativeCampaigns()'),/data-offer-id="live"/);
  for(const output of [run('brands()'),run('nativeCampaigns()'),run('discovery()')]){assert.match(output,/ps-nativelist/);assert.doesNotMatch(output,/ps-brandgrid|ps-nativerail|ps-carousel/);}
  assert.doesNotMatch(run('nativeCampaigns()'),/data-offer-id="no-code"/);
