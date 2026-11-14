@@ -435,3 +435,14 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 
 /* Section titles match the reference scale and the existing grey icons. */
 #prime-square-campaigns .ps-home .ps-codeheading,#prime-square-campaigns .ps-home .ps-discountheading{font-size:16px;font-weight:500;color:var(--ps-muted)}
+
+/* Newest section shares the approved heading/gutter system. */
+#prime-square-campaigns .ps-home .ps-recentcampaigns{display:flex;flex-direction:column;gap:12px;min-width:0}
+#prime-square-campaigns .ps-home .ps-recentcampaigns>.ps-sectionheading{margin:0 12px}
+#prime-square-campaigns .ps-home .ps-recentcampaigns>.ps-carousel{padding:0 12px;margin:0;gap:12px;scroll-padding-left:12px}
+#prime-square-campaigns .ps-home .ps-newestempty{padding:12px;color:var(--ps-muted);font-size:13px;line-height:1.5}
+/* Preserve artwork aspect ratios inside a proportional 3% safe inset. */
+#prime-square-campaigns .ps-posterimage,#prime-square-campaigns .ps-codebanner-art{position:absolute;inset:3%;width:94%;height:94%;object-fit:contain;object-position:center;border-radius:12px}
+#prime-square-campaigns .ps-nativerail button{display:grid;place-items:center}
+#prime-square-campaigns .ps-nativerail img{width:94%;height:94%;object-fit:contain;object-position:center;border-radius:12px}
+#prime-square-campaigns .ps-codebanner{background:#fff}
