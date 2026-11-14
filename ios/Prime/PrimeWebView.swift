@@ -9,6 +9,7 @@ struct PrimeWebView: UIViewRepresentable {
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--prime-ui-tests") {
             configuration.userContentController.addUserScript(WKUserScript(source: """
+            window.addEventListener('error',e=>window.webkit.messageHandlers.primeAPI.postMessage({path:'uitest/trace',body:{error:e.message,line:e.lineno}}).catch(()=>{}));
             ['click','pointerdown','pointerup','touchstart','touchend'].forEach(kind=>document.addEventListener(kind, e => {
               const el=e.target.closest('[data-action]');
               window.webkit.messageHandlers.primeAPI.postMessage({path:'uitest/trace',body:{kind,action:el?.dataset.action||e.target.tagName,x:e.clientX??e.changedTouches?.[0]?.clientX,y:e.clientY??e.changedTouches?.[0]?.clientY,hit:document.elementFromPoint(e.clientX??e.changedTouches?.[0]?.clientX,e.clientY??e.changedTouches?.[0]?.clientY)?.outerHTML.slice(0,240)}}).catch(()=>{});

@@ -34,6 +34,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - run: node scripts/sync-artwork-contract.cjs --check
       - run: node tests/client.cjs
       - run: node tests/campaign-order.cjs
       - run: node tests/ios.cjs
@@ -44,6 +45,30 @@ jobs:
         run: npm install --prefix "$RUNNER_TEMP/prime-test-deps" --ignore-scripts --no-audit --no-fund esbuild@0.25.12
       - name: Backend persistence and authorization tests
         run: NODE_PATH="$RUNNER_TEMP/prime-test-deps/node_modules" node tests/server.cjs
+
+  artwork:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser QA tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/prime-browser" --ignore-scripts --no-audit --no-fund playwright@1.62.1
+          "$RUNNER_TEMP/prime-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Actual DOM navigation and responsive artwork geometry
+        run: NODE_PATH="$RUNNER_TEMP/prime-browser/node_modules" node tests/artwork-browser.cjs
+      - name: Audit every active six-format artwork set from actual image bytes
+        if: always()
+        run: node scripts/audit-mobile-artwork.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: prime-artwork-audit
+          path: ci-artifacts/
+          retention-days: 7
 
   simulator:
     strategy:
