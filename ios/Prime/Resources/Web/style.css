@@ -446,3 +446,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-nativerail button{display:grid;place-items:center}
 #prime-square-campaigns .ps-nativerail img{width:94%;height:94%;object-fit:contain;object-position:center;border-radius:12px}
 #prime-square-campaigns .ps-codebanner{background:#fff}
+
+/* Search results reuse the brand campaign list instead of mixed card layouts. */
+#prime-square-campaigns .ps-home .ps-searchresults{margin:0 12px}
+#prime-square-campaigns .ps-searchsummary{margin:12px 0 0;color:var(--ps-muted);font-size:13px;line-height:1.5}
+#prime-square-campaigns .ps-searchresults .ps-nativelist{margin-top:12px}
