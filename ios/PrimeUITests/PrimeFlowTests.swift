@@ -154,6 +154,9 @@ final class PrimeFlowTests: XCTestCase {
             attachment.lifetime = .keepAlways
             add(attachment)
         }
+        // A clickable collapsed poster is still a layout failure (WKWebView flex/ratio regression).
+        XCTAssertGreaterThan(firstOffer.frame.height, firstOffer.frame.width,
+                             "The first portrait campaign card collapsed or lost its format.")
         try capture("01-home")
         // WKWebView virtual activation can miss freshly loaded image buttons.
         // Send the same physical touch used for the native header and copy footer.

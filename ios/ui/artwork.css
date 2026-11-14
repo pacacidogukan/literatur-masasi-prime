@@ -6,13 +6,14 @@
 #prime-square-campaigns .ps-poster.feedcard{width:100%;min-width:0;border-radius:16px}
 #prime-square-campaigns .ps-codebanner{display:block;flex:0 0 100%;border-radius:17px}
 #prime-square-campaigns .ps-nativerail button{display:block;flex:0 0 100%;height:100%}
-#prime-square-campaigns .ps-artwork-frame{display:block;position:relative;min-width:0;width:100%;height:auto;aspect-ratio:var(--ps-artwork-ratio);border-radius:10px;overflow:hidden;flex:none}
-#prime-square-campaigns [data-artwork-slot="large"]{--ps-artwork-ratio:720/1080}
-#prime-square-campaigns [data-artwork-slot="compact"]{--ps-artwork-ratio:600/820}
-#prime-square-campaigns [data-artwork-slot="square"]{--ps-artwork-ratio:768/768}
-#prime-square-campaigns [data-artwork-slot="detail"]{--ps-artwork-ratio:1200/800}
-#prime-square-campaigns [data-artwork-slot="code"]{--ps-artwork-ratio:1200/400}
-#prime-square-campaigns [data-artwork-slot="lastDay"]{--ps-artwork-ratio:1200/400}
+#prime-square-campaigns .ps-artwork-frame{display:block;position:relative;min-width:0;width:100%;height:auto;aspect-ratio:auto;border-radius:10px;overflow:hidden;flex:none}
+#prime-square-campaigns .ps-artwork-frame::before{content:"";display:block;padding-top:var(--ps-artwork-height)}
+#prime-square-campaigns [data-artwork-slot="large"]{--ps-artwork-ratio:720/1080;--ps-artwork-height:150%}
+#prime-square-campaigns [data-artwork-slot="compact"]{--ps-artwork-ratio:600/820;--ps-artwork-height:136.66666666666666%}
+#prime-square-campaigns [data-artwork-slot="square"]{--ps-artwork-ratio:768/768;--ps-artwork-height:100%}
+#prime-square-campaigns [data-artwork-slot="detail"]{--ps-artwork-ratio:1200/800;--ps-artwork-height:66.66666666666667%}
+#prime-square-campaigns [data-artwork-slot="code"]{--ps-artwork-ratio:1200/400;--ps-artwork-height:33.333333333333336%}
+#prime-square-campaigns [data-artwork-slot="lastDay"]{--ps-artwork-ratio:1200/400;--ps-artwork-height:33.333333333333336%}
 #prime-square-campaigns .ps-artwork-frame>img{display:block;position:absolute;inset:0;width:100%;height:100%;max-width:100%;max-height:100%;aspect-ratio:auto;object-fit:contain;object-position:center;border-radius:0;background:transparent}
 #prime-square-campaigns .ps-artworkfallback{display:none;position:absolute;inset:0;align-content:center;justify-items:center;gap:8px;padding:12px;background:#f3f3f5;color:var(--ps-muted);text-align:center;pointer-events:none;font-size:13px;line-height:1.4;overflow:hidden}
 #prime-square-campaigns .ps-artworkfallback b{font-size:14px;color:var(--ps-ink)}
