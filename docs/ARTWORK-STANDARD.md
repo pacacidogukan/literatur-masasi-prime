@@ -13,7 +13,7 @@ Tek ölçü kaynağı `ios/ui/artwork-contract.js` dosyasıdır. Görsellerin bo
 
 ## Yerleşim
 
-- Kartın her kenarında **6 CSS px** iç boşluk bulunur. Yüzdeyle verilen yatay/dikey boşluk kullanılmaz. Kartlar ve bölümler arasında mevcut 12 px korunur.
+- Kartın her kenarında **6 CSS px** iç boşluk bulunur. Yüzdeyle verilen yatay/dikey boşluk kullanılmaz. Kartlar ve bölümler arasında mevcut 12 px korunur. Büyük kart genişliği tablette 320 px, küçük dikey kart 220 px ile sınırlıdır; telefonlardaki mevcut %62,4 / %43 genişlik korunur. Detay görseli kullanılabilir ekran yüksekliğine göre küçülür; panel tutamacı ve koşullar alt işlem alanının arkasına itilmez.
 - Görselin tamamı kendi oranındaki iç çerçevede görünür. Kartın dış yüksekliği bu iç oran ve sabit boşluktan hesaplanır. Sabit yükseklik, `object-fit:fill`, `cover`, otomatik kırpma, esnetme veya yanlış formatı yedek olarak kullanma yasaktır.
 - Görselin içindeki logo, teklif ve gerekli koşullar dört kenardan en az %6 güvenli alanda kalır. Tasarımın arka planı tuvali doldurur; görüntünün içine beyaz/palet renkli sahte kenarlık eklenmez. Uygulamanın boşluğu görsel dosyasına ikinci kez işlenmez.
 - Büyük kartta ürün yüksekliği %25–30; küçük dikeyde %60–70. Gerekli koşul, logo veya ürün kimliği bu oran için feda edilmez. Diğer formatlar kendi kompozisyonuyla üretilir.
