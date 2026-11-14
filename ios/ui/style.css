@@ -428,7 +428,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-home .ps-brandcampaigns>.ps-carousel{padding:0 12px;margin:0;gap:12px;scroll-padding-left:12px}
 #prime-square-campaigns .ps-home .ps-sectionheading{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:28px}
 #prime-square-campaigns .ps-home .ps-brandcampaigns>.ps-sectionheading{margin:0 12px}
-#prime-square-campaigns .ps-home .ps-sectionheading h2{margin:0;font-size:18px;line-height:1.3;font-weight:600;letter-spacing:-.35px}
+#prime-square-campaigns .ps-home .ps-sectionheading h2{margin:0;font-size:16px;line-height:1.3;font-weight:500;letter-spacing:-.35px;color:var(--ps-muted)}
 #prime-square-campaigns .ps-home .ps-seeall{display:inline-flex;align-items:center;justify-content:flex-end;gap:3px;flex-shrink:0;border:0;background:none;padding:4px 0;color:var(--ps-red);font-size:14px;line-height:20px;font-weight:500;white-space:nowrap}
 #prime-square-campaigns .ps-home .ps-seeall svg{width:18px;height:18px}
 #prime-square-campaigns .ps-home .ps-codefeature>.ps-sectionheading{margin-bottom:12px}
+
+/* Section titles match the reference scale and the existing grey icons. */
+#prime-square-campaigns .ps-home .ps-codeheading,#prime-square-campaigns .ps-home .ps-discountheading{font-size:16px;font-weight:500;color:var(--ps-muted)}
