@@ -97,10 +97,11 @@ const posterHeadlines={
 function imagePoster(o,size="large"){const format=size==="square"?"square":size==="detail"?"detail":size==="large"?"large":"compact";return campaignArt[o.id]?.[format]||'';}
 function campaignImage(o,slot,extra=''){
  const m=artworkContract.slots[slot],url=o.artworkReady?asset(slot==='code'?codeBannerArt[o.id]:slot==='lastDay'?lastDayArt[o.id]:campaignArt[o.id]?.[slot]):'';
+ const spacer=`<svg class="ps-artwork-spacer" width="${m.width}" height="${m.height}" viewBox="0 0 ${m.width} ${m.height}" aria-hidden="true" focusable="false"></svg>`;
  const fallback=`<span class="ps-artworkfallback" role="img" aria-label="${esc(o.brand+' kampanya görseli hazırlanıyor')}"><b>${esc(o.brand)}</b><span>${esc(o.title)}</span></span>`;
  // A brand logo is a safe list thumbnail while a complete reviewed set is pending.
- if(!url&&slot==='square'&&logos[o.brand])return `<span class="ps-artwork-frame ps-logo-fallback ${extra}" data-artwork-slot="square"><img src="${esc(logos[o.brand])}" alt="${esc(o.brand)} logosu" loading="lazy">${fallback}</span>`;
- return `<span class="ps-artwork-frame ${extra}" data-artwork-slot="${slot}" data-artwork-state="${url?'pending':'unavailable'}">${url?`<img width="${m.width}" height="${m.height}" loading="${slot==='detail'?'eager':'lazy'}" decoding="async" data-validate-artwork="${slot}" src="${esc(url)}" alt="${esc(o.brand+' · '+o.title)}">`:''}${fallback}</span>`;
+ if(!url&&slot==='square'&&logos[o.brand])return `<span class="ps-artwork-frame ps-logo-fallback ${extra}" data-artwork-slot="square">${spacer}<img src="${esc(logos[o.brand])}" alt="${esc(o.brand)} logosu" loading="lazy">${fallback}</span>`;
+ return `<span class="ps-artwork-frame ${extra}" data-artwork-slot="${slot}" data-artwork-state="${url?'pending':'unavailable'}">${spacer}${url?`<img width="${m.width}" height="${m.height}" loading="${slot==='detail'?'eager':'lazy'}" decoding="async" data-validate-artwork="${slot}" src="${esc(url)}" alt="${esc(o.brand+' · '+o.title)}">`:''}${fallback}</span>`;
 }
 function poster(o,size){if(!o.artworkReady)return '';const slot=size==='large'?'large':size==='square'?'square':size==='detail'?'detail':'compact';return `<button type="button" class="ps-poster ${size} cursor-interaction" data-offer="${esc(o.id)}" data-card-brand="${esc(o.brand)}" aria-label="${esc(o.brand+': '+o.title)}">${campaignImage(o,slot)}</button>`}
 function carousel(arr,size){return `<div class="ps-carousel ${size}" aria-label="${size==='large'?'Öne çıkan kampanyalar':'Diğer kampanyalar'}">${arr.map(o=>poster(o,size)).join('')}</div>`}

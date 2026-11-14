@@ -37,6 +37,11 @@ clickRoute({action:'back'});assert.equal(run('view'),'newest');clickRoute({actio
 assert.equal(run('newestOffers(offers,'+(publicationNow+8*86400)+').length'),0);
 assert.match(run('newestFeature([])'),/Son 7 günde yayınlanan yeni bir kampanya bulunmuyor/);
 run('hydrate('+JSON.stringify(rows)+');navigation.length=0');
+// The native frame reserves each exact ratio with an in-flow replaced element, even before images load.
+for(const [slot,size] of Object.entries(run('artworkContract.slots'))){
+ const markup=run('campaignImage(offers[0],'+JSON.stringify(slot)+')');
+ assert.match(markup,new RegExp('class="ps-artwork-spacer" width="'+size.width+'" height="'+size.height+'"'));
+}
 // Route the dataset extracted from actual row markup, so metadata cannot shadow offer navigation.
 for(const page of ['home','brands','campaigns']){
  run("view="+JSON.stringify(page)+";query='Solgar';navigation.length=0;render()");screen.scrollTop=90;

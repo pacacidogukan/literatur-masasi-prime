@@ -32,3 +32,5 @@ Tek ölçü kaynağı `ios/ui/artwork-contract.js` dosyasıdır. Görsellerin bo
 Hatalı görsel tüm seti tekrar ürettirmez. Geçen dosyalar korunur, yalnızca hatalı format yeniden hazırlanır. Bir düzeltme sonrası aynı üretim hatası sürerse neden kaydedilir ve aynı deneme kontrolsüz biçimde tekrarlanmaz.
 
 WebKit notu: düğme içindeki mutlak konumlu görsellerin yüksekliği yalnız `aspect-ratio` ile bırakılmaz. Ortak çerçevede oranı belirleyen akış içi `::before` boşluğu vardır. Native ekran testi ilk dikey kartın yüksekliğinin genişliğinden büyük olmasını zorunlu tutar; tıklanabilir ince bir şerit başarılı kart sayılmaz.
+
+Native WKWebView kart yüksekliği, görsel yüklenmeden önce slotun doğal width/height ölçülerini taşıyan akış içi SVG yer tutucuyla ayrılır. Yalnızca aspect-ratio veya yüzde padding kullanan boş çerçeveler native düğmelerde sıfır yüksekliğe düşebildiği için kullanılmaz. Yer tutucu erişilebilirlikten gizlidir ve dokunmaları yakalamaz; gerçek görsel üzerinde değişiklik yapmaz.
