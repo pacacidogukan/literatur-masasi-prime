@@ -287,7 +287,7 @@ function failCampaignImage(img,reason){
  if(frame){frame.dataset.artworkState=reason;img.hidden=true;return;}
  // Non-campaign image failures remain inside their own thumbnail/button.
  img.hidden=true;const parent=img.parentElement;if(!parent||parent.querySelector('.ps-imageerror'))return;
- const fallback=document.createElement('span');fallback.className='ps-imageerror';fallback.setAttribute('role','img');fallback.setAttribute('aria-label',img.alt);fallback.textContent=img.alt;parent.append(fallback);
+ const fallback=document.createElement('span');fallback.className='ps-imageerror';fallback.setAttribute('role','img');fallback.setAttribute('aria-label',img.alt);fallback.textContent=img.alt;parent.style.position='relative';parent.append(fallback);
 }
 function inspectCampaignImage(img){
  const slot=img.dataset.validateArtwork;if(!slot)return;
