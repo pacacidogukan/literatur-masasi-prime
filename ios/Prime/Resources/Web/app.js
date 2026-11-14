@@ -126,7 +126,7 @@ const rail=e.target;const index=Math.round(rail.scrollLeft/Math.max(1,rail.clien
 },true);
 
 let cardMotionPauseUntil=0;
-function pauseCardMotion(){cardMotionPauseUntil=Date.now()+7000;resetBannerTimers();}
+function pauseCardMotion(event){cardMotionPauseUntil=Date.now()+7000;const section=event?.target?.closest?.('.ps-codefeature');if(section)scheduleBanner(section.classList.contains('ps-lastdayfeature')?'lastDay':'code');}
 for(const event of ['pointerdown','touchstart','keydown'])root.addEventListener(event,pauseCardMotion,{passive:true});
 function nextCardIndex(rail,requested,current){
  const count=rail.children.length;let next=(requested+count)%count;
@@ -149,11 +149,11 @@ const discoveryMotionTimer=setInterval(()=>{
 
 // Both banner rails restart a full seven-second interval after interaction.
 const bannerTimers={};
-function scheduleBanner(kind){clearTimeout(bannerTimers[kind]);if(root.isConnected)bannerTimers[kind]=setTimeout(()=>advanceBanner(kind),7000);}
-function resetBannerTimers(){scheduleBanner('code');scheduleBanner('lastDay');}
+function scheduleBanner(kind,delay=7000){clearTimeout(bannerTimers[kind]);if(root.isConnected)bannerTimers[kind]=setTimeout(()=>advanceBanner(kind),delay);}
+function resetBannerTimers(){scheduleBanner('code');scheduleBanner('lastDay',10500);}
 function advanceBanner(kind){
  if(!root.isConnected)return;
- if(loaded&&view==='home'&&!document.hidden&&Date.now()>=cardMotionPauseUntil&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+ if(loaded&&view==='home'&&!document.hidden&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
   const rail=root.querySelector(kind==='code'?'.ps-coderail':'.ps-lastdayrail');
   if(rail&&rail.children.length>1){const box=rail.getBoundingClientRect(),viewport=screen.getBoundingClientRect();if(box.bottom>viewport.top&&box.top<viewport.bottom){if(kind==='code')moveCodeBanner(codeBannerIndex+1);else moveLastDay(lastDayIndex+1);}}
  }
