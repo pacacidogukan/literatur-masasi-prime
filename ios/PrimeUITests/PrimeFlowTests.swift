@@ -92,6 +92,7 @@ final class PrimeFlowTests: XCTestCase {
         XCTAssertTrue(search.waitForExistence(timeout: 15))
         search.tap()
         search.typeText("Test ayrıcalığı")
+        XCTAssertTrue(app.webViews.staticTexts["Kampanyayı incele"].firstMatch.waitForExistence(timeout: 15))
         tap("Solgar: Test ayrıcalığı")
         XCTAssertTrue(app.webViews.staticTexts["Prime Ayrıcalıkları"].waitForExistence(timeout: 15))
         tap("Geri")
@@ -99,7 +100,7 @@ final class PrimeFlowTests: XCTestCase {
         let brandSearch = app.webViews.textFields["Marka veya kampanya ara"].firstMatch
         brandSearch.tap()
         brandSearch.typeText("Test ayrıcalığı")
-        tap("Solgar kampanyalarını aç")
+        XCTAssertTrue(app.webViews.staticTexts["Kampanyayı incele"].firstMatch.waitForExistence(timeout: 15))
         tap("Solgar: Test ayrıcalığı")
         XCTAssertTrue(app.webViews.staticTexts["Prime Ayrıcalıkları"].waitForExistence(timeout: 15))
     }
