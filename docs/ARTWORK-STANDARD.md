@@ -34,3 +34,5 @@ Hatalı görsel tüm seti tekrar ürettirmez. Geçen dosyalar korunur, yalnızca
 WebKit notu: düğme içindeki mutlak konumlu görsellerin yüksekliği yalnız `aspect-ratio` ile bırakılmaz. Ortak çerçevede oranı belirleyen akış içi `::before` boşluğu vardır. Native ekran testi ilk dikey kartın yüksekliğinin genişliğinden büyük olmasını zorunlu tutar; tıklanabilir ince bir şerit başarılı kart sayılmaz.
 
 Native WKWebView kart yüksekliği, görsel yüklenmeden önce slotun doğal width/height ölçülerini taşıyan akış içi SVG yer tutucuyla ayrılır. Yalnızca aspect-ratio veya yüzde padding kullanan boş çerçeveler native düğmelerde sıfır yüksekliğe düşebildiği için kullanılmaz. Yer tutucu erişilebilirlikten gizlidir ve dokunmaları yakalamaz; gerçek görsel üzerinde değişiklik yapmaz.
+
+Native WebKit ek güvence: render, arama ve ekran boyutu değişiminde gerçek kart genişlikleri toplu okunur; çerçeve ve dış kart yüksekliği kanonik orandan piksel olarak hesaplanır. Tekil marka yamaları kullanılmaz.

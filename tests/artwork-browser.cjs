@@ -22,7 +22,7 @@ const rows=[{id:'valid',name:'Solgar',offer:'Test ayrıcalığı',asset:'solgar.
   }
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Page overflows horizontally');
   // Invalid bytes must be bounded to one frame and remain an accessible offer.
-  const broken=page.locator('.ps-poster.large').first();await broken.locator('img').evaluate(i=>i.src='https://artwork.test/legacy.svg');
+  const broken=page.locator('.ps-poster.large').first();await broken.locator('img').evaluate(i=>{i.loading='eager';i.src='https://artwork.test/legacy.svg';});
   await page.waitForFunction(()=>document.querySelector('.ps-poster.large .ps-artwork-frame').dataset.artworkState==='invalid');
   assert(await broken.locator('.ps-artworkfallback').isVisible());
 
