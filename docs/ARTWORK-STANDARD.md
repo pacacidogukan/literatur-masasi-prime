@@ -14,7 +14,7 @@ Tek ölçü kaynağı `ios/ui/artwork-contract.js` dosyasıdır. Görsellerin bo
 ## Yerleşim
 
 - Kartın her kenarında **6 CSS px** iç boşluk bulunur. Yüzdeyle verilen yatay/dikey boşluk kullanılmaz. Kartlar ve bölümler arasında mevcut 12 px korunur. Büyük kart genişliği tablette 320 px, küçük dikey kart 220 px ile sınırlıdır; telefonlardaki mevcut %62,4 / %43 genişlik korunur. Detay görseli kullanılabilir ekran yüksekliğine göre küçülür; panel tutamacı ve koşullar alt işlem alanının arkasına itilmez.
-- Görselin tamamı kendi oranındaki iç çerçevede görünür. Kartın dış yüksekliği bu iç oran ve sabit boşluktan hesaplanır. Sabit yükseklik, `object-fit:fill`, `cover`, otomatik kırpma, esnetme veya yanlış formatı yedek olarak kullanma yasaktır.
+- Görselin tamamı kendi oranındaki iç çerçevede görünür. Kartın dış yüksekliği bu iç oran ve sabit boşluktan hesaplanır. Orandan bağımsız sabit yükseklik, `object-fit:fill`, `cover`, otomatik kırpma, esnetme veya yanlış formatı yedek olarak kullanma yasaktır.
 - Görselin içindeki logo, teklif ve gerekli koşullar dört kenardan en az %6 güvenli alanda kalır. Tasarımın arka planı tuvali doldurur; görüntünün içine beyaz/palet renkli sahte kenarlık eklenmez. Uygulamanın boşluğu görsel dosyasına ikinci kez işlenmez.
 - Büyük kartta ürün yüksekliği %25–30; küçük dikeyde %60–70. Gerekli koşul, logo veya ürün kimliği bu oran için feda edilmez. Diğer formatlar kendi kompozisyonuyla üretilir.
 - Gerçek logo ve ambalaj referansla yan yana karşılaştırılır. Değişmiş etiket, logo, uydurma koşul/fiyat, okunamayan küçük metin veya kesilmiş teklif onaylanmaz. Altı görseli yalnızca yeniden boyutlandırarak üretmek bağımsız kompozisyon sayılmaz.
@@ -31,7 +31,7 @@ Tek ölçü kaynağı `ios/ui/artwork-contract.js` dosyasıdır. Görsellerin bo
 
 Hatalı görsel tüm seti tekrar ürettirmez. Geçen dosyalar korunur, yalnızca hatalı format yeniden hazırlanır. Bir düzeltme sonrası aynı üretim hatası sürerse neden kaydedilir ve aynı deneme kontrolsüz biçimde tekrarlanmaz.
 
-WebKit notu: düğme içindeki mutlak konumlu görsellerin yüksekliği yalnız `aspect-ratio` ile bırakılmaz. Ortak çerçevede oranı belirleyen akış içi `::before` boşluğu vardır. Native ekran testi ilk dikey kartın yüksekliğinin genişliğinden büyük olmasını zorunlu tutar; tıklanabilir ince bir şerit başarılı kart sayılmaz.
+WebKit notu: düğme içindeki mutlak konumlu görsellerin yüksekliği yalnız `aspect-ratio` veya yüzde padding ile bırakılmaz. Doğal ölçülü SVG yer tutucu ve gerçek kart genişliğinden hesaplanan ortak geometri kullanılır. Native ekran testi ilk dikey kartın yüksekliğinin genişliğinden büyük olmasını zorunlu tutar; tıklanabilir ince bir şerit başarılı kart sayılmaz.
 
 Native WKWebView kart yüksekliği, görsel yüklenmeden önce slotun doğal width/height ölçülerini taşıyan akış içi SVG yer tutucuyla ayrılır. Yalnızca aspect-ratio veya yüzde padding kullanan boş çerçeveler native düğmelerde sıfır yüksekliğe düşebildiği için kullanılmaz. Yer tutucu erişilebilirlikten gizlidir ve dokunmaları yakalamaz; gerçek görsel üzerinde değişiklik yapmaz.
 
