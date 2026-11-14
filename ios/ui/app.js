@@ -110,25 +110,19 @@ function categoryRounds(){return `<div class="ps-rounds" aria-label="Kampanya t�
 function home(){return `${header()}<main class="ps-main ps-home">${categoryRounds()}<div id="ps-discovery">${discovery()}</div></main>`}
 const codeBannerArt={};
 let codeBannerIndex=0;
-function codeDotIndices(count,index=0){const size=Math.min(20,count);const start=Math.max(0,Math.min(count-size,index-Math.floor(size/2)));return Array.from({length:size},(_,n)=>start+n);}
-function codeDots(coded,index=0){return codeDotIndices(coded.length,index).map(i=>`<button type="button" data-code-slide="${i}" class="cursor-interaction" aria-current="${i===index}" aria-label="${esc(coded[i].brand)} kampanyasını göster · ${i+1} / ${coded.length}"></button>`).join('');}
-function syncCodeDots(){const dots=root.querySelector('.ps-codefeature:not(.ps-lastdayfeature) .ps-codedots');if(dots)dots.innerHTML=codeDots(spreadCampaigns(offers.filter(o=>o.hasCode&&matchesSearch(o)),'codes'),codeBannerIndex);}
-
 function codeFeature(arr){
 const coded=spreadCampaigns(arr.filter(o=>o.hasCode),'codes');
 if(!coded.length)return '';
-return `<section class="ps-codefeature" aria-label="Kampanya kodlu fırsatlar"><h2 class="ps-codeheading">Kampanya Kodu</h2><div class="ps-coderail" aria-roledescription="kampanya slaytları">${coded.map(o=>`<button type="button" data-offer="${esc(o.id)}" data-card-brand="${esc(o.brand)}" class="ps-codebanner cursor-interaction ${o.brand==='Justin Beauty'?'justin':''}" aria-label="${esc(o.brand+': '+o.title)}"><img class="ps-codebanner-art" src="${codeBannerArt[o.id]||offerTicket(o)}" alt="${esc(o.brand+': '+o.title+' · '+o.sub)}"></button>`).join('')}</div>${coded.length>1?`<div class="ps-codedots" aria-label="Kampanya seç">${codeDots(coded,0)}</div>`:''}</section>`;
+return `<section class="ps-codefeature" aria-label="Kampanya kodlu fırsatlar"><h2 class="ps-codeheading">Kampanya Kodu</h2><div class="ps-coderail" aria-roledescription="kampanya slaytları">${coded.map((o,index)=>`<button type="button" data-offer="${esc(o.id)}" data-card-brand="${esc(o.brand)}" class="ps-codebanner cursor-interaction ${o.brand==='Justin Beauty'?'justin':''}" aria-label="${esc(o.brand+': '+o.title)}"><img class="ps-codebanner-art" src="${codeBannerArt[o.id]||offerTicket(o)}" alt="${esc(o.brand+': '+o.title+' · '+o.sub)}"><span class="ps-nativecount ps-codecount" aria-label="${index+1}. kampanya, toplam ${coded.length}">${index+1}/${coded.length}</span></button>`).join('')}</div></section>`;
 }
 function moveCodeBanner(i,behavior='smooth'){
 const rail=root.querySelector('.ps-coderail');if(!rail||!rail.children.length)return;
 codeBannerIndex=i>=rail.children.length?nextCardIndex(rail,i,codeBannerIndex):(i+rail.children.length)%rail.children.length;
 rail.scrollTo({left:codeBannerIndex*rail.clientWidth,behavior});
-syncCodeDots();
 }
 root.addEventListener('scroll',e=>{
 if(!e.target.classList?.contains('ps-coderail'))return;
 const rail=e.target;const index=Math.round(rail.scrollLeft/Math.max(1,rail.clientWidth));if(index===codeBannerIndex)return;codeBannerIndex=index;
-syncCodeDots();
 },true);
 
 let cardMotionPauseUntil=0;
