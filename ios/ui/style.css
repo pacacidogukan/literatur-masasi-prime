@@ -402,3 +402,16 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 /* Reuse the campaign-card badge; only its corner changes for coupon banners. */
 #prime-square-campaigns .ps-codebanner .ps-codecount{top:auto;bottom:8px}
 #prime-square-campaigns .ps-home .ps-codefeature{margin-bottom:0}
+
+/* Home cards, section boundaries and page gutters share one spacing value. */
+#prime-square-campaigns .ps-home{--ps-home-gap:12px}
+#prime-square-campaigns .ps-main.ps-home{display:flex;flex-direction:column;gap:var(--ps-home-gap);padding:var(--ps-home-gap) 0}
+#prime-square-campaigns .ps-home #ps-discovery{display:flex;flex-direction:column;gap:var(--ps-home-gap);min-width:0}
+#prime-square-campaigns .ps-home .ps-rounds{padding:0 var(--ps-home-gap);margin:0;scroll-padding-left:var(--ps-home-gap)}
+#prime-square-campaigns .ps-home #ps-discovery>.ps-carousel{gap:var(--ps-home-gap);padding:0 var(--ps-home-gap);margin:0;scroll-padding-left:var(--ps-home-gap)}
+#prime-square-campaigns .ps-home #ps-discovery>.ps-codefeature{margin:0 var(--ps-home-gap)}
+#prime-square-campaigns .ps-home .ps-codeheading{margin:0 0 var(--ps-home-gap)}
+#prime-square-campaigns .ps-home #ps-discovery>.ps-brandrounds{gap:var(--ps-home-gap);padding:0 var(--ps-home-gap);margin:0;scroll-padding-left:var(--ps-home-gap)}
+#prime-square-campaigns .ps-home .ps-discountheading{margin:0 var(--ps-home-gap)}
+#prime-square-campaigns .ps-home .ps-discountgrid{gap:var(--ps-home-gap);padding:0 var(--ps-home-gap);margin:0}
+#prime-square-campaigns .ps-header:has(+ .ps-home){padding-left:12px;padding-right:12px}
