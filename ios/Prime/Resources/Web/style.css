@@ -451,3 +451,6 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-home .ps-searchresults{margin:0 12px}
 #prime-square-campaigns .ps-searchsummary{margin:12px 0 0;color:var(--ps-muted);font-size:13px;line-height:1.5}
 #prime-square-campaigns .ps-searchresults .ps-nativelist{margin-top:12px}
+
+/* Shared horizontal campaign rows: keep long summaries within the card. */
+#prime-square-campaigns .ps-nativelist .ps-rowsummary{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}

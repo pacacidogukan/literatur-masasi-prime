@@ -102,6 +102,19 @@ await run('deleteData()');
 assert(requests.some(x=>x.path==='delete-account'));
 assert.equal(run('favorites.size'),0);
 
+// Brand directory always shows every active campaign as shared horizontal rows.
+run('hydrate('+JSON.stringify([...rows,{...rows[0],id:'second-brand-offer',offer:'İkinci fırsat',cardArtwork:undefined}])+')');
+run("view='brands';query='stale';type='Sepette İndirim';navigation.length=0;render()");
+clickRoute({brand:'Solgar'});
+assert.equal(run('view'),'brand');assert.match(screen.innerHTML,/2 kampanya/);
+assert.match(screen.innerHTML,/ps-nativelist/);assert.doesNotMatch(screen.innerHTML,/ps-feed|ps-poster/);
+assert.match(screen.innerHTML,/data-offer="live"/);assert.match(screen.innerHTML,/data-offer="second-brand-offer"/);
+assert.doesNotMatch(screen.innerHTML,/data-offer="no-code"|data-offer="expired"/);
+assert.match(screen.innerHTML,/Seçili ürünler/);
+clickRoute({offer:'second-brand-offer'});assert.equal(run('view'),'detail');
+clickRoute({action:'back'});assert.equal(run('view'),'brand');assert.match(screen.innerHTML,/2 kampanya/);
+run('hydrate('+JSON.stringify(rows)+')');
+
 // Search matches brands, offer titles and descriptions consistently on every screen.
 for(const query of [' solgar ', ' %25 İNDİRİM ', ' seçili ürünler ']){
  run('query='+JSON.stringify(query));
