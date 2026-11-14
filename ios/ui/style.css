@@ -394,3 +394,11 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-search input:focus-visible{outline:none;box-shadow:none;-webkit-appearance:none;appearance:none}
 /* Pointer taps must not flash the settings rows grey. Keyboard focus stays visible. */
 #prime-square-campaigns .ps-settingsnative .menu button:active{background:transparent}
+
+/* Approved home spacing: compact filters, same icon size, closer labels. */
+#prime-square-campaigns .ps-home .ps-rounds{gap:4px}
+#prime-square-campaigns .ps-home .ps-rounds button{flex:0 0 68px;width:68px;min-width:68px;max-width:68px;row-gap:2px}
+#prime-square-campaigns .ps-home .ps-rounds button>span{width:68px}
+/* Reuse the campaign-card badge; only its corner changes for coupon banners. */
+#prime-square-campaigns .ps-codebanner .ps-codecount{top:auto;bottom:8px}
+#prime-square-campaigns .ps-codefeature:not(.ps-lastdayfeature){margin-bottom:0}
