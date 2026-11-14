@@ -84,7 +84,7 @@
 #prime-square-campaigns .ps-rounds img{display:block;width:38px;height:38px;object-fit:contain}
 #prime-square-campaigns .ps-rounds span{display:block;min-height:30px;text-align:center;word-break:normal}
 #prime-square-campaigns .ps-rounds .active b{background:#fff0f0;border-color:#ff3131;box-shadow:none}
-#prime-square-campaigns .ps-rounds .active{color:#d32232}
+#prime-square-campaigns .ps-rounds .active{color:var(--ps-red)}
 #prime-square-campaigns .ps-rounds{scrollbar-width:none;-ms-overflow-style:none}
 #prime-square-campaigns .ps-rounds::-webkit-scrollbar{display:none;width:0;height:0}
 #prime-square-campaigns .ps-rounds b,#prime-square-campaigns .ps-rounds .active b{background:transparent;border:0;border-radius:0;box-shadow:none}
@@ -286,7 +286,7 @@
 #prime-square-campaigns .ps-icon,#prime-square-campaigns .ps-detailtop>button,#prime-square-campaigns .ps-nav button{min-width:44px;min-height:44px}
 #prime-square-campaigns .ps-nav{padding-bottom:max(8px,env(safe-area-inset-bottom))}
 #prime-square-campaigns .ps-nav button{color:#626b77}
-#prime-square-campaigns .ps-nav button.active{color:#cf2020}
+#prime-square-campaigns .ps-nav button.active{color:var(--ps-red)}
 #prime-square-campaigns .ps-brandrounds .ps-brandlabel{overflow-wrap:break-word}
 #prime-square-campaigns .ps-imageerror{position:absolute;inset:0;display:grid;place-content:center;padding:18px;background:#eeeef0;color:#4c5057;text-align:center;font-size:13px;line-height:1.5}
 #prime-square-campaigns .ps-copyerror{margin:12px;color:#b02020;font-size:13px;line-height:1.5}
@@ -422,3 +422,13 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-header,#prime-square-campaigns .ps-header:has(+ .ps-home){padding-top:4px;padding-bottom:4px}
 #prime-square-campaigns .ps-searchrow{min-height:44px;align-items:center}
 #prime-square-campaigns .ps-searchrow>.ps-icon{min-width:44px;min-height:44px}
+
+/* Approved home section headings and brand-red navigation. */
+#prime-square-campaigns .ps-home .ps-brandcampaigns{display:flex;flex-direction:column;gap:12px;min-width:0}
+#prime-square-campaigns .ps-home .ps-brandcampaigns>.ps-carousel{padding:0 12px;margin:0;gap:12px;scroll-padding-left:12px}
+#prime-square-campaigns .ps-home .ps-sectionheading{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:28px}
+#prime-square-campaigns .ps-home .ps-brandcampaigns>.ps-sectionheading{margin:0 12px}
+#prime-square-campaigns .ps-home .ps-sectionheading h2{margin:0;font-size:18px;line-height:1.3;font-weight:600;letter-spacing:-.35px}
+#prime-square-campaigns .ps-home .ps-seeall{display:inline-flex;align-items:center;justify-content:flex-end;gap:3px;flex-shrink:0;border:0;background:none;padding:4px 0;color:var(--ps-red);font-size:14px;line-height:20px;font-weight:500;white-space:nowrap}
+#prime-square-campaigns .ps-home .ps-seeall svg{width:18px;height:18px}
+#prime-square-campaigns .ps-home .ps-codefeature>.ps-sectionheading{margin-bottom:12px}
