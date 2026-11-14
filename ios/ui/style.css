@@ -401,4 +401,4 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-home .ps-rounds button>span{width:68px}
 /* Reuse the campaign-card badge; only its corner changes for coupon banners. */
 #prime-square-campaigns .ps-codebanner .ps-codecount{top:auto;bottom:8px}
-#prime-square-campaigns .ps-codefeature:not(.ps-lastdayfeature){margin-bottom:0}
+#prime-square-campaigns .ps-home .ps-codefeature{margin-bottom:0}

@@ -126,7 +126,7 @@ const rail=e.target;const index=Math.round(rail.scrollLeft/Math.max(1,rail.clien
 },true);
 
 let cardMotionPauseUntil=0;
-function pauseCardMotion(){cardMotionPauseUntil=Date.now()+12000;}
+function pauseCardMotion(){cardMotionPauseUntil=Date.now()+7000;resetBannerTimers();}
 for(const event of ['pointerdown','touchstart','keydown'])root.addEventListener(event,pauseCardMotion,{passive:true});
 function nextCardIndex(rail,requested,current){
  const count=rail.children.length;let next=(requested+count)%count;
@@ -147,25 +147,27 @@ const discoveryMotionTimer=setInterval(()=>{
  }
 },6000);
 
-const codeBannerTimer=setInterval(()=>{
-if(!root.isConnected){clearInterval(codeBannerTimer);return;}
-if(view!=='home'||document.hidden||Date.now()<cardMotionPauseUntil||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-const rail=root.querySelector('.ps-coderail');if(!rail||rail.children.length<2)return;
-const box=rail.getBoundingClientRect(),viewport=screen.getBoundingClientRect();
-if(box.bottom<=viewport.top||box.top>=viewport.bottom||rail.matches(':hover')||rail.contains(document.activeElement))return;
-moveCodeBanner(codeBannerIndex+1,window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth');
-},5000);
+// Both banner rails restart a full seven-second interval after interaction.
+const bannerTimers={};
+function scheduleBanner(kind){clearTimeout(bannerTimers[kind]);if(root.isConnected)bannerTimers[kind]=setTimeout(()=>advanceBanner(kind),7000);}
+function resetBannerTimers(){scheduleBanner('code');scheduleBanner('lastDay');}
+function advanceBanner(kind){
+ if(!root.isConnected)return;
+ if(loaded&&view==='home'&&!document.hidden&&Date.now()>=cardMotionPauseUntil&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+  const rail=root.querySelector(kind==='code'?'.ps-coderail':'.ps-lastdayrail');
+  if(rail&&rail.children.length>1){const box=rail.getBoundingClientRect(),viewport=screen.getBoundingClientRect();if(box.bottom>viewport.top&&box.top<viewport.bottom){if(kind==='code')moveCodeBanner(codeBannerIndex+1);else moveLastDay(lastDayIndex+1);}}
+ }
+ scheduleBanner(kind);
+}
+resetBannerTimers();
 const lastDayArt={};
 
 let lastDayIndex=0;
 function lastDayTicket(o){const xml=v=>String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400"><rect width="1200" height="400" rx="36" fill="#171719"/><path d="M890 0v400" stroke="#f6f0df" stroke-width="4" stroke-dasharray="12 12"/><circle cx="890" cy="0" r="26" fill="#fafafa"/><circle cx="890" cy="400" r="26" fill="#fafafa"/><rect x="44" y="34" width="152" height="44" rx="12" fill="#ff454b"/><text x="120" y="64" text-anchor="middle" font-family="Arial,sans-serif" font-size="25" font-weight="700" fill="#171719">SON GÜN</text><text x="44" y="130" font-family="Arial,sans-serif" font-size="36" fill="#f6f0df">${xml(o.brand)}</text><text x="44" y="217" font-family="Arial,sans-serif" font-size="52" font-weight="700" fill="#f6f0df">${xml(o.title)}</text><text x="44" y="286" font-family="Arial,sans-serif" font-size="30" fill="#f6f0df">${xml(o.sub)}</text><text x="44" y="351" font-family="Arial,sans-serif" font-size="25" fill="#ff7276">Bitmesine 24 saatten az kaldı</text><text x="1043" y="208" text-anchor="middle" font-family="Arial,sans-serif" font-size="72" font-weight="700" fill="#ff454b">24</text><text x="1043" y="250" text-anchor="middle" font-family="Arial,sans-serif" font-size="26" fill="#f6f0df">SAATTEN AZ</text></svg>`);}
 function lastDayFeature(arr){const last=spreadCampaigns(arr.filter(o=>isLastDay(o)),'last-day');if(!last.length)return '';
-return `<section class="ps-codefeature ps-lastdayfeature" aria-label="Son gün kampanyaları"><h2 class="ps-codeheading">Son Gün</h2><div class="ps-lastdayrail" aria-roledescription="kampanya slaytları">${last.map(o=>`<button type="button" data-offer="${esc(o.id)}" data-card-brand="${esc(o.brand)}" class="ps-codebanner cursor-interaction" aria-label="${esc(o.brand+': '+o.title)}"><img class="ps-codebanner-art" src="${lastDayArt[o.id]||lastDayTicket(o)}" alt="${esc(o.brand+' · '+o.title+' · '+o.sub)}"></button>`).join('')}</div>${last.length>1?`<div class="ps-codedots ps-lastdaydots" aria-label="Son gün kampanyası seç">${last.map((o,i)=>`<button type="button" data-lastday-slide="${i}" class="cursor-interaction" aria-current="${i===0}" aria-label="${esc(o.brand)} kampanyasını göster"></button>`).join('')}</div>`:''}</section>`;}
-function moveLastDay(i,behavior='smooth'){const rail=root.querySelector('.ps-lastdayrail');if(!rail||!rail.children.length)return;lastDayIndex=i>=rail.children.length?nextCardIndex(rail,i,lastDayIndex):(i+rail.children.length)%rail.children.length;rail.scrollTo({left:lastDayIndex*rail.clientWidth,behavior});root.querySelectorAll('.ps-lastdaydots button').forEach((b,n)=>b.setAttribute('aria-current',String(n===lastDayIndex)));}
-root.addEventListener('click',e=>{const b=e.target.closest('[data-lastday-slide]');if(b)moveLastDay(Number(b.dataset.lastdaySlide));});
-root.addEventListener('scroll',e=>{if(!e.target.classList?.contains('ps-lastdayrail'))return;const rail=e.target;lastDayIndex=Math.round(rail.scrollLeft/Math.max(1,rail.clientWidth));root.querySelectorAll('.ps-lastdaydots button').forEach((b,n)=>b.setAttribute('aria-current',String(n===lastDayIndex)));},true);
-function advanceLastDay(){if(!root.isConnected){clearInterval(lastDayTimer);return;}if(view!=='home'||document.hidden||Date.now()<cardMotionPauseUntil||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;const rail=root.querySelector('.ps-lastdayrail');if(!rail||rail.children.length<2)return;const box=rail.getBoundingClientRect(),viewport=screen.getBoundingClientRect();if(box.bottom<=viewport.top||box.top>=viewport.bottom||rail.matches(':hover')||rail.contains(document.activeElement))return;moveLastDay(lastDayIndex+1,window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth');}
-const lastDayTimer=setInterval(advanceLastDay,5000);
+return `<section class="ps-codefeature ps-lastdayfeature" aria-label="Son gün kampanyaları"><h2 class="ps-codeheading">Son Gün</h2><div class="ps-lastdayrail" aria-roledescription="kampanya slaytları">${last.map((o,index)=>`<button type="button" data-offer="${esc(o.id)}" data-card-brand="${esc(o.brand)}" class="ps-codebanner cursor-interaction" aria-label="${esc(o.brand+': '+o.title)}"><img class="ps-codebanner-art" src="${lastDayArt[o.id]||lastDayTicket(o)}" alt="${esc(o.brand+' · '+o.title+' · '+o.sub)}"><span class="ps-nativecount ps-codecount" aria-label="${index+1}. kampanya, toplam ${last.length}">${index+1}/${last.length}</span></button>`).join('')}</div></section>`;}
+function moveLastDay(i,behavior='smooth'){const rail=root.querySelector('.ps-lastdayrail');if(!rail||!rail.children.length)return;lastDayIndex=i>=rail.children.length?nextCardIndex(rail,i,lastDayIndex):(i+rail.children.length)%rail.children.length;rail.scrollTo({left:lastDayIndex*rail.clientWidth,behavior});}
+root.addEventListener('scroll',e=>{if(!e.target.classList?.contains('ps-lastdayrail'))return;lastDayIndex=Math.round(e.target.scrollLeft/Math.max(1,e.target.clientWidth));},true);
 
 function discovery(){const arr=spreadCampaigns(offers.filter(matchesSearch),'discovery');const top=arr.slice(0,20);const small=arr.slice(20).length?arr.slice(20):arr;return `${arr.length?'':`<div class="ps-empty" role="status">${query?'Aramana uygun kampanya bulunamadı.':'Yeni ayrıcalıklar yakında'}</div>`}${carousel(top,'large')}${codeFeature(arr)}${carousel(small,'small')}${lastDayFeature(arr)}${brandRounds()}${discountTiles()}`}
 const discountRates={};
