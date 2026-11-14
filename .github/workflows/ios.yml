@@ -71,6 +71,7 @@ jobs:
           retention-days: 7
 
   simulator:
+    needs: [behavior, artwork]
     strategy:
       fail-fast: false
       matrix:
