@@ -60,7 +60,6 @@
 #prime-square-campaigns .ps-overlaytags{bottom:8px}
 #prime-square-campaigns .ps-overlaytags .ps-tag{box-shadow:none;background:#ffffffeb}
 #prime-square-campaigns .ps-poster{transition:transform .2s ease,box-shadow .2s ease}
-#prime-square-campaigns .ps-poster:active{transform:scale(.98)}
 #prime-square-campaigns .ps-appdetail{padding:0 0 24px;background:#fff}
 #prime-square-campaigns .ps-back{position:sticky;top:0;z-index:4;border-bottom:1px solid #f0f0f1}
 #prime-square-campaigns .ps-detailhero{width:100%;aspect-ratio:3/2;overflow:hidden;background:#f3f3f5}
@@ -386,3 +385,12 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 
 /* Keep Favorites and Brands on the same card grid at every supported width. */
 #prime-square-campaigns .ps-nativepage.ps-nativefavorites{padding-left:15px;padding-right:15px}
+
+/* WebKit's default tap overlay also covers clickable SVGs and labels. */
+#prime-square-campaigns,#prime-square-campaigns *{-webkit-tap-highlight-color:transparent}
+/* Search keeps its neutral surface while the input and caret remain focused. */
+#prime-square-campaigns .ps-search input,
+#prime-square-campaigns .ps-search input:focus,
+#prime-square-campaigns .ps-search input:focus-visible{outline:none;box-shadow:none;-webkit-appearance:none;appearance:none}
+/* Pointer taps must not flash the settings rows grey. Keyboard focus stays visible. */
+#prime-square-campaigns .ps-settingsnative .menu button:active{background:transparent}
