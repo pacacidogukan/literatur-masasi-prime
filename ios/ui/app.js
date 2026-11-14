@@ -243,7 +243,7 @@ function syncArtworkFrames(){
   const spec=artworkContract.slots[frame.dataset.artworkSlot];if(!spec)return null;
   const parent=frame.parentElement;
   const media=parent&&(['ps-poster','ps-codebanner','ps-nativehero'].some(name=>parent.classList.contains(name))||parent.parentElement?.classList.contains('ps-nativerail'));
-  const width=media?parent.clientWidth-artworkContract.inset*2:frame.getBoundingClientRect().width;
+  const width=media?parent.getBoundingClientRect().width-artworkContract.inset*2:frame.getBoundingClientRect().width;
   return width>0?{frame,parent,media,width,height:width*spec.height/spec.width}:null;
  }).filter(Boolean);
  for(const x of layouts){x.frame.style.width=x.width+'px';x.frame.style.height=x.height+'px';if(x.media)x.parent.style.height=(x.height+artworkContract.inset*2)+'px';}
