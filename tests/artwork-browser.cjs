@@ -21,6 +21,24 @@ const rows=[{id:'valid',name:'Solgar',offer:'Test ayrıcalığı',asset:'solgar.
    for(const g of await geometry(selector)){if(selector==='.ps-poster.large')assert(g.outerWidth<=contract.maxLargeWidth+.1);if(selector==='.ps-poster.small')assert(g.outerWidth<=contract.maxCompactWidth+.1);const s=contract.slots[g.slot];assert(Math.abs(g.w/g.h-s.width/s.height)<.002,JSON.stringify({width,selector,g}));for(const edge of ['left','right','top','bottom'])assert(Math.abs(g[edge]-contract.inset)<.2,JSON.stringify({width,selector,g}));assert.equal(g.fit,'contain');}
   }
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Page overflows horizontally');
+  // All three tab headers keep one usable search field and a 44px back target.
+  for(const name of ['Markalar','Kampanyalar','Favoriler']){
+   await page.getByRole('button',{name,exact:true}).tap();
+   const header=page.locator('.ps-pagesearchheader');
+   assert.equal(await header.locator('input').count(),1);
+   assert.equal(await header.locator('button').count(),1);
+   const bounds=await header.evaluate(el=>{const b=el.querySelector('button').getBoundingClientRect(),s=el.querySelector('.ps-search').getBoundingClientRect();return {backWidth:b.width,backHeight:b.height,left:s.left,right:s.right,top:s.top,backTop:b.top,width:innerWidth};});
+   assert(bounds.backWidth>=44&&bounds.backHeight>=44);
+   assert(bounds.right<=bounds.width&&bounds.left>=0);
+   if(name==='Kampanyalar'){
+    const input=header.getByRole('textbox');await input.fill('Test ayrıcalığı');
+    assert.equal(await page.locator('#ps-native-results [data-offer="valid"]').count(),1);
+    await input.fill('');
+   }
+  }
+  await page.getByRole('button',{name:'Geri',exact:true}).tap();
+  await page.getByRole('button',{name:'Ana Sayfa',exact:true}).tap();
+  await page.locator('.ps-poster.large').first().waitFor();
   // Invalid bytes must be bounded to one frame and remain an accessible offer.
   const broken=page.locator('.ps-poster.large').first();await broken.locator('img').evaluate(i=>{i.loading='eager';i.src='https://artwork.test/legacy.svg';});
   await page.waitForFunction(()=>document.querySelector('.ps-poster.large .ps-artwork-frame').dataset.artworkState==='invalid');

@@ -59,6 +59,12 @@ run("copyNotice=false");copyFailure=true;await run('copyCurrentCode()');assert.e
 run("revealed=false;current.code=''");revealFailure=true;await run('revealCode()');assert.equal(run('revealed'),false);revealFailure=false;
 run("discountThreshold='25'");assert.equal(run('discountOffers().length'),1);run("selectedCategory='Sepette İndirim'");assert(run('categorypage()').includes('no-code'));assert(!run('categorypage()').includes('data-offer-id="live"'));
 run("favorites.add('live');persistFavorites()");assert(store.get('lmprime-favorites').includes('live'));assert(run('nativeFavorites()').includes('Solgar'));
+// Favorites search must stay within saved offers and must not inherit another page's query.
+run("favoriteQuery='solgar';query='Other'");assert.match(run('favoritesContent()'),/Solgar/);assert.doesNotMatch(run('favoritesContent()'),/Other/);
+run("favoriteQuery='Other'");assert.match(run('favoritesContent()'),/Favorilerinde aramana uygun/);
+run("favoriteQuery='seçili'");assert.match(run('favoritesContent()'),/Solgar/);
+run("favoriteQuery='';query=''");
+for(const page of ['brands()','nativeCampaigns()','nativeFavorites()']){const html=run(page);assert.match(html,/ps-pagesearchheader/);assert.equal((html.match(/<input/g)||[]).length,1);assert.doesNotMatch(html,/data-native-search|Ayarları aç/);}
 assert(run('copySheetDismissal(100,400,360)'));assert(!run('copySheetDismissal(-90,100,360)'));assert(!run('copySheetDismissal(0,10,360)'));
 fail=true;await run('start()');assert(screen.innerHTML.includes('Kampanyalar yüklenemedi'));assert(!screen.innerHTML.includes('Yeni ayrıcalıklar yakında'));fail=false;await run('start()');assert.equal(run('loaded'),true);assert.equal(run('loadError'),false);
 run("current=offers[0];current.expires=1;revealed=false");const before=requests.length;await run('revealCode()');assert.equal(before,requests.length);
