@@ -110,7 +110,7 @@ let categoryScroll=0;
 let selectedCategory='Kampanya Kodu';
 const categoryIconBoxes=[[12,28,86,61],[110,19,87,75],[213,14,65,86],[305,18,85,77],[14,116,83,72],[111,112,78,77],[212,112,76,77],[309,112,79,78],[7,211,93,69],[100,211,93,66],[205,207,84,75],[305,203,86,78]];
 const polishedIconBoxes={'Kampanya Kodu':[28,235,405,335],'Son Gün':[449,195,376,390],'Sepette İndirim':[820,200,420,390],'Hediyeli Alışveriş':[32,635,393,410],'Üyelere Özel':[442,679,380,360],'Kargo Avantajı':[827,681,412,365]};
-function categoryIconStyle(name){const i=categoryAtlasNames.indexOf(name);if(i<0)return '';return `background-image:url('assets/category-soft-blush-v1.webp');background-size:400% 300%;background-position:${(i%4)*100/3}% ${Math.floor(i/4)*50}%;`;}
+function categoryIconStyle(name){const i=categoryAtlasNames.indexOf(name);if(i<0)return '';return `background-image:url('assets/category-powder-red-v2.webp');background-size:400% 300%;background-position:${(i%4)*100/3}% ${Math.floor(i/4)*50}%;`;}
 
 function clockAngles(now=new Date()){const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Istanbul',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(now).map(p=>[p.type,p.value]));const seconds=Number(p.second)+now.getMilliseconds()/1000;const minutes=Number(p.minute)+seconds/60;return {hour:(Number(p.hour)%12+minutes/60)*30,minute:minutes*6};}
 function liveClock(){const a=clockAngles();return `<span class="ps-liveclock" aria-hidden="true"><span class="ps-clockhand ps-clockhour" style="--clock-angle:${a.hour}deg"></span><span class="ps-clockhand ps-clockminute" style="--clock-angle:${a.minute}deg"></span><span class="ps-clockpin"></span></span>`;}

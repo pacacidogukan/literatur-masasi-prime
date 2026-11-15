@@ -476,3 +476,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-categorygrid button:focus-visible{outline:2px solid var(--ps-red);outline-offset:3px;border-radius:12px}
 #prime-square-campaigns .ps-categorygrid button.active>b{outline:2px solid var(--ps-red);outline-offset:-2px}
 
+/* Match the shared card rhythm; override legacy home-strip width caps. */
+#prime-square-campaigns .ps-home .ps-categorygrid{gap:var(--ps-home-gap)}
+#prime-square-campaigns .ps-home .ps-categorygrid button{width:100%;min-width:0;max-width:none;flex:none;row-gap:6px}
+#prime-square-campaigns .ps-home .ps-categorygrid button>span.ps-categorylabel{width:100%;height:auto;min-height:3.9em;line-height:1.3}
+#prime-square-campaigns .ps-home .ps-categorygrid button>b{background:#ffe8e8}
