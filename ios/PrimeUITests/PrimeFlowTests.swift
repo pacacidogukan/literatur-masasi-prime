@@ -45,7 +45,7 @@ final class PrimeFlowTests: XCTestCase {
     func openSolgarCampaign() {
         tap("Markalar")
         tap("Solgar kampanyalarını aç")
-        XCTAssertTrue(app.webViews.staticTexts["Markanın kampanyaları"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.webViews.staticTexts["Marka Kampanyaları"].waitForExistence(timeout: 15))
         XCTAssertEqual(app.webViews.switches.matching(NSPredicate(format: "label CONTAINS %@", "favorilere")).count, 0)
         tap("Solgar: Test ayrıcalığı")
     }
