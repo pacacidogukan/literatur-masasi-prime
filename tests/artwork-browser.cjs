@@ -30,6 +30,16 @@ const rows=[{id:'valid',name:'Solgar',offer:'Test ayrıcalığı',asset:'solgar.
    for(const g of await geometry(selector)){if(selector==='.ps-poster.large')assert(g.outerWidth<=contract.maxLargeWidth+.1);if(selector==='.ps-poster.small')assert(g.outerWidth<=contract.maxCompactWidth+.1);const s=contract.slots[g.slot];assert(Math.abs(g.w/g.h-s.width/s.height)<.002,JSON.stringify({width,selector,g}));for(const edge of ['left','right','top','bottom'])assert(Math.abs(g[edge]-contract.inset)<.2,JSON.stringify({width,selector,g}));assert.equal(g.fit,'contain');}
   }
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Page overflows horizontally');
+  // Compare the real computed styles across page and section headers.
+  const sectionStyle=await page.locator('.ps-brandcampaigns h2').evaluate(el=>{const s=getComputedStyle(el);return [s.fontFamily,s.fontSize,s.fontWeight,s.color,s.letterSpacing]});
+  async function headerStyle(selector){
+   const result=await page.locator(selector).evaluate(el=>{const s=getComputedStyle(el),h=el.parentElement,b=h.querySelector('[data-action="back"]'),r=b.getBoundingClientRect(),svg=b.querySelector('svg'),v=getComputedStyle(svg);return {title:[s.fontFamily,s.fontSize,s.fontWeight,s.color,s.letterSpacing],background:getComputedStyle(h).backgroundColor,back:getComputedStyle(b).color,w:r.width,h:r.height,icon:[v.width,v.height,v.strokeWidth]};});
+   assert.deepEqual(result.title,sectionStyle);assert.equal(result.background,'rgb(247, 247, 248)');assert.equal(result.back,sectionStyle[3]);assert(result.w>=44&&result.h>=44);assert.deepEqual(result.icon,['22px','22px','1.8px']);
+  }
+  await page.locator('[data-type="Kargo Avantajı"]').tap();await headerStyle('.ps-back>span:first-of-type');
+  await page.getByRole('button',{name:'Geri',exact:true}).tap();
+  await page.locator('[data-newest="1"]').tap();await headerStyle('.ps-back>span:first-of-type');assert.equal(await page.locator('.ps-newestpage h2').innerText(),'En Yeniler');
+  await page.getByRole('button',{name:'Geri',exact:true}).tap();
   // All three tab headers keep one usable search field and a 44px back target.
   for(const name of ['Markalar','Kampanyalar','Favoriler']){
    await page.getByRole('button',{name,exact:true}).tap();
@@ -57,6 +67,7 @@ const rows=[{id:'valid',name:'Solgar',offer:'Test ayrıcalığı',asset:'solgar.
   await page.getByRole('button',{name:'Markalar',exact:true}).tap();await page.getByRole('button',{name:'Solgar kampanyalarını aç',exact:true}).tap();
   await page.getByRole('button',{name:'Solgar: Test ayrıcalığı',exact:true}).locator('.ps-artwork-frame').tap();
   await page.getByText('Prime Ayrıcalıkları',{exact:true}).waitFor();
+  await headerStyle('.ps-detailtop>strong');
   for(const g of await geometry('.ps-nativehero'))assert(Math.abs(g.w/g.h-1.5)<.002);assert(await page.evaluate(()=>document.querySelector('.ps-detailsheet').getBoundingClientRect().top<document.querySelector('.ps-slidefooter').getBoundingClientRect().top-80),'Detail drag handle/conditions must remain above footer');
   await page.getByRole('button',{name:'Geri',exact:true}).tap();await page.getByRole('button',{name:'Ana Sayfa',exact:true}).tap();
   await page.getByRole('textbox',{name:'Marka veya kampanya ara'}).fill('Test ayrıcalığı');assert.equal(await page.locator('.ps-searchresults .ps-nativelist button').count(),1);assert.equal(await page.locator('#ps-discovery .ps-carousel').count(),0);
