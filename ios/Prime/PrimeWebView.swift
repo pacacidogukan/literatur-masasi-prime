@@ -2,6 +2,12 @@ import SwiftUI
 import WebKit
 import UIKit
 
+enum PrimeSurface {
+    // Matches --ps-header-bg (#f7f7f8) in the bundled web interface.
+    static let header = UIColor(red: 247.0 / 255.0, green: 247.0 / 255.0,
+                                blue: 248.0 / 255.0, alpha: 1)
+}
+
 struct PrimeWebView: UIViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator() }
     func makeUIView(context: Context) -> WKWebView {
@@ -27,7 +33,8 @@ struct PrimeWebView: UIViewRepresentable {
         view.navigationDelegate = context.coordinator
         view.uiDelegate = context.coordinator
         view.isOpaque = false
-        view.backgroundColor = .white
+        view.backgroundColor = PrimeSurface.header
+        view.scrollView.backgroundColor = PrimeSurface.header
         view.scrollView.contentInsetAdjustmentBehavior = .never
         view.allowsBackForwardNavigationGestures = false
         if let root = Bundle.main.url(forResource: "Web", withExtension: nil),
