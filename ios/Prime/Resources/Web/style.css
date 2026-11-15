@@ -145,7 +145,7 @@
 #prime-square-campaigns .ps-nativelist button{display:flex;align-items:center;gap:12px;width:100%;min-height:0;padding:12px;text-align:left;border:1px solid #e8e8ec;border-radius:14px;background:#fff;color:#171a22}
 #prime-square-campaigns .ps-nativelist img{width:112px;height:112px;flex:0 0 112px;object-fit:contain;border-radius:9px;background:#f3f3f5}
 #prime-square-campaigns .ps-nativelist span{flex:1;min-width:0}
-#prime-square-campaigns .ps-nativelist strong{display:block;font-size:15px;line-height:1.4;font-weight:700;overflow-wrap:anywhere}
+#prime-square-campaigns .ps-nativelist strong{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.8em;max-height:2.8em;font-size:15px;line-height:1.4;font-weight:700;overflow-wrap:anywhere}
 #prime-square-campaigns .ps-nativelist small{display:block;margin-top:7px;font-size:12px;color:#717581}
 #prime-square-campaigns .ps-nativelist svg{flex:0 0 16px;width:16px;color:#717581}
 #prime-square-campaigns .ps-nativeempty{padding:70px 10px;text-align:center;color:#717581}
