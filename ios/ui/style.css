@@ -485,7 +485,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns{--ps-header-bg:#f7f7f8;--ps-title-size:16px;--ps-title-weight:500;--ps-title-color:#74787f}
 #prime-square-campaigns .ps-header,#prime-square-campaigns .ps-back,#prime-square-campaigns .ps-nativebar,#prime-square-campaigns .ps-detailtop{background:var(--ps-header-bg);color:var(--ps-title-color);border-bottom:0}
 #prime-square-campaigns .ps-back>span:first-of-type,#prime-square-campaigns .ps-nativebar>strong,#prime-square-campaigns .ps-detailtop>strong,#prime-square-campaigns .ps-home .ps-sectionheading h2,#prime-square-campaigns .ps-home .ps-discountheading{font-family:var(--ps-font);font-size:var(--ps-title-size);font-weight:var(--ps-title-weight);line-height:1.3;letter-spacing:-.35px;color:var(--ps-title-color)}
-#prime-square-campaigns [data-action="back"]{width:44px;min-width:44px;height:44px;min-height:44px;display:grid;place-items:center;padding:0;border:0;border-radius:0;background:transparent;color:var(--ps-title-color)}
+#prime-square-campaigns .ps-back [data-action="back"],#prime-square-campaigns .ps-nativebar [data-action="back"],#prime-square-campaigns .ps-detailtop [data-action="back"],#prime-square-campaigns .ps-header [data-action="back"]{width:44px;min-width:44px;height:44px;min-height:44px;display:grid;place-items:center;padding:0;border:0;border-radius:0;background:transparent;color:var(--ps-title-color)}
 #prime-square-campaigns [data-action="back"] svg{width:22px;height:22px;stroke-width:1.8;color:inherit}
 
 #prime-square-campaigns .ps-back,#prime-square-campaigns .ps-nativebar,#prime-square-campaigns .ps-detailtop{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;min-height:60px}
