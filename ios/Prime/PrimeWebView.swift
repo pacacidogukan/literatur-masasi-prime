@@ -23,6 +23,9 @@ struct PrimeWebView: UIViewRepresentable {
             """, injectionTime: .atDocumentStart, forMainFrameOnly: true))
             if ProcessInfo.processInfo.arguments.contains("--reset-test-state") {
                 SecureStore.clear("session")
+                // Reset in the app after launch; simctl pbcopy can time out
+                // while the simulator's pasteboard service is still starting.
+                UIPasteboard.general.string = "prime-ci-empty"
                 UserDefaults(suiteName: "PrimeUITests")?.removePersistentDomain(forName: "PrimeUITests")
                 configuration.userContentController.addUserScript(WKUserScript(source: "localStorage.clear();", injectionTime: .atDocumentStart, forMainFrameOnly: true))
             }

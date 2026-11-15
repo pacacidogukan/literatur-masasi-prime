@@ -96,7 +96,6 @@ jobs:
           DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys,os; d=json.load(sys.stdin); devices=[x for group in d["devices"].values() for x in group if x["name"].startswith(os.environ["PRIME_SIMULATOR_FAMILY"])]; print(next((x["udid"] for x in devices if x["name"].endswith("Pro Max")),devices[0]["udid"]))')
           xcrun simctl boot "$DEVICE_ID"
           xcrun simctl bootstatus "$DEVICE_ID" -b
-          printf 'prime-ci-empty' | xcrun simctl pbcopy "$DEVICE_ID"
           echo "PRIME_SIMULATOR_ID=$DEVICE_ID" >> "$GITHUB_ENV"
       - name: Run iPhone UI tests
         timeout-minutes: 30
