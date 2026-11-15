@@ -462,3 +462,17 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 
 #prime-square-campaigns .ps-campaignspage{padding-left:15px;padding-right:15px}
 #prime-square-campaigns .ps-nativefavorites{padding-top:16px}
+
+/* Approved soft-blush square category grid, directly below brand campaigns. */
+#prime-square-campaigns .ps-home .ps-categorysection{margin:0 12px;min-width:0}
+#prime-square-campaigns .ps-categorysection>.ps-sectionheading{margin-bottom:12px}
+#prime-square-campaigns .ps-home .ps-categorygrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px 8px;padding:0;margin:0;overflow:visible;scroll-snap-type:none}
+#prime-square-campaigns .ps-categorygrid[hidden]{display:none}
+#prime-square-campaigns .ps-categorygrid button{width:100%;min-width:0;gap:6px;flex:none;display:flex;align-items:stretch;font-size:11px;line-height:1.3;text-align:center;justify-content:flex-start}
+#prime-square-campaigns .ps-categorygrid button>b,#prime-square-campaigns .ps-categorygrid button.active>b{display:block;width:100%;height:auto;aspect-ratio:1/1;padding:0;border:0;border-radius:12px;overflow:hidden;background:#fff5f5;box-shadow:none}
+#prime-square-campaigns .ps-categorygrid .ps-iconart{display:block;width:100%;height:100%;padding:0}
+#prime-square-campaigns .ps-categorygrid .ps-atlasicon{display:block;width:100%;height:100%;min-height:0;border-radius:inherit;background-repeat:no-repeat}
+#prime-square-campaigns .ps-categorygrid .ps-categorylabel{display:block;min-height:3.9em;white-space:normal;overflow-wrap:normal;word-break:normal}
+#prime-square-campaigns .ps-categorygrid button:focus-visible{outline:2px solid var(--ps-red);outline-offset:3px;border-radius:12px}
+#prime-square-campaigns .ps-categorygrid button.active>b{outline:2px solid var(--ps-red);outline-offset:-2px}
+

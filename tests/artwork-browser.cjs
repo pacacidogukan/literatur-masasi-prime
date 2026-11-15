@@ -16,6 +16,14 @@ const rows=[{id:'valid',name:'Solgar',offer:'Test ayrıcalığı',asset:'solgar.
   await page.addInitScript(rows=>{window.webkit={messageHandlers:{primeAPI:{postMessage:async({path})=>({status:200,data:path==='campaigns'?{campaigns:rows}:path==='reveal'?{code:'TEST'}:{authorized:true,ok:true}})}}};},rows);
   await page.goto(url);await page.getByRole('button',{name:'Ana Sayfa',exact:true}).waitFor();await page.locator('.ps-poster.large').first().waitFor();
   await page.waitForFunction(()=>[...document.querySelectorAll('.ps-poster.large img')].every(i=>i.complete&&i.naturalWidth));
+  // Category artwork is a four-column square grid after the brand campaign carousel.
+  const grid=page.locator('.ps-categorygrid');assert.equal(await grid.locator('button').count(),12);
+  const layout=await grid.evaluate(el=>{const cards=[...el.querySelectorAll('button>b')].map(n=>{const r=n.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};});const section=el.closest('.ps-categorysection'),brand=document.querySelector('.ps-brandcampaigns');return {cards,columns:getComputedStyle(el).gridTemplateColumns.split(' ').length,after:!!(brand.compareDocumentPosition(section)&Node.DOCUMENT_POSITION_FOLLOWING)};});
+  assert.equal(layout.columns,4);assert(layout.after);
+  for(const card of layout.cards)assert(Math.abs(card.w-card.h)<.5,'Category image must remain square');
+  assert.equal(new Set(layout.cards.map(c=>Math.round(c.y))).size,3);
+  const atlas=await page.evaluate(()=>new Promise(resolve=>{const i=new Image();i.onload=()=>resolve([i.naturalWidth,i.naturalHeight]);i.onerror=()=>resolve(null);i.src='assets/category-soft-blush-v1.webp';}));
+  assert.deepEqual(atlas,[1024,768]);
   async function geometry(selector){return page.locator(selector).evaluateAll(nodes=>nodes.map(el=>{const f=el.querySelector('.ps-artwork-frame'),i=f?.querySelector('img'),a=el.getBoundingClientRect(),b=f?.getBoundingClientRect();return {outerWidth:a.width,slot:f?.dataset.artworkSlot,w:b?.width,h:b?.height,left:b?.left-a.left,right:a.right-b?.right,top:b?.top-a.top,bottom:a.bottom-b?.bottom,fit:i&&getComputedStyle(i).objectFit,state:f?.dataset.artworkState};}));}
   for(const selector of ['.ps-poster.large','.ps-poster.small','.ps-codebanner']){
    for(const g of await geometry(selector)){if(selector==='.ps-poster.large')assert(g.outerWidth<=contract.maxLargeWidth+.1);if(selector==='.ps-poster.small')assert(g.outerWidth<=contract.maxCompactWidth+.1);const s=contract.slots[g.slot];assert(Math.abs(g.w/g.h-s.width/s.height)<.002,JSON.stringify({width,selector,g}));for(const edge of ['left','right','top','bottom'])assert(Math.abs(g[edge]-contract.inset)<.2,JSON.stringify({width,selector,g}));assert.equal(g.fit,'contain');}
@@ -61,3 +69,4 @@ const rows=[{id:'valid',name:'Solgar',offer:'Test ayrıcalığı',asset:'solgar.
  }
  }finally{await browser?.close();server.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
+
