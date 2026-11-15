@@ -454,3 +454,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 
 /* Shared horizontal campaign rows: keep long summaries within the card. */
 #prime-square-campaigns .ps-nativelist .ps-rowsummary{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+
+/* Brands: back navigation and a flexible search field share one compact row. */
+#prime-square-campaigns .ps-brandsheader{padding-left:12px;padding-right:12px}
+#prime-square-campaigns .ps-brandsheader .ps-searchrow{gap:6px}
+#prime-square-campaigns .ps-brandsheader .ps-icon{flex:0 0 44px}
