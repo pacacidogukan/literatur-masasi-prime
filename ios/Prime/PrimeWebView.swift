@@ -9,7 +9,8 @@ enum PrimeSurface {
 }
 
 struct PrimeWebView: UIViewRepresentable {
-    func makeCoordinator() -> Coordinator { Coordinator() }
+    @Binding var isLaunching: Bool
+    func makeCoordinator() -> Coordinator { Coordinator(isLaunching: $isLaunching) }
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
         #if DEBUG
@@ -36,8 +37,8 @@ struct PrimeWebView: UIViewRepresentable {
         view.navigationDelegate = context.coordinator
         view.uiDelegate = context.coordinator
         view.isOpaque = false
-        view.backgroundColor = PrimeSurface.header
-        view.scrollView.backgroundColor = PrimeSurface.header
+        view.backgroundColor = isLaunching ? .white : PrimeSurface.header
+        view.scrollView.backgroundColor = isLaunching ? .white : PrimeSurface.header
         view.scrollView.contentInsetAdjustmentBehavior = .never
         view.allowsBackForwardNavigationGestures = false
         if let root = Bundle.main.url(forResource: "Web", withExtension: nil),
@@ -47,7 +48,11 @@ struct PrimeWebView: UIViewRepresentable {
         }
         return view
     }
-    func updateUIView(_ view: WKWebView, context: Context) {}
+    func updateUIView(_ view: WKWebView, context: Context) {
+        context.coordinator.isLaunching = $isLaunching
+        view.backgroundColor = isLaunching ? .white : PrimeSurface.header
+        view.scrollView.backgroundColor = view.backgroundColor
+    }
     static func dismantleUIView(_ view: WKWebView, coordinator: Coordinator) {
         view.configuration.userContentController.removeScriptMessageHandler(forName: "primeAPI", contentWorld: .page)
         view.navigationDelegate = nil
@@ -56,6 +61,8 @@ struct PrimeWebView: UIViewRepresentable {
     }
 
     final class Coordinator: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDelegate, WKUIDelegate {
+        var isLaunching: Binding<Bool>
+        init(isLaunching: Binding<Bool>) { self.isLaunching = isLaunching; super.init() }
         var webRoot: URL?
         private let apiRoot = URL(string: "https://prime-campaign-editor.pacacidogukan.chatgpt.site/api/mobile/")!
         private let redirectGuard = PrimeAPIRedirectPolicy()
@@ -87,6 +94,16 @@ struct PrimeWebView: UIViewRepresentable {
                 if path == "uitest/trace" { replyHandler(["status":200, "data":["ok":true]], nil); return }
             }
             #endif
+            if path == "ui/launch-state" {
+                guard let body = payload["body"] as? [String: Any], let visible = body["visible"] as? Bool else {
+                    replyHandler(nil, "Geçersiz ekran durumu."); return
+                }
+                Task { @MainActor in
+                    self.isLaunching.wrappedValue = visible
+                    replyHandler(["status":200, "data":["ok":true]], nil)
+                }
+                return
+            }
             if path == "open-external" {
                 guard let body = payload["body"] as? [String: Any],
                       let value = body["url"] as? String, value.count <= 2048,

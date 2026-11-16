@@ -136,6 +136,17 @@ run("view='home';query='solgar';navigation.length=0;render()");clickRoute({offer
 run('hydrate('+JSON.stringify([{...rows[0],id:'pending-native',cardArtwork:undefined}])+');query="";type="Tümü"');assert.equal(run('offers[0].artworkReady'),false);assert.match(run('feed(offers)'),/ps-nativelist/);assert.doesNotMatch(run('feed(offers)'),/ps-poster/);assert.equal(run("poster(offers[0],'small')"),'');
 run('hydrate('+JSON.stringify(rows)+');query="";campaignBrand="Tümü"');
 
+// Launch surface follows loading and retry state; repeated renders do not spam the bridge.
+assert.deepEqual(Array.from(run('categoryDisplayNames.slice(0,2)')),['Kampanya Kodu','Son Gün']);
+assert.equal(new Set(run('categoryDisplayNames')).size,12);
+run('loaded=false;render()');
+assert.equal(requests.filter(r=>r.path==='ui/launch-state').at(-1).body.visible,true);
+const launchRequests=requests.filter(r=>r.path==='ui/launch-state').length;
+run('render()');
+assert.equal(requests.filter(r=>r.path==='ui/launch-state').length,launchRequests);
+run('loaded=true;render()');
+assert.equal(requests.filter(r=>r.path==='ui/launch-state').at(-1).body.visible,false);
+
 // All twelve categories resolve without losing coded/codeless gift behavior.
 assert.equal(run('cats.length-1'),12);
 for(const category of Array.from(run('cats.slice(1).map(c=>c[0])'))){
