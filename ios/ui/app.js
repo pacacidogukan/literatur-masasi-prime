@@ -259,7 +259,7 @@ const emptyCampaignFilters=()=>({brands:[],rates:[],published:[],ending:[],codes
 const cloneCampaignFilters=f=>JSON.parse(JSON.stringify(f));
 let campaignFilters=emptyCampaignFilters(),filterDraft=null,filterOpen=false,filterAllBrands=false,filterFocus=null,filterDragStart=null;
 const filterOptions={rates:[['10','%10 ve üzeri'],['25','%25 ve üzeri'],['50','%50 ve üzeri']],published:[['1','Son 24 saat'],['7','Son 7 gün'],['30','Son 30 gün']],ending:[['1','Son 24 saat'],['3','3 gün içinde'],['7','7 gün içinde']],codes:[['yes','Kodlu'],['no','Kodsuz']],saved:[['yes','Favorilerim']]};
-const filterTitles={brands:'Markalar',rates:'İndirim oranı',published:'Yayınlanma tarihi',ending:'Bitiş zamanı',codes:'Kod kullanımı',saved:'Favoriler'};
+const filterTitles={brands:'Markalar',rates:'İndirim oranı',published:'Yayınlanma tarihi',ending:'Bitiş zamanı',codes:'Kod kullanımı',saved:'Favorilerim'};
 const campaignSortOptions=[['discover','Keşfet'],['newest','En yeniler'],['ending','Bitişi en yakın'],['discount','İndirim oranı yüksekten düşüğe']];
 function campaignFilterCount(f=campaignFilters){return Object.keys(filterTitles).reduce((n,k)=>n+f[k].length,0);}
 function campaignFilterMatches(o,f=campaignFilters,skip='',now=Date.now()){
