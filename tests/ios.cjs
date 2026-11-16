@@ -147,6 +147,7 @@ assert.equal(requests.filter(r=>r.path==='ui/launch-state').length,launchRequest
 run('loaded=true;render()');
 assert.equal(requests.filter(r=>r.path==='ui/launch-state').at(-1).body.visible,false);
 
+for(const glyph of ['x','chevron-down','chevron-up','arrow-down-up','sliders-horizontal'])assert.equal(run('Object.hasOwn(iconMarkup,'+JSON.stringify(glyph)+')'),true,'Filter icon must not fall back to a tag');
 // Real facets combine alternatives within groups and intersect across groups.
 const filterNow=Date.now();
 run('campaignFilters=emptyCampaignFilters();query="";view="campaigns";campaignBrand="Tümü";hydrate('+JSON.stringify([

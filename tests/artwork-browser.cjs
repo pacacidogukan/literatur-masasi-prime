@@ -62,7 +62,7 @@ const rows=[{id:'valid',name:'Solgar',offer:'Test ayrıcalığı',asset:'solgar.
   await page.locator('.ps-quickrail').evaluate(el=>el.scrollLeft=el.scrollWidth);
   const after=await iconFilter.boundingBox();assert.equal(before.x,after.x,'All-filter button must stay pinned');
   await iconFilter.tap();
-  const dialog=page.getByRole('dialog');await dialog.waitFor();
+  const dialog=page.getByRole('dialog');await dialog.waitFor();assert.equal(await dialog.locator('.ps-filterclose .lucide-x').count(),1);
   const bounds=await dialog.boundingBox();assert(bounds.y<=1&&Math.abs(bounds.height-1000)<2,'Sheet must cover entire web viewport below native status bar');
   assert(await page.locator('#ps-screen').evaluate(el=>el.inert));
   await page.locator('[data-filter-group="brands"][data-filter-value="Solgar"]').tap();
