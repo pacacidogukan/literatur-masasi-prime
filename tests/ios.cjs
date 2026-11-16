@@ -147,6 +147,28 @@ assert.equal(requests.filter(r=>r.path==='ui/launch-state').length,launchRequest
 run('loaded=true;render()');
 assert.equal(requests.filter(r=>r.path==='ui/launch-state').at(-1).body.visible,false);
 
+// Real facets combine alternatives within groups and intersect across groups.
+const filterNow=Date.now();
+run('campaignFilters=emptyCampaignFilters();query="";view="campaigns";campaignBrand="Tümü";hydrate('+JSON.stringify([
+ {...rows[0],id:'f1',name:'Solgar',discountPercent:25,publishedAt:Math.floor(filterNow/1000)-2*86400,expires:Math.floor(filterNow/1000)+2*86400},
+ {...rows[0],id:'f2',name:'Orzax',discountPercent:50,publishedAt:Math.floor(filterNow/1000)-3600,expires:Math.floor(filterNow/1000)+3600,hasCode:0},
+ {...rows[0],id:'f3',name:'Other',discountPercent:10,publishedAt:0,expires:0},
+ {...rows[0],id:'f4',name:'Solgar',discountPercent:0,publishedAt:Math.floor(filterNow/1000)-40*86400,expires:0}
+])+')');
+run('campaignFilters.brands=["Solgar","Orzax"];campaignFilters.rates=["25","50"];campaignFilters.published=["1","7"];campaignFilters.ending=["1","3"]');
+assert.deepEqual(Array.from(run('filteredCampaigns().map(o=>o.id)')),['f1','f2']);
+run('campaignFilters.codes=["no"]');assert.deepEqual(Array.from(run('filteredCampaigns().map(o=>o.id)')),['f2']);
+run('campaignFilters.codes=["yes","no"];campaignFilters.sort="discount"');assert.deepEqual(Array.from(run('filteredCampaigns().map(o=>o.id)')),['f2','f1']);
+run('campaignFilters.sort="ending"');assert.deepEqual(Array.from(run('filteredCampaigns().map(o=>o.id)')),['f2','f1']);
+run('campaignFilters=emptyCampaignFilters();campaignFilters.ending=["7"]');assert.deepEqual(Array.from(run('filteredCampaigns().map(o=>o.id)')),['f1','f2'],'Unknown expiry is not imminent');
+run('campaignFilters=emptyCampaignFilters();campaignFilters.published=["30"]');assert.deepEqual(Array.from(run('filteredCampaigns().map(o=>o.id)')),['f1','f2'],'Unknown publication date is not new');
+run('campaignFilters=emptyCampaignFilters();filterDraft=cloneCampaignFilters(campaignFilters);filterDraft.brands=["Solgar"]');assert.equal(run('campaignFilters.brands.length'),0,'Draft cannot mutate applied filters');
+run('campaignFilters.brands=["Orzax"];favorites=new Set(["f1"]);campaignFilters.saved=["yes"]');assert.equal(run('filteredCampaigns().length'),0);
+run('campaignFilters=emptyCampaignFilters();query="Orzax"');assert.deepEqual(Array.from(run('filteredCampaigns().map(o=>o.id)')),['f2']);
+run('campaignFilters.brands=["Orzax"];navigation.push(capturePage());campaignFilters.brands=[];restorePage(navigation.pop())');assert.deepEqual(Array.from(run('campaignFilters.brands')),['Orzax']);
+run('campaignFilters=emptyCampaignFilters();query="";filterDraft=null;hydrate('+JSON.stringify(rows)+')');
+console.log('PASS: multi-select OR/AND facets, expiry/publication unknowns, sorting, search, favorites, draft isolation and navigation restoration.');
+
 // All twelve categories resolve without losing coded/codeless gift behavior.
 assert.equal(run('cats.length-1'),12);
 for(const category of Array.from(run('cats.slice(1).map(c=>c[0])'))){

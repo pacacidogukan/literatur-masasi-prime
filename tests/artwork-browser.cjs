@@ -36,7 +36,7 @@ const rows=[{id:'valid',name:'Solgar',offer:'Test ayrıcalığı',asset:'solgar.
    const result=await page.locator(selector).evaluate(el=>{const s=getComputedStyle(el),h=el.parentElement,b=h.querySelector('[data-action="back"]'),r=b.getBoundingClientRect(),svg=b.querySelector('svg'),v=getComputedStyle(svg);return {title:[s.fontFamily,s.fontSize,s.fontWeight,s.color,s.letterSpacing],background:getComputedStyle(h).backgroundColor,back:getComputedStyle(b).color,w:r.width,h:r.height,icon:[v.width,v.height,v.strokeWidth]};});
    assert.deepEqual(result.title,sectionStyle);assert.equal(result.background,'rgb(247, 247, 248)');assert.equal(result.back,sectionStyle[3]);assert(result.w>=44&&result.h>=44);assert.deepEqual(result.icon,['22px','22px','1.8px']);
   }
-  await page.locator('[data-type="Kargo Avantajı"]').tap();await headerStyle('.ps-back>span:first-of-type');
+  await page.locator('[data-type="Kargo Avantajı"]').tap();await page.locator('.ps-categorytabs [aria-pressed="true"]').filter({hasText:'Kargo Avantajı'}).waitFor();
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
   await page.locator('[data-newest="1"]').tap();await headerStyle('.ps-back>span:first-of-type');assert.equal(await page.locator('.ps-newestpage h2').innerText(),'En Yeniler');
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
@@ -55,6 +55,34 @@ const rows=[{id:'valid',name:'Solgar',offer:'Test ayrıcalığı',asset:'solgar.
     await input.fill('');
    }
   }
+  // Approved full-height panel: independent rails, draft multi-select and dismissal.
+  await page.getByRole('button',{name:'Kampanyalar',exact:true}).tap();
+  const iconFilter=page.locator('[data-filter-open="all"]');
+  const before=await iconFilter.boundingBox();
+  await page.locator('.ps-quickrail').evaluate(el=>el.scrollLeft=el.scrollWidth);
+  const after=await iconFilter.boundingBox();assert.equal(before.x,after.x,'All-filter button must stay pinned');
+  await iconFilter.tap();
+  const dialog=page.getByRole('dialog');await dialog.waitFor();
+  const bounds=await dialog.boundingBox();assert(bounds.y<=1&&Math.abs(bounds.height-1000)<2,'Sheet must cover entire web viewport below native status bar');
+  assert(await page.locator('#ps-screen').evaluate(el=>el.inert));
+  await page.locator('[data-filter-group="brands"][data-filter-value="Solgar"]').tap();
+  await page.locator('[data-filter-group="brands"][data-filter-value="Other"]').tap();
+  assert.equal(await dialog.locator('[data-filter-group="brands"][aria-pressed="true"]').count(),2);
+  await page.locator('[data-filter-group="rates"][data-filter-value="10"]').tap();
+  await page.locator('[data-filter-group="rates"][data-filter-value="25"]').tap();
+  assert.equal(await dialog.locator('[data-filter-group="rates"][aria-pressed="true"]').count(),2);
+  await page.getByRole('button',{name:'Kapat',exact:true}).tap();
+  assert.equal(await page.locator('.ps-allfilters>span').count(),0,'Dismiss must discard draft');
+  await iconFilter.tap();
+  await page.locator('[data-filter-group="brands"][data-filter-value="Solgar"]').tap();
+  await page.locator('[data-filter-apply]').tap();
+  assert.equal(await page.locator('#ps-native-results [data-offer="valid"]').count(),1);
+  assert.equal(await page.locator('#ps-native-results [data-offer="other"]').count(),0);
+  await iconFilter.tap();
+  assert.equal(await dialog.locator('[data-filter-group="brands"][aria-pressed="true"]').count(),1);
+  if(width===390){fs.mkdirSync('ci-artifacts/artwork',{recursive:true});await page.screenshot({path:'ci-artifacts/artwork/filters-'+engine.name()+'.png'});}
+  await page.locator('[data-filter-clean]').tap();await page.locator('[data-filter-apply]').tap();
+  assert.equal(await page.locator('.ps-allfilters>span').count(),0);
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
   await page.getByRole('button',{name:'Ana Sayfa',exact:true}).tap();
   await page.locator('.ps-poster.large').first().waitFor();
