@@ -257,7 +257,7 @@ function syncDetailPanel(){const sheet=root.querySelector('.ps-detailsheet'),ima
 // Campaign discovery filters: OR within a facet, AND between facets.
 const emptyCampaignFilters=()=>({brands:[],rates:[],published:[],ending:[],codes:[],saved:[],sort:'discover'});
 const cloneCampaignFilters=f=>JSON.parse(JSON.stringify(f));
-let campaignFilters=emptyCampaignFilters(),filterDraft=null,filterOpen=false,filterAllBrands=false,filterFocus=null,filterDragStart=null;
+let campaignFilters=emptyCampaignFilters(),filterDraft=null,filterOpen=false,filterGroup='all',filterAllBrands=false,filterFocus=null,filterDragStart=null;
 const filterOptions={rates:[['10','%10 ve üzeri'],['25','%25 ve üzeri'],['50','%50 ve üzeri']],published:[['1','Son 24 saat'],['7','Son 7 gün'],['30','Son 30 gün']],ending:[['1','Son 24 saat'],['3','3 gün içinde'],['7','7 gün içinde']],codes:[['yes','Kodlu'],['no','Kodsuz']],saved:[['yes','Favorilerim']]};
 const filterTitles={brands:'Markalar',rates:'İndirim oranı',published:'Yayınlanma tarihi',ending:'Bitiş zamanı',codes:'Kod kullanımı',saved:'Favorilerim'};
 const campaignSortOptions=[['discover','Keşfet'],['newest','En yeniler'],['ending','Bitişi en yakın'],['discount','İndirim oranı yüksekten düşüğe']];
@@ -284,7 +284,7 @@ function campaignFilterToolbar(scope=view){
 }
 function campaignFilterResults(scope=view){
  const arr=filteredCampaigns(campaignFilters,scope),filtered=campaignFilterCount()>0||campaignFilters.sort!=='discover'||query.trim();
- return `<div class="ps-filterresulthead"><div><h2>${esc(scope==='category'?selectedCategory:'Kampanyalar')}</h2><p role="status">${arr.length} kampanya</p></div><button type="button" data-filter-open="sort" aria-haspopup="dialog">${icon('arrow-down-up')}Sırala</button></div>${arr.length?(filtered?campaignRows(arr):`<div class="ps-nativegrid">${nativeGroups([...new Set(arr.map(o=>o.brand))],arr)}</div>`):`<div class="ps-empty">Seçimlerine uygun kampanya bulunamadı.${campaignFilterCount()?'<button type="button" data-filter-reset="1">Filtreleri temizle</button>':''}</div>`}`;
+ return `<div class="ps-filterresulthead"><div><h2>${esc(scope==='category'?selectedCategory:'Kampanyalar')}</h2><p role="status">${arr.length} kampanya</p></div></div>${arr.length?(filtered?campaignRows(arr):`<div class="ps-nativegrid">${nativeGroups([...new Set(arr.map(o=>o.brand))],arr)}</div>`):`<div class="ps-empty">Seçimlerine uygun kampanya bulunamadı.${campaignFilterCount()?'<button type="button" data-filter-reset="1">Filtreleri temizle</button>':''}</div>`}`;
 }
 function campaignBrowsePage(scope=view){return `<div class="ps-browseheader">${pageSearchHeader('ps-native-query')}${campaignFilterToolbar(scope)}</div><main class="ps-nativepage ps-campaignspage ${scope==='category'?'ps-categorypage':''}"><div id="ps-native-results">${campaignFilterResults(scope)}</div></main>`;}
 function filterChip(group,value,label,count){const selected=filterDraft[group].includes(value);return `<button type="button" data-filter-group="${group}" data-filter-value="${esc(value)}" aria-pressed="${selected}">${esc(label)}${count===undefined?'':` <span>${count}</span>`}</button>`;}
@@ -292,9 +292,9 @@ function campaignFilterSheetHTML(){
  const f=filterDraft,counts=new Map();for(const o of campaignFilterSource().filter(o=>campaignFilterMatches(o,f,'brands')))counts.set(o.brand,(counts.get(o.brand)||0)+1);
  const names=[...new Set([...counts.keys(),...f.brands])].sort((a,b)=>a.localeCompare(b,'tr'));
  const shown=filterAllBrands?names:[...new Set([...f.brands,...names.slice(0,6)])];
- const section=(k,content)=>`<section id="ps-filter-${k}" aria-labelledby="ps-filter-title-${k}"><h3 id="ps-filter-title-${k}">${filterTitles[k]}</h3><div class="ps-filterchips">${content}</div></section>`;
+ const section=(k,content)=>filterGroup!=='all'&&filterGroup!==k?'':`<section id="ps-filter-${k}" aria-labelledby="ps-filter-title-${k}"><h3 id="ps-filter-title-${k}">${filterTitles[k]}</h3><div class="ps-filterchips">${content}</div></section>`;
  const facets=k=>section(k,`<button type="button" data-filter-clear="${k}" aria-pressed="${!f[k].length}">Tümü</button>`+filterOptions[k].map(([v,n])=>filterChip(k,v,n)).join(''));
- return `<section class="ps-filterdialog" role="dialog" aria-modal="true" aria-labelledby="ps-filter-title"><header class="ps-filterdialoghead"><button type="button" class="ps-filterhandle" data-filter-close="1" aria-label="Filtre panelini kapat"><span></span></button><h2 id="ps-filter-title" tabindex="-1">Sırala ve Filtrele</h2><button type="button" class="ps-filterclose" data-filter-close="1" aria-label="Kapat">${icon('x')}</button></header><div class="ps-filterbody"><section id="ps-filter-sort" aria-labelledby="ps-filter-title-sort"><h3 id="ps-filter-title-sort">Sıralama</h3><div class="ps-filterchips">${campaignSortOptions.map(([v,n])=>`<button type="button" data-filter-sort="${v}" aria-pressed="${f.sort===v}">${n}</button>`).join('')}</div></section>${facets('rates')}${section('brands',`<button type="button" data-filter-clear="brands" aria-pressed="${!f.brands.length}">Tümü</button>`+shown.map(n=>filterChip('brands',n,n,counts.get(n)||0)).join('')+(names.length>6?`<button type="button" class="ps-brandsmore" data-filter-more="1" aria-expanded="${filterAllBrands}">${filterAllBrands?'Daha Az Göster':'Tümünü Gör'}${icon(filterAllBrands?'chevron-up':'chevron-down')}</button>`:''))}${facets('published')}${facets('ending')}${facets('codes')}${facets('saved')}</div><footer class="ps-filterfooter"><button type="button" data-filter-clean="1">Temizle</button><button type="button" data-filter-apply="1">${filteredCampaigns(f).length} kampanyayı göster</button></footer></section>`;
+ return `<section class="ps-filterdialog" role="dialog" aria-modal="true" aria-labelledby="ps-filter-title"><header class="ps-filterdialoghead"><button type="button" class="ps-filterhandle" data-filter-close="1" aria-label="Filtre panelini kapat"><span></span></button><h2 id="ps-filter-title" tabindex="-1">${filterGroup==='all'?'Filtrele':filterTitles[filterGroup]}</h2><button type="button" class="ps-filterclose" data-filter-close="1" aria-label="Kapat">${icon('x')}</button></header><div class="ps-filterbody">${filterGroup==='all'?`<section id="ps-filter-sort" aria-labelledby="ps-filter-title-sort"><h3 id="ps-filter-title-sort">Sıralama</h3><div class="ps-filterchips">${campaignSortOptions.map(([v,n])=>`<button type="button" data-filter-sort="${v}" aria-pressed="${f.sort===v}">${n}</button>`).join('')}</div></section>`:''}${facets('rates')}${section('brands',`<button type="button" data-filter-clear="brands" aria-pressed="${!f.brands.length}">Tümü</button>`+shown.map(n=>filterChip('brands',n,n,counts.get(n)||0)).join('')+(names.length>6?`<button type="button" class="ps-brandsmore" data-filter-more="1" aria-expanded="${filterAllBrands}">${filterAllBrands?'Daha Az Göster':'Tümünü Gör'}${icon(filterAllBrands?'chevron-up':'chevron-down')}</button>`:''))}${facets('published')}${facets('ending')}${facets('codes')}${facets('saved')}</div><footer class="ps-filterfooter"><button type="button" data-filter-clean="1">Temizle</button><button type="button" data-filter-apply="1">${filteredCampaigns(f).length} kampanyayı göster</button></footer></section>`;
 }
 function redrawCampaignFilterSheet(){
  const host=root.querySelector('.ps-filteroverlay');if(!host)return;
@@ -304,10 +304,10 @@ function redrawCampaignFilterSheet(){
  if(focusKey)[...host.querySelectorAll('[data-filter-group]')].find(b=>b.dataset.filterGroup===focusKey.group&&b.dataset.filterValue===focusKey.value)?.focus({preventScroll:true});
 }
 function openCampaignFilters(group='all'){
- if(filterOpen)return;filterFocus=document.activeElement;filterDraft=cloneCampaignFilters(campaignFilters);filterOpen=true;filterAllBrands=false;
+ if(filterOpen)return;filterFocus=document.activeElement;filterDraft=cloneCampaignFilters(campaignFilters);filterOpen=true;filterGroup=Object.hasOwn(filterTitles,group)?group:'all';filterAllBrands=false;
  const host=document.createElement('div');host.className='ps-filteroverlay';host.innerHTML=campaignFilterSheetHTML();root.append(host);
  screen.inert=true;const nav=root.querySelector('.ps-nav');if(nav)nav.inert=true;
- host.querySelector('#ps-filter-title')?.focus();if(group!=='all')host.querySelector('#ps-filter-'+group)?.scrollIntoView({block:'start'});
+ host.querySelector('#ps-filter-title')?.focus();
 }
 function closeCampaignFilters(apply=false){
  if(!filterOpen)return;if(apply)campaignFilters=cloneCampaignFilters(filterDraft);
@@ -325,7 +325,7 @@ function handleCampaignFilterClick(d){
  else if(d.filterClear){filterDraft[d.filterClear]=[];}
  else if(d.filterSort){filterDraft.sort=d.filterSort;}
  else if(d.filterMore){filterAllBrands=!filterAllBrands;}
- else if(d.filterClean){filterDraft=emptyCampaignFilters();}
+ else if(d.filterClean){if(filterGroup==='all')filterDraft=emptyCampaignFilters();else filterDraft[filterGroup]=[];}
  else return false;
  redrawCampaignFilterSheet();return true;
 }

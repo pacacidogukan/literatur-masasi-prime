@@ -16,6 +16,8 @@ const rows=[{id:'valid',name:'Solgar',offer:'Test ayrıcalığı',asset:'solgar.
   await page.addInitScript(rows=>{window.webkit={messageHandlers:{primeAPI:{postMessage:async({path})=>({status:200,data:path==='campaigns'?{campaigns:rows}:path==='reveal'?{code:'TEST'}:{authorized:true,ok:true}})}}};},rows);
   await page.goto(url);await page.getByRole('button',{name:'Ana Sayfa',exact:true}).waitFor();await page.locator('.ps-poster.large').first().waitFor();
   await page.waitForFunction(()=>[...document.querySelectorAll('.ps-poster.large img')].every(i=>i.complete&&i.naturalWidth));
+  const circleGap=await page.locator('.ps-brandrounds button>b').evaluateAll(nodes=>{const a=nodes[0].getBoundingClientRect(),b=nodes[1].getBoundingClientRect();return b.left-a.right;});
+  assert(Math.abs(circleGap-12)<.5,'Visible brand-circle gap must be halved from 24px to 12px');
   // Category artwork is a four-column square grid after the brand campaign carousel.
   const grid=page.locator('.ps-categorygrid');assert.equal(await grid.locator('button').count(),12);
   const layout=await grid.evaluate(el=>{const cards=[...el.querySelectorAll('button>b')].map(n=>{const r=n.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};});const section=el.closest('.ps-categorysection'),brand=document.querySelector('.ps-brandcampaigns');return {cards,columns:getComputedStyle(el).gridTemplateColumns.split(' ').length,after:!!(brand.compareDocumentPosition(section)&Node.DOCUMENT_POSITION_FOLLOWING)};});
@@ -83,6 +85,26 @@ const rows=[{id:'valid',name:'Solgar',offer:'Test ayrıcalığı',asset:'solgar.
   if(width===390){fs.mkdirSync('ci-artifacts/artwork',{recursive:true});await page.screenshot({path:'ci-artifacts/artwork/filters-'+engine.name()+'.png'});}
   await page.locator('[data-filter-clean]').tap();await page.locator('[data-filter-apply]').tap();
   assert.equal(await page.locator('.ps-allfilters>span').count(),0);
+  assert.equal(await page.locator('[data-filter-open="sort"]').count(),0,'No standalone sort action');
+  for(const group of ['brands','rates','published','ending','codes','saved']){
+   await page.locator('[data-filter-open="'+group+'"]').tap();
+   assert.deepEqual(await dialog.locator('.ps-filterbody>section').evaluateAll(nodes=>nodes.map(n=>n.id)),['ps-filter-'+group]);
+   if(group==='rates'){
+    await dialog.locator('[data-filter-value="10"]').tap();await dialog.locator('[data-filter-value="25"]').tap();
+    assert.equal(await dialog.locator('[data-filter-group][aria-pressed="true"]').count(),2);
+   }
+   await page.getByRole('button',{name:'Kapat',exact:true}).tap();
+  }
+  await page.locator('[data-filter-open="brands"]').tap();
+  await dialog.locator('[data-filter-value="Solgar"]').tap();await dialog.locator('[data-filter-apply]').tap();
+  await page.locator('[data-filter-open="codes"]').tap();
+  await dialog.locator('[data-filter-value="yes"]').tap();await dialog.locator('[data-filter-clean]').tap();await dialog.locator('[data-filter-apply]').tap();
+  await iconFilter.tap();
+  assert.equal(await dialog.locator('[data-filter-group="brands"][aria-pressed="true"]').count(),1,'Facet reset must preserve other selections');
+  assert.equal(await dialog.locator('#ps-filter-sort').count(),1,'Sorting remains in all filters');
+  await dialog.locator('[data-filter-sort="newest"]').tap();
+  assert.equal(await dialog.locator('[data-filter-sort="newest"]').getAttribute('aria-pressed'),'true');
+  await dialog.locator('[data-filter-clean]').tap();await dialog.locator('[data-filter-apply]').tap();
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
   await page.getByRole('button',{name:'Ana Sayfa',exact:true}).tap();
   await page.locator('.ps-poster.large').first().waitFor();

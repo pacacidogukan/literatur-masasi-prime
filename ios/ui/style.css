@@ -411,7 +411,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-home #ps-discovery>.ps-carousel{gap:var(--ps-home-gap);padding:0 var(--ps-home-gap);margin:0;scroll-padding-left:var(--ps-home-gap)}
 #prime-square-campaigns .ps-home #ps-discovery>.ps-codefeature{margin:0 var(--ps-home-gap)}
 #prime-square-campaigns .ps-home .ps-codeheading{margin:0 0 var(--ps-home-gap)}
-#prime-square-campaigns .ps-home #ps-discovery>.ps-brandrounds{gap:var(--ps-home-gap);padding:0 var(--ps-home-gap);margin:0;scroll-padding-left:var(--ps-home-gap)}
+#prime-square-campaigns .ps-home #ps-discovery>.ps-brandrounds{gap:0;padding:0 var(--ps-home-gap);margin:0;scroll-padding-left:var(--ps-home-gap)}
 #prime-square-campaigns .ps-home .ps-discountheading{margin:0 var(--ps-home-gap)}
 #prime-square-campaigns .ps-home .ps-discountgrid{gap:var(--ps-home-gap);padding:0 var(--ps-home-gap);margin:0}
 #prime-square-campaigns .ps-header:has(+ .ps-home){padding-left:12px;padding-right:12px}
