@@ -8,10 +8,35 @@ enum PrimeSurface {
                                 blue: 248.0 / 255.0, alpha: 1)
 }
 
+// The regular safe area excludes system bars, but window controls also occupy
+// a corner region on iPad. Keep the custom web header below that region.
+final class PrimeWebContainer: UIView {
+    let webView: WKWebView
+    init(webView: WKWebView) {
+        self.webView = webView
+        super.init(frame: .zero)
+        addSubview(webView)
+        webView.translatesAutoresizingMaskIntoConstraints = false
+        let topGuide: UILayoutGuide
+        if #available(iOS 26.0, *) {
+            topGuide = layoutGuide(for: .safeArea(cornerAdaptation: .vertical))
+        } else {
+            topGuide = safeAreaLayoutGuide
+        }
+        NSLayoutConstraint.activate([
+            webView.topAnchor.constraint(equalTo: topGuide.topAnchor),
+            webView.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor),
+            webView.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor),
+            webView.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor)
+        ])
+    }
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+}
+
 struct PrimeWebView: UIViewRepresentable {
     @Binding var isLaunching: Bool
     func makeCoordinator() -> Coordinator { Coordinator(isLaunching: $isLaunching) }
-    func makeUIView(context: Context) -> WKWebView {
+    func makeUIView(context: Context) -> PrimeWebContainer {
         let configuration = WKWebViewConfiguration()
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--prime-ui-tests") {
@@ -47,14 +72,19 @@ struct PrimeWebView: UIViewRepresentable {
             context.coordinator.webRoot = root.standardizedFileURL
             view.loadFileURL(root.appendingPathComponent("index.html"), allowingReadAccessTo: root)
         }
-        return view
+        let container = PrimeWebContainer(webView: view)
+        container.backgroundColor = view.backgroundColor
+        return container
     }
-    func updateUIView(_ view: WKWebView, context: Context) {
+    func updateUIView(_ container: PrimeWebContainer, context: Context) {
+        let view = container.webView
         context.coordinator.isLaunching = $isLaunching
         view.backgroundColor = isLaunching ? .white : PrimeSurface.header
         view.scrollView.backgroundColor = view.backgroundColor
+        container.backgroundColor = view.backgroundColor
     }
-    static func dismantleUIView(_ view: WKWebView, coordinator: Coordinator) {
+    static func dismantleUIView(_ container: PrimeWebContainer, coordinator: Coordinator) {
+        let view = container.webView
         view.configuration.userContentController.removeScriptMessageHandler(forName: "primeAPI", contentWorld: .page)
         view.navigationDelegate = nil
         view.uiDelegate = nil
