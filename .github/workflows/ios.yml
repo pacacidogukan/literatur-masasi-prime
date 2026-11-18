@@ -76,9 +76,10 @@ jobs:
       fail-fast: false
       matrix:
         device: [iPhone, iPad]
+    runs-on: xcode-27
     env:
       PRIME_SIMULATOR_FAMILY: ${{ matrix.device }}
-    runs-on: macos-15-intel
+      DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
     timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
@@ -125,7 +126,7 @@ jobs:
           retention-days: 7
 
   release:
-    runs-on: macos-26-intel
+    runs-on: xcode-27
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
