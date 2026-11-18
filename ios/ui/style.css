@@ -531,3 +531,9 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-filterfooter button{min-height:48px;border:1px solid #e3e4e7;border-radius:12px;background:#fff;color:#74787f;padding:10px 14px;font-size:14px;font-weight:600}
 #prime-square-campaigns .ps-filterfooter [data-filter-apply]{flex:1;background:var(--ps-red);color:#fff;border-color:var(--ps-red)}
 @media(min-width:700px){#prime-square-campaigns .ps-filterbody{padding-left:max(24px,calc((100vw - 680px)/2));padding-right:max(24px,calc((100vw - 680px)/2))}#prime-square-campaigns .ps-filterfooter{padding-left:max(24px,calc((100vw - 680px)/2));padding-right:max(24px,calc((100vw - 680px)/2))}}
+
+/* Equal category hit areas and square artwork, independent of intrinsic icon size. */
+#prime-square-campaigns .ps-home .ps-categorygrid button>b{width:100%;height:auto;aspect-ratio:1;min-height:0;flex:none}
+#prime-square-campaigns .ps-home .ps-categorygrid .ps-iconart,#prime-square-campaigns .ps-home .ps-categorygrid .ps-atlasicon{width:100%;height:100%;min-height:0}
+#prime-square-campaigns .ps-home .ps-homemarks{margin:0}
+#prime-square-campaigns .ps-home .ps-homemarks .ps-brandrounds{gap:0;padding:0 var(--ps-home-gap);margin:0}
