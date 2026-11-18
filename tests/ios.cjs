@@ -183,4 +183,34 @@ assert.match(run('discovery()'),/Yeni ayrıcalıklar yakında/);
 assert.match(run('nativeFavorites()'),/Henüz favorin yok/);
 console.log('PASS: acknowledged deletion, brand/offer/description search, twelve category pages and empty feeds.');
 
+// Refresh the actual native UI with changing server snapshots, without reopening it.
+const bridge=box.window.webkit.messageHandlers.primeAPI,originalPost=bridge.postMessage;
+let refreshRows=rows.map(r=>({...r})),refreshCalls=0,refreshReject=false,refreshDeferred=null;
+bridge.postMessage=async message=>{if(message.path!=='campaigns')return originalPost(message);refreshCalls++;if(refreshReject)throw Error('offline');if(refreshDeferred)return refreshDeferred;return {status:200,data:{campaigns:refreshRows}};};
+await run('start()');
+run("view='campaigns';query='Solgar';campaignFilters.brands=['Solgar'];favorites=new Set(['live']);render()");screen.scrollTop=123;
+const beforeRefresh=refreshCalls;
+await run('refreshCampaigns(true)');assert.equal(refreshCalls,beforeRefresh,'Recent load suppresses foreground request');
+refreshRows.push({...rows[0],id:'new',offer:'New offer'});
+run('lastCampaignAttempt=Date.now()-300001');await run('refreshCampaigns()');
+assert(run("offers.some(o=>o.id==='new')"));assert.equal(run('view'),'campaigns');assert.equal(run('query'),'Solgar');assert.equal(screen.scrollTop,123);assert.deepEqual(Array.from(run('campaignFilters.brands')),['Solgar']);
+run("view='detail';current=offers.find(o=>o.id==='live');current.code='VALID';revealed=true;copyNotice=true;navigation.push(capturePage())");
+refreshRows=refreshRows.filter(r=>r.id!=='live');run('lastCampaignAttempt=0');await run('refreshCampaigns(true)');
+assert.equal(run('view'),'home');assert.equal(run('current'),null);assert.equal(run('copyNotice'),false);assert.equal(run('revealed'),false);assert.match(run('favoritesContent()'),/Henüz favorin yok/);
+run('restorePage(navigation.pop())');assert.equal(run('view'),'home','Back cannot resurrect an unpublished detail');
+const retained=run('JSON.stringify(offers)');refreshReject=true;run('lastCampaignAttempt=0');await run('refreshCampaigns()');assert.equal(run('JSON.stringify(offers)'),retained);assert.equal(run('loaded'),true);
+const failedCalls=refreshCalls;await run('refreshCampaigns(true)');assert.equal(refreshCalls,failedCalls,'Failure does not cause a tight retry loop');refreshReject=false;
+box.document.hidden=true;run('lastCampaignAttempt=0');await run('refreshCampaigns()');assert.equal(refreshCalls,failedCalls);box.document.hidden=false;
+let releaseRefresh;refreshDeferred=new Promise(resolve=>{releaseRefresh=resolve});
+run('lastCampaignAttempt=0');const pendingRefresh=run('refreshCampaigns(true)');await run('refreshCampaigns(true)');assert.equal(refreshCalls,failedCalls+1,'Concurrent foreground events share one request');
+run('campaignEpoch++');releaseRefresh({status:200,data:{campaigns:[]}});await pendingRefresh;assert.equal(run('JSON.stringify(offers)'),retained,'An old session response cannot replace the current feed');refreshDeferred=null;
+// A changed offer loses the old revealed code and gets its updated end date.
+run("query='';view='detail';current=offers.find(o=>o.id==='new');current.code='OLD';revealed=true;copyNotice=true");
+refreshRows=refreshRows.map(r=>r.id==='new'?{...r,offer:'Updated offer',expires:Math.floor(Date.now()/1000)+3600}:r);
+run('lastCampaignAttempt=0');await run('refreshCampaigns(true)');assert.equal(run('current.title'),'Updated offer');assert.equal(run('current.code'),'');assert.equal(run('revealed'),false);assert.equal(run('copyNotice'),false);
+// Local expiry uses the same reconciliation for current and back-stack details.
+run("navigation.push(capturePage());applyCampaignRows(offers.filter(o=>o.id!=='new').map(o=>o.raw))");assert.equal(run('view'),'home');run('restorePage(navigation.pop())');assert.equal(run('view'),'home');
+bridge.postMessage=originalPost;
+console.log('PASS: live feed refresh, new/unpublished/changed offers, detail and favorite cleanup, navigation preservation, hidden-page throttle, error retention, single flight and stale-response rejection.');
+
 assert.equal(run("website('javascript:alert(1)')"),'');assert.equal(run("website('https://user:pass@example.com')"),'');console.log('PASS: native production feed, demo/expiry exclusion, categories, thresholds, server-only reveal, native copy failures, favorites, delete, retry and sheet dismissal.');})().catch(e=>{console.error(e);process.exit(1)});
