@@ -34,6 +34,7 @@ struct PrimeWebView: UIViewRepresentable {
         #endif
         configuration.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "primeAPI")
         let view = WKWebView(frame: .zero, configuration: configuration)
+        context.coordinator.observeForeground(view)
         view.navigationDelegate = context.coordinator
         view.uiDelegate = context.coordinator
         view.isOpaque = false
@@ -57,12 +58,26 @@ struct PrimeWebView: UIViewRepresentable {
         view.configuration.userContentController.removeScriptMessageHandler(forName: "primeAPI", contentWorld: .page)
         view.navigationDelegate = nil
         view.uiDelegate = nil
+        coordinator.stopObservingForeground()
         view.stopLoading()
     }
 
     final class Coordinator: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDelegate, WKUIDelegate {
         var isLaunching: Binding<Bool>
         init(isLaunching: Binding<Bool>) { self.isLaunching = isLaunching; super.init() }
+        private weak var foregroundWebView: WKWebView?
+        func observeForeground(_ view: WKWebView) {
+            foregroundWebView = view
+            NotificationCenter.default.addObserver(self, selector: #selector(refreshOnForeground),
+                name: UIApplication.didBecomeActiveNotification, object: nil)
+        }
+        func stopObservingForeground() {
+            NotificationCenter.default.removeObserver(self, name: UIApplication.didBecomeActiveNotification, object: nil)
+            foregroundWebView = nil
+        }
+        @objc private func refreshOnForeground() {
+            foregroundWebView?.evaluateJavaScript("document.dispatchEvent(new Event('prime-foreground'))", completionHandler: nil)
+        }
         var webRoot: URL?
         private let apiRoot = URL(string: "https://prime-campaign-editor.pacacidogukan.chatgpt.site/api/mobile/")!
         private let redirectGuard = PrimeAPIRedirectPolicy()

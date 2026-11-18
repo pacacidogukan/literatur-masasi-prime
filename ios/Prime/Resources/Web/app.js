@@ -33,14 +33,46 @@ const expired=o=>Number(o?.expires)>0&&Number(o.expires)*1000<=Date.now();
 function asset(value){const v=String(value||'');if(/^[\w.-]+\.(png|jpg|jpeg|webp|svg)$/.test(v))return 'assets/'+v;if(/^assets\/[\w.\/-]+$/.test(v))return v;try{const u=new URL(v);return u.protocol==='https:'&&!u.username&&!u.password?u.href:''}catch{return ''}}
 function website(value){try{const u=new URL(String(value||''));return u.protocol==='https:'&&!u.username&&!u.password?u.href:''}catch{return ''}}
 function showError(message){const note=document.createElement('p');note.className='ps-copyerror';note.setAttribute('role','alert');note.textContent=message;(screen.querySelector('.ps-slidefooter')||screen).append(note);}
-async function revealCode(){if(revealBusy||!current?.hasCode||expired(current))return;const campaign=current;revealBusy=true;try{const r=await server('reveal',{id:campaign.id});if(r.expired||expired(campaign))throw Error('Kampanya sona erdi.');if(!String(r.code||'').trim())throw Error('Kampanya kodu bulunamadı.');campaign.code=String(r.code);if(current===campaign&&view==='detail'){revealed=true;render();}}catch(e){showError(e.message);}finally{revealBusy=false;}}
+async function revealCode(){if(revealBusy||!current?.hasCode||expired(current))return;const campaign=current;revealBusy=true;try{const r=await server('reveal',{id:campaign.id});if(!offers.includes(campaign)||r.expired||expired(campaign))throw Error('Kampanya sona erdi.');if(!String(r.code||'').trim())throw Error('Kampanya kodu bulunamadı.');campaign.code=String(r.code);if(current===campaign&&view==='detail'){revealed=true;render();}}catch(e){showError(e.message);}finally{revealBusy=false;}}
 function inferBenefits(c){if(Array.isArray(c.benefitCategories))return c.benefitCategories;const text=(c.offer+' '+c.description+' '+c.conditions).toLocaleLowerCase('tr');const rules=[['Sepette İndirim',/sepette.{0,30}indirim|sepet.{0,25}tl indirim/],['Ürün İndirimleri',/%\s*\d+.{0,15}indirim/],['İkinci Ürüne İndirim',/ikinci ürün|2\. ürün/],['Çoklu Alım ve Setler',/\bset|çoklu alım|\d+ alana/],['Hediyeli Alışveriş',/hediye/],['İlk Alışveriş',/ilk (alışveriş|sipariş)/],['Puan ve Para İadesi',/puan|para iadesi|cashback/],['Kargo Avantajı',/ücretsiz kargo|kargo bedava/],['Üyelere Özel',/üyelere özel|yeni üye/],['Ödeme Avantajları',/havale|taksit/]];return rules.filter(([,r])=>r.test(text)).map(([name])=>name);}
 function hydrate(rows){offers=rows.filter(c=>!c.demo&&c.active!==0&&!expired(c)).map(c=>({id:String(c.id),brand:String(c.name||''),title:String(c.offer||''),sub:String(c.description||''),terms:[c.description,c.conditions].filter(Boolean).join('\n\n'),category:'',hasCode:!!Number(c.hasCode),code:'',source:website(c.campaignPage||c.channel),expires:Number(c.expires)||0,publishedAt:Number(c.publishedAt)||0,expiry:Number(c.expires)>0?new Date(Number(c.expires)*1000).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul',dateStyle:'long',timeStyle:'short'}):'Bitiş tarihi belirtilmedi',benefitCategories:inferBenefits(c),artworkReady:Object.keys(artworkContract.slots).every(slot=>!!asset(c.cardArtwork?.[slot])),raw:c}));brandNames=[...new Set(offers.map(o=>o.brand))];for(const o of offers){const c=o.raw;const art=o.artworkReady?c.cardArtwork:{};logos[o.brand]=asset(c.asset);campaignArt[o.id]={large:asset(art.large),compact:asset(art.compact),square:asset(art.square),detail:asset(art.detail)};codeBannerArt[o.id]=asset(art.code);lastDayArt[o.id]=asset(art.lastDay);const rate=c.discountPercent==null?String(c.offer||'').match(/%\s*(\d+(?:[.,]\d+)?)/)?.[1]:c.discountPercent;discountRates[o.id]=Number(String(rate??'').replace(',','.'))||0;}}
 function offerTicket(o){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400"><rect width="1200" height="400" rx="36" fill="#171719"/><text x="46" y="90" font-family="Arial" font-size="34" fill="#ff7276">KAMPANYA KODU</text><text x="46" y="166" font-family="Arial" font-size="40" fill="white">${esc(o.brand)}</text><text x="46" y="245" font-family="Arial" font-size="46" fill="white">${esc(o.title).slice(0,70)}</text><text x="46" y="340" font-family="Arial" font-size="28" fill="#ff7276">Kodu açmak için dokun</text></svg>`);}
-async function start(){loaded=false;loadError=false;render();try{let me=await server('me');if(!me.authorized)await server('access',{});const r=await server('campaigns');hydrate(r.campaigns||[]);loaded=true;view='home';navigation.length=0;render();}catch(e){loadError=true;render();}}
-async function deleteData(){if(deleteBusy)return;deleteBusy=true;try{const result=await server('delete-account',{});if(result.deleted!==true)throw Error('Silme işlemi doğrulanamadı.');favorites.clear();persistFavorites();settingsPhoto=null;writeLocal('lmprime-photo',null);navigation.length=0;await start();}catch(e){showError('Veriler silinemedi. Tekrar dene.');}finally{deleteBusy=false;}}
+// Refresh only while visible, deduplicate foreground events and retain the last
+// successful feed on transport errors. Never reset the user's page or filters.
+let campaignRefreshPending=null,lastCampaignAttempt=0,campaignEpoch=0;
+let campaignSignature='';
+function applyCampaignRows(rows){
+ const signature=JSON.stringify(rows);if(signature===campaignSignature)return false;
+ const position=capturePage(),previous=new Map(offers.map(o=>[o.id,o]));
+ hydrate(rows);campaignSignature=signature;
+ const fresh=new Map(offers.map(o=>[o.id,o]));
+ for(const offer of offers){const old=previous.get(offer.id);if(old&&JSON.stringify(old.raw)===JSON.stringify(offer.raw))offer.code=old.code;}
+ const reconcile=page=>{if(!page.current)return;page.current=fresh.get(page.current.id)||null;if(page.view==='detail'&&!page.current)page.view='home';};
+ for(const page of navigation)reconcile(page);
+ const oldCurrent=current;reconcile(position);
+ if(oldCurrent&&(!position.current||!position.current.code)){copyNotice=false;revealed=false;}
+ restorePage(position);return true;
+}
+async function refreshCampaigns(foreground=false){
+ if(!loaded||deleteBusy||document.hidden||campaignRefreshPending)return;
+ const now=Date.now(),interval=foreground?60000:300000;
+ if(now-lastCampaignAttempt<interval)return;
+ lastCampaignAttempt=now;const epoch=campaignEpoch;
+ campaignRefreshPending=(async()=>{try{
+  const result=await server('campaigns');
+  if(epoch!==campaignEpoch||!loaded||deleteBusy)return;
+  if(!Array.isArray(result.campaigns))throw Error('Geçersiz kampanya yanıtı.');
+  applyCampaignRows(result.campaigns);
+ }catch{/* Keep the usable feed; retry at the next throttled opportunity. */}})();
+ try{await campaignRefreshPending;}finally{campaignRefreshPending=null;}
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)void refreshCampaigns(true);});
+document.addEventListener('prime-foreground',()=>void refreshCampaigns(true));
+setInterval(()=>void refreshCampaigns(),60000);
+async function start(){campaignEpoch++;loaded=false;loadError=false;render();try{let me=await server('me');if(!me.authorized)await server('access',{});const r=await server('campaigns');if(!Array.isArray(r.campaigns))throw Error('Geçersiz kampanya yanıtı.');hydrate(r.campaigns);campaignSignature=JSON.stringify(r.campaigns);lastCampaignAttempt=Date.now();loaded=true;view='home';navigation.length=0;render();}catch(e){loadError=true;render();}}
+async function deleteData(){if(deleteBusy)return;deleteBusy=true;campaignEpoch++;try{const result=await server('delete-account',{});if(result.deleted!==true)throw Error('Silme işlemi doğrulanamadı.');favorites.clear();persistFavorites();settingsPhoto=null;writeLocal('lmprime-photo',null);navigation.length=0;await start();}catch(e){showError('Veriler silinemedi. Tekrar dene.');}finally{deleteBusy=false;}}
 root.addEventListener('click',async e=>{const a=e.target.closest('a[href]');if(!a)return;e.preventDefault();const url=website(a.getAttribute('href'));if(!url){showError('Mağaza bağlantısı bulunmuyor.');return;}try{await server('open-external',{url});}catch(e){showError(e.message);}},true);
-setInterval(()=>{if(!loaded||document.hidden)return;const active=offers.filter(o=>!expired(o));if(active.length===offers.length)return;offers=active;brandNames=[...new Set(offers.map(o=>o.brand))];if(view==='detail'&&expired(current)){copyNotice=false;revealed=false;view='home';}render();},1000);
+setInterval(()=>{if(!loaded||document.hidden)return;const active=offers.filter(o=>!expired(o));if(active.length===offers.length)return;applyCampaignRows(active.map(o=>o.raw));},1000);
 
 let offers=[];
 const campaignArt={};
