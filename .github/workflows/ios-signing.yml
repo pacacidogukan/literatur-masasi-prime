@@ -17,30 +17,22 @@ concurrency:
 jobs:
   archive:
     if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository)
-    runs-on: macos-26-intel
+    runs-on: xcode-27
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
-      - name: Select supported App Store Xcode
+      - name: Verify Xcode and iOS SDK
         run: |
+          xcodebuild -version
           python3 - <<'PY'
-          import glob, os, re, subprocess
-          choices=[]
-          for app in glob.glob('/Applications/Xcode*.app'):
-              developer=app+'/Contents/Developer'
-              try:
-                  out=subprocess.check_output([developer+'/usr/bin/xcodebuild','-version'],text=True,stderr=subprocess.DEVNULL)
-                  version=re.search(r'Xcode (\d+(?:\.\d+)*)',out).group(1)
-                  if any(s in app.lower() for s in ['beta','release_candidate','rc.app']): continue
-                  parts=tuple(map(int,version.split('.')))
-                  if parts[0]>=26: choices.append((parts,developer))
-              except Exception: continue
-          if not choices: raise SystemExit('No stable Xcode 26+ is installed on this runner.')
-          selected=max(choices)[1]
-          with open(os.environ['GITHUB_ENV'],'a') as f: f.write('DEVELOPER_DIR='+selected+'\n')
-          print('Selected supported Xcode:',selected)
+          import subprocess
+          sdk = subprocess.check_output(['xcrun', '--sdk', 'iphoneos', '--show-sdk-version'], text=True).strip()
+          assert int(sdk.split('.')[0]) >= 27, 'iOS 27+ SDK required; refusing outdated upload'
+          print('Verified iOS SDK:', sdk)
           PY
       - uses: actions/setup-node@v4
         with:

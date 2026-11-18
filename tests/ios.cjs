@@ -37,6 +37,13 @@ clickRoute({action:'back'});assert.equal(run('view'),'newest');clickRoute({actio
 assert.equal(run('newestOffers(offers,'+(publicationNow+8*86400)+').length'),0);
 assert.match(run('newestFeature([])'),/Son 7 günde yayınlanan yeni bir kampanya bulunmuyor/);
 run('hydrate('+JSON.stringify(rows)+');navigation.length=0');
+// Full campaign routing and shared brand directory filters.
+run("view='home';query='';campaignFilters.rates=['50'];navigation.length=0");
+clickRoute({discount:'all'});assert.equal(run('view'),'campaigns');assert.equal(run('campaignFilterCount()'),0);
+clickRoute({view:'brands'});assert.equal(run('selectedCategory'),'Tümü');assert.match(screen.innerHTML,/data-filter-open="ending"/);
+run("campaignFilters.brands=['Solgar'];render()");assert.match(screen.innerHTML,/data-brand="Solgar"/);assert.doesNotMatch(screen.innerHTML,/data-brand="Other"/);
+clickRoute({filterCategory:'Kargo Avantajı'});assert.equal(run('view'),'brands');assert.equal(run("filteredCampaigns(campaignFilters,'brands').length"),0);
+run('hydrate('+JSON.stringify(rows)+');campaignFilters=emptyCampaignFilters();selectedCategory="Tümü";view="home";query="";navigation.length=0');
 // The native frame reserves each exact ratio with an in-flow replaced element, even before images load.
 for(const [slot,size] of Object.entries(run('artworkContract.slots'))){
  const markup=run('campaignImage(offers[0],'+JSON.stringify(slot)+')');
@@ -122,6 +129,7 @@ clickRoute({action:'back'});assert.equal(run('view'),'brand');assert.match(scree
 run('hydrate('+JSON.stringify(rows)+')');
 
 // Search matches brands, offer titles and descriptions consistently on every screen.
+run("campaignFilters=emptyCampaignFilters();selectedCategory='Tümü'");
 for(const query of [' solgar ', ' %25 İNDİRİM ', ' seçili ürünler ']){
  run('query='+JSON.stringify(query));
  assert.deepEqual(Array.from(run('matchingBrands()')),['Solgar']);

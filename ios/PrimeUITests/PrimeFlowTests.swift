@@ -12,10 +12,10 @@ final class PrimeFlowTests: XCTestCase {
     func tap(_ label: String) {
         let element = button(label)
         XCTAssertTrue(element.waitForExistence(timeout: 15), "Missing button: \(label)")
-        if label == "Ayarları aç" {
-            // Use a physical touch for the freshly rendered WKWebView header control.
-            app.coordinate(withNormalizedOffset: .zero)
-                .withOffset(CGVector(dx: element.frame.midX, dy: element.frame.midY)).tap()
+        if label == "Ayarları aç" || label == "Geri" {
+            // WKWebView accessibility activation can miss header controls on iPad.
+            // Touch the element itself so window positioning is respected.
+            element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         } else {
             element.tap()
         }
@@ -90,7 +90,7 @@ final class PrimeFlowTests: XCTestCase {
         login()
         let search = app.webViews.textFields["Marka veya kampanya ara"].firstMatch
         XCTAssertTrue(search.waitForExistence(timeout: 15))
-        search.tap()
+        search.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         search.typeText("Test ayrıcalığı")
         XCTAssertTrue(button("Solgar: Test ayrıcalığı").waitForExistence(timeout: 15))
         tap("Solgar: Test ayrıcalığı")
@@ -98,7 +98,7 @@ final class PrimeFlowTests: XCTestCase {
         tap("Geri")
         tap("Markalar")
         let brandSearch = app.webViews.textFields["Marka veya kampanya ara"].firstMatch
-        brandSearch.tap()
+        brandSearch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         brandSearch.typeText("Test ayrıcalığı")
         XCTAssertTrue(button("Solgar: Test ayrıcalığı").waitForExistence(timeout: 15))
         tap("Solgar: Test ayrıcalığı")
