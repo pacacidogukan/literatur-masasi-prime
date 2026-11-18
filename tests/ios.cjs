@@ -37,15 +37,7 @@ clickRoute({action:'back'});assert.equal(run('view'),'newest');clickRoute({actio
 assert.equal(run('newestOffers(offers,'+(publicationNow+8*86400)+').length'),0);
 assert.match(run('newestFeature([])'),/Son 7 günde yayınlanan yeni bir kampanya bulunmuyor/);
 run('hydrate('+JSON.stringify(rows)+');navigation.length=0');
-// Home selection is unique per brand, stable during render and rotates on return.
-run('hydrate('+JSON.stringify([{...rows[0],id:'a',publishedAt:publicationNow},{...rows[0],id:'b',publishedAt:publicationNow},{...rows[0],id:'c',name:'Other',publishedAt:publicationNow}])+');query=""');
-const firstHome=Array.from(run("homeCampaigns(offers,'home-brands').map(o=>o.id)"));
-assert.equal(firstHome.length,2);
-assert.deepEqual(Array.from(run("homeCampaigns(offers,'home-brands').map(o=>o.id)")),firstHome);
-run('homeRotation++');
-const nextHome=Array.from(run("homeCampaigns(offers,'home-brands').map(o=>o.id)"));
-assert.notEqual(firstHome.find(id=>id!=='c'),nextHome.find(id=>id!=='c'));
-assert.equal(run("homeCampaigns(newestOffers(),'newest').length"),2);
+// Full campaign routing and shared brand directory filters.
 run("view='home';query='';campaignFilters.rates=['50'];navigation.length=0");
 clickRoute({discount:'all'});assert.equal(run('view'),'campaigns');assert.equal(run('campaignFilterCount()'),0);
 clickRoute({view:'brands'});assert.equal(run('selectedCategory'),'Tümü');assert.match(screen.innerHTML,/data-filter-open="ending"/);
