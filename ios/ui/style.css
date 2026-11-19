@@ -507,7 +507,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-quickrail svg{width:13px;height:13px}
 #prime-square-campaigns .ps-quickrail .selected{background:#ffeded;border-color:#ffcdcd;color:var(--ps-red)}
 #prime-square-campaigns .ps-filterresulthead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:8px 0 20px}
-#prime-square-campaigns .ps-filterresulthead h2{font-size:19px;margin:0}
+#prime-square-campaigns .ps-filterresulthead h2{font-size:19px;margin:0;color:var(--ps-title-color)}
 #prime-square-campaigns .ps-filterresulthead p{font-size:13px;color:#74787f;margin:5px 0 0}
 #prime-square-campaigns .ps-filterresulthead button{display:flex;align-items:center;gap:5px;flex:none;min-height:44px;padding:8px 12px;background:#fff;border:1px solid #e3e4e7;border-radius:10px;font-size:13px}
 #prime-square-campaigns .ps-empty [data-filter-reset]{display:block;min-height:44px;margin:16px auto 0;background:#ffeded;border:0;border-radius:10px;color:var(--ps-red);padding:10px 16px}
