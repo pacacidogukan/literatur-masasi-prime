@@ -2,7 +2,7 @@
 const {chromium,webkit}=require('playwright'),fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict'),vm=require('node:vm');
 const ctx={};vm.runInNewContext(fs.readFileSync('ios/ui/artwork-contract.js','utf8'),ctx);const contract=ctx.primeArtworkContract;
 const artwork=Object.fromEntries(Object.keys(contract.slots).map(s=>[s,'https://artwork.test/'+s+'.svg']));
-const rows=[{id:'valid',name:'Solgar',offer:'Test ayrıcalığı',asset:'solgar.png',hasCode:1,channel:'https://example.com',expires:Math.floor(Date.now()/1000)+3600,publishedAt:Math.floor(Date.now()/1000),cardArtwork:artwork},{id:'other',name:'Other',offer:'İkinci kampanya',hasCode:0,cardArtwork:artwork},{id:'legacy',name:'Eski format',offer:'Görseli hazırlanıyor',photo:'https://artwork.test/legacy.svg',hasCode:0}];
+const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'Test ayrıcalığı',asset:'solgar.png',hasCode:1,channel:'https://example.com',expires:Math.floor(Date.now()/1000)+3600,publishedAt:Math.floor(Date.now()/1000),cardArtwork:artwork},{id:'other',productCategories:['care'],name:'Other',offer:'İkinci kampanya',hasCode:0,cardArtwork:artwork},{id:'legacy',productCategories:['makeup'],name:'Eski format',offer:'Görseli hazırlanıyor',photo:'https://artwork.test/legacy.svg',hasCode:0}];
 (async()=>{
  const base=path.resolve('ios/Prime/Resources/Web');
  const server=http.createServer((req,res)=>{const file=path.resolve(base,'.'+req.url.split('?')[0]);if(!file.startsWith(base+path.sep)){res.writeHead(403).end();return;}try{res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':file.endsWith('.html')?'text/html':'application/octet-stream');res.end(fs.readFileSync(file));}catch{res.writeHead(404).end();}});
@@ -101,9 +101,15 @@ const rows=[{id:'valid',name:'Solgar',offer:'Test ayrıcalığı',asset:'solgar.
   assert.equal(await page.locator('#ps-native-results [data-offer]').first().getAttribute('data-offer'),'valid');
   await page.locator('[data-filter-open="sort"]').tap();await dialog.locator('[data-filter-clean]').tap();await dialog.locator('[data-filter-apply]').tap();
   assert.equal(await page.locator('[data-filter-open="sort"]').getAttribute('aria-label'),'Sırala: Keşfet');
-  for(const group of ['brands','rates','published','ending','codes','saved']){
+  for(const group of ['products','brands','rates','published','ending','codes','saved']){
    await page.locator('[data-filter-open="'+group+'"]').tap();
    assert.deepEqual(await dialog.locator('.ps-filterbody>section').evaluateAll(nodes=>nodes.map(n=>n.id)),['ps-filter-'+group]);
+   if(group==='products'){
+    assert.equal(await dialog.locator('#ps-filter-title').innerText(),'Ürün Kategorisi');
+    for(const label of ['Tümü','Takviyeler','Cilt ve Bakım','Sporcu Beslenmesi','Makyaj'])assert(await dialog.getByRole('button',{name:label,exact:true}).isVisible());
+    await dialog.locator('[data-filter-value="supplements"]').tap();await dialog.locator('[data-filter-value="care"]').tap();
+    assert.equal(await dialog.locator('[data-filter-group][aria-pressed="true"]').count(),2);
+   }
    if(group==='rates'){
     await dialog.locator('[data-filter-value="10"]').tap();await dialog.locator('[data-filter-value="25"]').tap();
     assert.equal(await dialog.locator('[data-filter-group][aria-pressed="true"]').count(),2);
@@ -123,6 +129,27 @@ const rows=[{id:'valid',name:'Solgar',offer:'Test ayrıcalığı',asset:'solgar.
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
   await page.getByRole('button',{name:'Ana Sayfa',exact:true}).tap();
   await page.locator('.ps-poster.large').first().waitFor();
+  // Profile changes survive navigation/relaunch; a wide source image stays within its circle.
+  await page.getByRole('button',{name:'Profili aç',exact:true}).tap();
+  await headerStyle('.ps-profilebar>strong');
+  assert.equal(await page.locator('.ps-profilebar input,.ps-profilebar [data-search]').count(),0);
+  await page.getByRole('button',{name:'Profili düzenle',exact:true}).tap();
+  await headerStyle('.ps-profilebar>strong');
+  await page.getByRole('textbox',{name:'Profil adı',exact:true}).fill('Test Kullanıcısı');
+  await page.getByRole('button',{name:'İsmi kaydet',exact:true}).tap();
+  const source=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=1800;c.height=900;const x=c.getContext('2d');x.fillStyle='#a51d32';x.fillRect(0,0,1800,900);x.fillStyle='#dedede';x.fillRect(600,100,600,700);return c.toDataURL('image/png').split(',')[1];});
+  await page.locator('#ps-settings-photo').setInputFiles({name:'wide-profile.png',mimeType:'image/png',buffer:Buffer.from(source,'base64')});
+  await page.getByText('Fotoğraf kaydedildi.',{exact:true}).waitFor();
+  const avatar=await page.locator('.ps-profileavatar').evaluate(async el=>{const i=el.querySelector('img');await i.decode();const a=el.getBoundingClientRect(),b=i.getBoundingClientRect();return {natural:[i.naturalWidth,i.naturalHeight],frame:[a.width,a.height],image:[b.width,b.height],overflow:getComputedStyle(el).overflow,fit:getComputedStyle(i).objectFit,inside:b.left>=a.left&&b.right<=a.right&&b.top>=a.top&&b.bottom<=a.bottom};});
+  assert.deepEqual(avatar.natural,[512,512]);assert.deepEqual(avatar.frame,[96,96]);assert.equal(avatar.overflow,'hidden');assert.equal(avatar.fit,'cover');assert(avatar.inside);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  if(width===390){fs.mkdirSync('ci-artifacts/artwork',{recursive:true});await page.screenshot({path:'ci-artifacts/artwork/profile-'+engine.name()+'.png'});}
+  await page.getByRole('button',{name:'Geri',exact:true}).tap();
+  assert.equal(await page.locator('.ps-profilecopy strong').innerText(),'Test Kullanıcısı');
+  await page.reload();await page.getByRole('button',{name:'Profili aç',exact:true}).tap();
+  assert.equal(await page.locator('.ps-profilecopy strong').innerText(),'Test Kullanıcısı');assert.equal(await page.locator('.ps-profileavatar img').count(),1);
+  await page.getByRole('button',{name:'Profili düzenle',exact:true}).tap();await page.getByRole('button',{name:'Fotoğrafı kaldır',exact:true}).tap();
+  assert.equal(await page.locator('.ps-profileavatar img').count(),0);assert.equal(await page.getByRole('textbox',{name:'Profil adı',exact:true}).inputValue(),'Test Kullanıcısı');
+  await page.getByRole('button',{name:'Geri',exact:true}).tap();await page.getByRole('button',{name:'Geri',exact:true}).tap();
   // Invalid bytes must be bounded to one frame and remain an accessible offer.
   const broken=page.locator('.ps-poster.large').first();await broken.locator('img').evaluate(i=>{i.loading='eager';i.src='https://artwork.test/legacy.svg';});
   await page.waitForFunction(()=>document.querySelector('.ps-poster.large .ps-artwork-frame').dataset.artworkState==='invalid');

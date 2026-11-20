@@ -222,16 +222,16 @@
 #prime-square-campaigns .ps-header:has(+ .ps-home){padding-bottom:0}
 #prime-square-campaigns .ps-main.ps-home{padding-top:0}
 #prime-square-campaigns .ps-home .ps-rounds{padding-top:24px;padding-bottom:24px}
-#prime-square-campaigns .ps-settingsnative{--red:#ff3131;--ink:#171a22;--muted:#717581;--gray:#f3f3f5;--line:#e8e8ec;--surface-shadow:0 5px 18px rgba(23,26,34,.045);background:white;color:var(--ink);padding:15px 16px 40px;min-height:100%;font-size:14px;line-height:1.5}
-#prime-square-campaigns .ps-settingsnative button{border:0;background:none;font:inherit;color:inherit}
-#prime-square-campaigns .ps-settingsnative h1{font-size:24px;line-height:1.25;font-weight:700;letter-spacing:-.65px;margin:0}
-#prime-square-campaigns .ps-settingsnative h2{font-size:18px;margin:24px 0 12px}
-#prime-square-campaigns .ps-settingsnative p{margin:0}
-#prime-square-campaigns .ps-settingsnative .primary{display:block;width:100%;padding:14px;background:#ff3131;color:white;border-radius:24px;text-align:center;margin-top:18px}
-#prime-square-campaigns .ps-settingsnative .text-link{display:flex;align-items:center;gap:5px;font-size:12px;color:#8994a2}
-#prime-square-campaigns .ps-settingsnative .profile-photo{width:100%;height:100%;object-fit:cover;border-radius:50%}
-#prime-square-campaigns .ps-settingsnative .sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-#prime-square-campaigns .ps-settingsnative .topbar{height:54px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;background:white;position:sticky;top:0;z-index:20}#prime-square-campaigns .ps-settingsnative .page-title{font-size:17px;font-weight:650}#prime-square-campaigns .ps-settingsnative .circle{width:44px;height:44px;flex:0 0 44px;border-radius:50%;display:grid;place-items:center;padding:0}#prime-square-campaigns .ps-settingsnative .home-header .circle{color:var(--red)}#prime-square-campaigns .ps-settingsnative .edit-dot{position:absolute;right:-3px;bottom:-3px;width:24px;height:24px;background:var(--red);color:white;border:2px solid white;border-radius:50%;display:grid;place-items:center;font-size:15px}#prime-square-campaigns .ps-settingsnative .profile-photo{width:100%;height:100%;object-fit:cover;border-radius:50%}#prime-square-campaigns .ps-settingsnative .text-link{display:flex;align-items:center;gap:3px;color:var(--red);font-size:11px;white-space:nowrap;padding:4px 0}#prime-square-campaigns .ps-settingsnative .text-link .icon{width:16px;height:16px}#prime-square-campaigns .ps-settingsnative .sub{color:var(--muted);line-height:1.6;margin-top:16px}#prime-square-campaigns .ps-settingsnative .login .sub{text-align:center;font-size:13px}#prime-square-campaigns .ps-settingsnative .primary{display:block;width:100%;border-radius:28px;background:var(--red);color:white;padding:15px 12px;font-size:17px;font-weight:500}#prime-square-campaigns .ps-settingsnative .empty .primary{margin-top:24px}#prime-square-campaigns .ps-settingsnative .profile-card{margin:4px 0 18px;display:flex;align-items:center;gap:18px;background:white;border-radius:20px;padding:20px;width:100%;text-align:left;box-shadow:0 3px 25px #14233403}#prime-square-campaigns .ps-settingsnative .profile-card>.icon{margin-left:auto;width:18px}#prime-square-campaigns .ps-settingsnative .profile-icon{width:72px;height:72px;flex-shrink:0;aspect-ratio:1;border-radius:50%;border:4px solid white;box-shadow:0 0 0 4px #ffe9e9;background:linear-gradient(#ddd,#bbb);position:relative;display:grid;place-items:center;padding:0}#prime-square-campaigns .ps-settingsnative .profile-icon>.icon{width:42px;height:42px;color:#888}#prime-square-campaigns .ps-settingsnative .menu{display:grid;background:white;border-radius:20px;overflow:hidden}#prime-square-campaigns .ps-settingsnative .menu button{display:flex;align-items:center;gap:13px;text-align:left;padding:16px 14px;min-height:56px;font-size:13px;border-bottom:1px solid #f3f3f4}#prime-square-campaigns .ps-settingsnative .menu button>.icon{color:var(--red);width:20px;height:20px}#prime-square-campaigns .ps-settingsnative .last{margin-left:auto}#prime-square-campaigns .ps-settingsnative .last>.icon{width:16px;height:16px;color:#758291}#prime-square-campaigns .ps-settingsnative .switch{width:38px;height:23px;border-radius:20px;background:#ddd;position:relative;margin-left:auto;flex-shrink:0}#prime-square-campaigns .ps-settingsnative .switch:after{content:'';position:absolute;left:3px;top:3px;width:17px;height:17px;border-radius:50%;background:white;transition:left .2s}#prime-square-campaigns .ps-settingsnative .switch.on{background:var(--red)}#prime-square-campaigns .ps-settingsnative .switch.on:after{left:18px}#prime-square-campaigns .ps-settingsnative .photo-settings{margin:26px 0;background:var(--gray);border-radius:20px;padding:24px;text-align:center}#prime-square-campaigns .ps-settingsnative .photo-settings .profile-icon{margin:0 auto 24px}#prime-square-campaigns .ps-settingsnative .photo-pick{display:inline-block;padding:11px 20px;background:var(--red);border-radius:24px;color:white;cursor:pointer}#prime-square-campaigns .ps-settingsnative .photo-settings .text-link{margin:14px auto 0;justify-content:center}#prime-square-campaigns .ps-settingsnative .photo-settings .sub{font-size:11px}#prime-square-campaigns .ps-settingsnative .document{padding:10px 0;color:#667384}#prime-square-campaigns .ps-settingsnative .document h1{color:var(--ink);margin-bottom:24px}#prime-square-campaigns .ps-settingsnative .document h2{color:var(--ink);margin:24px 0 12px}#prime-square-campaigns .ps-settingsnative .document p{line-height:1.8}#prime-square-campaigns .ps-settingsnative .document .topbar{color:var(--ink)}#prime-square-campaigns .ps-settingsnative .primary:disabled{opacity:.5;cursor:wait}#prime-square-campaigns .ps-settingsnative h1,#prime-square-campaigns .ps-settingsnative h2,#prime-square-campaigns .ps-settingsnative h3,#prime-square-campaigns .ps-settingsnative .page-title{font-weight:700;letter-spacing:-.65px}#prime-square-campaigns .ps-settingsnative .topbar{border-bottom:1px solid var(--line);margin-bottom:20px}#prime-square-campaigns .ps-settingsnative .page-title{font-size:18px}#prime-square-campaigns .ps-settingsnative .circle{color:var(--ink)}#prime-square-campaigns .ps-settingsnative .home-header .circle{color:var(--ink)}#prime-square-campaigns .ps-settingsnative .edit-dot{background:white;color:var(--ink);border:1px solid var(--line);box-shadow:0 2px 6px rgba(23,26,34,.10)}#prime-square-campaigns .ps-settingsnative .text-link{color:var(--muted);font-size:11px}#prime-square-campaigns .ps-settingsnative .profile-card,#prime-square-campaigns .ps-settingsnative .menu,#prime-square-campaigns .ps-settingsnative .login-card,#prime-square-campaigns .ps-settingsnative .photo-settings{border-radius:16px;border:1px solid var(--line);box-shadow:var(--surface-shadow);background:#fff}#prime-square-campaigns .ps-settingsnative .profile-card strong{font-size:17px;font-weight:650}#prime-square-campaigns .ps-settingsnative .profile-icon{box-shadow:0 2px 12px rgba(23,26,34,.08)}#prime-square-campaigns .ps-settingsnative .menu button{font-size:14px;border-bottom-color:var(--line);padding:17px 16px}#prime-square-campaigns .ps-settingsnative .menu button:last-child{border-bottom:0}#prime-square-campaigns .ps-settingsnative .menu button>.icon{color:var(--muted)}#prime-square-campaigns .ps-settingsnative .menu button:active{background:var(--gray)}#prime-square-campaigns .ps-settingsnative .document{color:var(--muted)}#prime-square-campaigns .ps-settingsnative .primary{border-radius:14px;font-weight:650;box-shadow:0 4px 12px rgba(255,49,49,.12)}#prime-square-campaigns .ps-settingsnative .document .draft-note{padding:14px;border-radius:12px;background:#fff7f3;color:#80533b}#prime-square-campaigns .ps-codeheading{margin:0 0 12px;font-size:18px;font-weight:600;letter-spacing:-.35px;color:var(--ps-ink)}
+
+
+
+
+
+
+
+
+
+#prime-square-campaigns .ps-codeheading{margin:0 0 12px;font-size:18px;font-weight:600;letter-spacing:-.35px;color:var(--ps-ink)}
 
 #prime-square-campaigns .ps-home .ps-rounds,#prime-square-campaigns .ps-brandrounds{gap:8px;align-items:start;scroll-padding-left:15px}
 #prime-square-campaigns .ps-rounds button,#prime-square-campaigns .ps-brandrounds button{display:grid;grid-template-rows:60px 32px;align-content:start;justify-items:center;row-gap:8px;flex:0 0 78px;width:78px;min-width:78px;max-width:78px;padding:0;margin:0;font-size:11px;line-height:16px;font-weight:400;color:#686c73}
@@ -393,7 +393,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-search input:focus,
 #prime-square-campaigns .ps-search input:focus-visible{outline:none;box-shadow:none;-webkit-appearance:none;appearance:none}
 /* Pointer taps must not flash the settings rows grey. Keyboard focus stays visible. */
-#prime-square-campaigns .ps-settingsnative .menu button:active{background:transparent}
+
 
 /* Approved home spacing: compact filters, same icon size, closer labels. */
 #prime-square-campaigns .ps-home .ps-rounds{gap:4px}
@@ -539,3 +539,44 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-home .ps-homemarks{display:flex;flex-direction:column;gap:var(--ps-home-gap);min-width:0;margin:0}
 #prime-square-campaigns .ps-home .ps-homemarks>.ps-sectionheading{margin:0 var(--ps-home-gap)}
 #prime-square-campaigns .ps-home .ps-homemarks .ps-brandrounds{gap:0;padding:0 var(--ps-home-gap);margin:0}
+
+/* Profile follows the shared page header, gray icons and white card system. */
+#prime-square-campaigns .ps-header [data-view="settings"]{color:var(--ps-muted)}
+#prime-square-campaigns .ps-header [data-view="settings"] svg{width:22px;height:22px;stroke-width:1.8}
+#prime-square-campaigns .ps-profilepage{min-height:100%;background:#fff;color:var(--ps-ink)}
+#prime-square-campaigns .ps-profilebar{position:sticky;top:0;z-index:12;padding:0 12px}
+#prime-square-campaigns .ps-profilecontent{padding:16px 15px 32px;min-width:0}
+#prime-square-campaigns .ps-profilecontent button,#prime-square-campaigns .ps-profilecontent input{font-family:var(--ps-font)}
+#prime-square-campaigns .ps-profilecard{display:flex;align-items:center;gap:16px;width:100%;padding:18px 16px;margin:0 0 20px;text-align:left;background:white;border:1px solid var(--ps-line);border-radius:12px;box-shadow:0 3px 12px #171a2205}
+#prime-square-campaigns .ps-profilecopy{display:block;flex:1;min-width:0}
+#prime-square-campaigns .ps-profilecopy strong{display:block;font-size:19px;font-weight:600;line-height:1.35;overflow-wrap:anywhere}
+#prime-square-campaigns .ps-profilecopy small{display:block;margin-top:5px;color:var(--ps-muted);font-size:13px}
+#prime-square-campaigns .ps-profilecard>svg{flex:none;width:18px;height:18px;color:var(--ps-muted);stroke-width:1.8}
+#prime-square-campaigns .ps-profileavatar{display:grid;place-items:center;position:relative;isolation:isolate;overflow:hidden;flex:0 0 64px;width:64px;height:64px;min-width:64px;max-width:64px;aspect-ratio:1;border:1px solid var(--ps-line);border-radius:50%;background:var(--ps-bg);color:var(--ps-muted)}
+#prime-square-campaigns .ps-profileavatar>img{display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:cover;object-position:center;border-radius:inherit}
+#prime-square-campaigns .ps-profileavatar>svg{width:28px;height:28px;stroke-width:1.8}
+#prime-square-campaigns .ps-profileavatar-large{width:96px;height:96px;min-width:96px;max-width:96px;flex-basis:96px;margin:18px auto}
+#prime-square-campaigns .ps-profileavatar-large>svg{width:36px;height:36px}
+#prime-square-campaigns .ps-profilemenu{overflow:hidden;border:1px solid var(--ps-line);border-radius:12px}
+#prime-square-campaigns .ps-profilemenu button{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:16px;text-align:left;background:#fff;border:0;border-bottom:1px solid var(--ps-line);font-size:14px}
+#prime-square-campaigns .ps-profilemenu button:last-child{border-bottom:0}
+#prime-square-campaigns .ps-profilemenu button>svg{width:18px;height:18px;margin-left:auto;color:var(--ps-muted);stroke-width:1.8}
+#prime-square-campaigns .ps-profileglyph{display:grid;place-items:center;flex:none;width:20px;height:20px;color:var(--ps-muted)}
+#prime-square-campaigns .ps-profileglyph svg{display:block;width:20px;height:20px;stroke-width:1.8}
+#prime-square-campaigns .ps-photoeditor,#prime-square-campaigns .ps-nameeditor{min-width:0;padding:18px 16px;border:1px solid var(--ps-line);border-radius:12px;margin:0 0 16px;background:#fff}
+#prime-square-campaigns .ps-photoeditor{text-align:center}
+#prime-square-campaigns .ps-photoeditor h2{margin:0;font-size:16px;line-height:1.3;font-weight:500;color:var(--ps-title-color)}
+#prime-square-campaigns .ps-photoactions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+#prime-square-campaigns .ps-photoactions button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;max-width:100%;padding:10px 14px;border:1px solid #e3e4e7;border-radius:10px;background:white;color:var(--ps-muted);font-size:13px;line-height:1.35}
+#prime-square-campaigns .ps-photoactions button:disabled{opacity:.6}
+#prime-square-campaigns .ps-profilefile{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap;border:0}
+#prime-square-campaigns .ps-profilehint{margin:12px 0 0;color:var(--ps-muted);font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+#prime-square-campaigns .ps-nameeditor label{display:block;margin:0 0 10px;color:var(--ps-title-color);font-size:16px;font-weight:500}
+#prime-square-campaigns .ps-nameeditor input{display:block;width:100%;min-width:0;min-height:48px;padding:12px;border:1px solid #e3e4e7;border-radius:10px;background:#fff;color:var(--ps-ink);font-size:16px;line-height:1.4}
+#prime-square-campaigns .ps-profilesave,#prime-square-campaigns .ps-profilecontent .primary{display:block;width:100%;min-height:48px;margin-top:14px;padding:12px 16px;border:1px solid var(--ps-red);border-radius:12px;background:var(--ps-red);color:#fff;font-size:14px;font-weight:600;text-align:center}
+#prime-square-campaigns .ps-profilefeedback{min-height:20px;margin:0;color:var(--ps-muted);font-size:13px;line-height:1.5}
+#prime-square-campaigns .ps-profilefeedback.is-error{color:#b42318}
+#prime-square-campaigns .ps-profilecontent .document h1,#prime-square-campaigns .ps-profilecontent .document h2{font-size:16px;line-height:1.4;font-weight:500;color:var(--ps-title-color);margin:20px 0 12px}
+#prime-square-campaigns .ps-profilecontent .document h1{margin-top:0}
+#prime-square-campaigns .ps-profilecontent .document p{margin:0 0 14px;font-size:14px;line-height:1.6;overflow-wrap:anywhere}
+#prime-square-campaigns .ps-profilecontent .text-link{display:block;min-height:44px;margin:10px auto 0;padding:10px 14px;color:var(--ps-muted);background:none;border:0;font-size:14px}

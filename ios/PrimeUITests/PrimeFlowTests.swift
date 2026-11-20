@@ -12,7 +12,7 @@ final class PrimeFlowTests: XCTestCase {
     func tap(_ label: String) {
         let element = button(label)
         XCTAssertTrue(element.waitForExistence(timeout: 15), "Missing button: \(label)")
-        if label == "Ayarları aç" || label == "Geri" {
+        if label == "Profili aç" || label == "Geri" {
             // WKWebView accessibility activation can miss header controls on iPad.
             // Touch the element itself so window positioning is respected.
             element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
@@ -49,8 +49,17 @@ final class PrimeFlowTests: XCTestCase {
         XCTAssertEqual(app.webViews.switches.matching(NSPredicate(format: "label CONTAINS %@", "favorilere")).count, 0)
         tap("Solgar: Test ayrıcalığı")
     }
-    func testAutomaticOpeningAndPersistence() { login(); relaunch(); home(); tap("Ayarları aç"); XCTAssertFalse(button("Çıkış Yap").exists) }
-    func testDeleteAccessAndLocalData() { login(); tap("Ayarları aç");tap("Verilerimi sil");tap("Verileri sil");home();relaunch();home();tap("Favoriler");XCTAssertTrue(app.webViews.staticTexts["Henüz favorin yok"].waitForExistence(timeout:15)) }
+    func testProfileNamePersists() {
+        login(); tap("Profili aç"); tap("Profili düzenle")
+        let name = app.webViews.textFields["Profil adı"].firstMatch
+        XCTAssertTrue(name.waitForExistence(timeout: 15)); name.tap(); name.typeText("Test Kullanıcısı")
+        tap("İsmi kaydet"); tap("Geri")
+        XCTAssertTrue(app.webViews.staticTexts["Test Kullanıcısı"].waitForExistence(timeout: 15))
+        relaunch(); home(); tap("Profili aç")
+        XCTAssertTrue(app.webViews.staticTexts["Test Kullanıcısı"].waitForExistence(timeout: 15))
+    }
+    func testAutomaticOpeningAndPersistence() { login(); relaunch(); home(); tap("Profili aç"); XCTAssertFalse(button("Çıkış Yap").exists) }
+    func testDeleteAccessAndLocalData() { login(); tap("Profili aç");tap("Verilerimi sil");tap("Verileri sil");home();relaunch();home();tap("Favoriler");XCTAssertTrue(app.webViews.staticTexts["Henüz favorin yok"].waitForExistence(timeout:15)) }
     func testCampaignWebsiteIsDisplayedWithoutNavigation() {
         login(); home(); openSolgarCampaign()
         let address = app.webViews.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "example.com")).firstMatch
@@ -64,7 +73,7 @@ final class PrimeFlowTests: XCTestCase {
     func testNotificationsAreHidden() {
         login(); home()
         XCTAssertEqual(app.webViews.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bildirimlerim")).count, 0)
-        tap("Ayarları aç")
+        tap("Profili aç")
         XCTAssertEqual(app.webViews.switches.matching(NSPredicate(format: "label CONTAINS %@", "Bildirim")).count, 0)
         XCTAssertFalse(button("Bildirimlerim").exists)
         relaunch(); home()
@@ -128,7 +137,7 @@ final class PrimeFlowTests: XCTestCase {
         XCTAssertEqual(brandCard.frame.height, favoriteSize.height, accuracy: 2)
         XCTAssertEqual(brandCard.frame.width, favoriteSize.width, accuracy: 2)
         tap("Ana Sayfa")
-        tap("Ayarları aç")
+        tap("Profili aç")
         tap("Gizlilik")
         XCTAssertTrue(app.webViews.staticTexts["Literatür Masası Prime Gizlilik Bilgilendirmesi"].waitForExistence(timeout: 15))
         tap("Geri")

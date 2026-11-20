@@ -71,7 +71,7 @@ run("favoriteQuery='solgar';query='Other'");assert.match(run('favoritesContent()
 run("favoriteQuery='Other'");assert.match(run('favoritesContent()'),/Favorilerinde aramana uygun/);
 run("favoriteQuery='seçili'");assert.match(run('favoritesContent()'),/Solgar/);
 run("favoriteQuery='';query=''");
-for(const page of ['brands()','nativeCampaigns()','nativeFavorites()']){const html=run(page);assert.match(html,/ps-pagesearchheader/);assert.equal((html.match(/<input/g)||[]).length,1);assert.doesNotMatch(html,/data-native-search|Ayarları aç/);}
+for(const page of ['brands()','nativeCampaigns()','nativeFavorites()']){const html=run(page);assert.match(html,/ps-pagesearchheader/);assert.equal((html.match(/<input/g)||[]).length,1);assert.doesNotMatch(html,/data-native-search|Profili aç/);}
 assert(run('copySheetDismissal(100,400,360)'));assert(!run('copySheetDismissal(-90,100,360)'));assert(!run('copySheetDismissal(0,10,360)'));
 fail=true;await run('start()');assert(screen.innerHTML.includes('Kampanyalar yüklenemedi'));assert(!screen.innerHTML.includes('Yeni ayrıcalıklar yakında'));fail=false;await run('start()');assert.equal(run('loaded'),true);assert.equal(run('loadError'),false);
 run("current=offers[0];current.expires=1;revealed=false");const before=requests.length;await run('revealCode()');assert.equal(before,requests.length);
@@ -90,19 +90,31 @@ assert(store.get('lmprime-favorites').includes('no-code'));
 assert.equal(run("toggleFavorite('no-code')"),true);
 assert(!store.get('lmprime-favorites').includes('no-code'));
 
-// A photo must never appear saved after its storage write fails.
-box.FileReader=class {
- readAsDataURL(){this.result='data:image/png;base64,new-photo';this.onload();}
-};
+// Profile writes must be acknowledged before visible state changes.
+const originalCreateElement=box.document.createElement;
+box.document.createElement=tag=>tag==='canvas'?{getContext:()=>({fillRect(){},drawImage(){}}),toDataURL:()=> 'data:image/jpeg;base64,bm9ybWFsaXplZA=='}:originalCreateElement(tag);
+box.Image=class {constructor(){this.naturalWidth=1800;this.naturalHeight=900;}set src(value){this.onload();}};
+box.FileReader=class {readAsDataURL(){this.result='data:image/png;base64,cGhvdG8=';this.onload();}};
 run("settingsPhoto='data:image/png;base64,previous-photo';view='personal';render()");
 box.localStorage.setItem=()=>{throw Error('QuotaExceededError');};
-for(const handler of listeners.change||[])handler({target:{id:'ps-settings-photo',files:[{type:'image/png',size:1024}]}});
+await run('saveProfilePhoto({type:"image/png",size:1024})');
 assert.equal(run('settingsPhoto'),'data:image/png;base64,previous-photo');
-assert(screen.notes.some(note=>note.textContent.includes('Fotoğraf kaydedilemedi')));
+assert.match(run('profileError'),/Fotoğraf kaydedilemedi/);
+assert.equal(run('profilePhotoBusy'),false);
+assert.equal(run('removeProfilePhoto()'),false);assert.equal(run('settingsPhoto'),'data:image/png;base64,previous-photo');
+run('settingsName="Önceki"');assert.equal(run('saveProfileName("Yeni isim")'),false);assert.equal(run('settingsName'),'Önceki');
 box.localStorage.setItem=originalStorageWrite;
-for(const handler of listeners.change||[])handler({target:{id:'ps-settings-photo',files:[{type:'image/png',size:1024}]}});
-assert.equal(run('settingsPhoto'),'data:image/png;base64,new-photo');
-assert.match(store.get('lmprime-photo'),/new-photo/);
+await run('saveProfilePhoto({type:"image/png",size:1024})');
+assert.equal(run('settingsPhoto'),'data:image/jpeg;base64,bm9ybWFsaXplZA==');
+assert.match(store.get('lmprime-photo'),/bm9ybWFsaXplZA==/);
+assert.equal(run('removeProfilePhoto()'),true);assert.equal(run('settingsPhoto'),null);assert.equal(store.get('lmprime-photo'),'null');
+assert.equal(run('saveProfileName("  Test   Kullanıcısı  ")'),true);assert.equal(run('settingsName'),'Test Kullanıcısı');assert.equal(JSON.parse(store.get('lmprime-name')),'Test Kullanıcısı');
+assert.equal(run('saveProfileName("x".repeat(61))'),false);assert.equal(run('settingsName'),'Test Kullanıcısı');
+assert.equal(run('saveProfileName("<script>test</script>")'),true);assert.match(run('settingsPage()'),/&lt;script&gt;test&lt;\/script&gt;/);
+assert.equal(run('saveProfileName("")'),true);assert.equal(run('profileDisplayName()'),'Misafir');
+assert.match(run('header()'),/aria-label="Profili aç"/);assert.doesNotMatch(run('settingsHeader("Profil")'),/aria-label="Ara"/);
+box.document.createElement=originalCreateElement;
+console.log('PASS: profile name validation/escaping/persistence, normalized photos, removal, and failed storage retain visible state.');
 
 // A successful HTTP response alone must not clear local data.
 deleteAcknowledged=false;
@@ -197,6 +209,15 @@ assert.deepEqual(Array.from(run('campaignFilters.brands')),['Solgar'],'Clear sor
 assert.deepEqual(Array.from(run('campaignFilters.rates')),['10'],'Clear sort must preserve rate facet');
 run('campaignFilters=emptyCampaignFilters()');
 console.log('PASS: sort-only apply, clear and cancel preserve other filters.');
+
+run('hydrate('+JSON.stringify([{...rows[0],id:'supp',name:'Solgar',productCategories:['supplements']},{...rows[0],id:'care',name:'Care',productCategories:['care']},{...rows[0],id:'sport',name:'Sport',productCategories:['sports']},{...rows[0],id:'makeup',name:'Makeup',productCategories:['makeup']},{...rows[0],id:'shared',name:'Retailer',productCategories:['supplements','sports']}])+');campaignFilters=emptyCampaignFilters();campaignFilters.products=["supplements","sports"]');
+assert.deepEqual(Array.from(run('filteredCampaigns().map(o=>o.id)')),['supp','sport','shared']);
+run('campaignFilters.brands=["Retailer"]');assert.deepEqual(Array.from(run('filteredCampaigns().map(o=>o.id)')),['shared']);
+run('openCampaignFilters("products")');assert.match(run('campaignFilterSheetHTML()'),/Ürün Kategorisi/);assert.match(run('campaignFilterSheetHTML()'),/data-filter-value="makeup"/);assert.doesNotMatch(run('campaignFilterSheetHTML()'),/id="ps-filter-rates"/);
+run('handleCampaignFilterClick({filterClean:"1"});closeCampaignFilters(true)');assert.equal(run('campaignFilters.products.length'),0);assert.deepEqual(Array.from(run('campaignFilters.brands')),['Retailer']);
+run('campaignFilters=emptyCampaignFilters();hydrate('+JSON.stringify(rows)+')');
+console.log('PASS: product category multi-select, brand intersection, independent clear, and preserved benefit filters.');
+
 
 
 // All twelve categories resolve without losing coded/codeless gift behavior.
