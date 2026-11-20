@@ -98,7 +98,9 @@ jobs:
           xcrun simctl boot "$DEVICE_ID"
           xcrun simctl bootstatus "$DEVICE_ID" -b
           echo "PRIME_SIMULATOR_ID=$DEVICE_ID" >> "$GITHUB_ENV"
+      # XCTest installs and launches the iPad app itself; manual warmup failed before tests (timeout / already-exited process).
       - name: Prepare first simulator app launch
+        if: matrix.device == 'iPhone'
         timeout-minutes: 6
         run: |
           set -euo pipefail
