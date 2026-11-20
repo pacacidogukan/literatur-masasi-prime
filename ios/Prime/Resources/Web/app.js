@@ -330,7 +330,7 @@ function syncArtworkFrames(){
 }
 function syncDetailPanel(){const sheet=root.querySelector('.ps-detailsheet'),image=root.querySelector('.ps-nativehero');if(!sheet||!image)return;const h=screen.clientHeight,footer=root.querySelector('.ps-slidefooter');const availableHeight=Math.max(80,h-72-(footer?.offsetHeight||130)-140);image.style.width=Math.max(80,Math.min(screen.clientWidth-32,(availableHeight-12)*1.5+12))+'px';syncArtworkFrames();const middle=image.offsetTop+image.offsetHeight+12;sheet.style.setProperty('--sheet-middle-top',middle+'px');sheet.style.setProperty('--sheet-collapsed-top',Math.max(h*.52,middle+h*.08)+'px');}
 // Campaign discovery filters: OR within a facet, AND between facets.
-const productCategoryOptions=[['supplements','Takviyeler'],['care','Cilt ve Bakım'],['sports','Sporcu Beslenmesi'],['makeup','Makyaj']];
+const productCategoryOptions=[['supplements','Gıda Takviyeleri'],['care','Dermokozmetik ve Kişisel Bakım'],['sports','Sporcu Beslenmesi'],['makeup','Makyaj ve Kozmetik']];
 const emptyCampaignFilters=()=>({products:[],brands:[],rates:[],published:[],ending:[],codes:[],saved:[],sort:'discover'});
 const cloneCampaignFilters=f=>JSON.parse(JSON.stringify({...emptyCampaignFilters(),...f}));
 let campaignFilters=emptyCampaignFilters(),filterDraft=null,filterOpen=false,filterGroup='all',filterAllBrands=false,filterFocus=null,filterDragStart=null;

@@ -106,7 +106,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    assert.deepEqual(await dialog.locator('.ps-filterbody>section').evaluateAll(nodes=>nodes.map(n=>n.id)),['ps-filter-'+group]);
    if(group==='products'){
     assert.equal(await dialog.locator('#ps-filter-title').innerText(),'Ürün Kategorisi');
-    for(const label of ['Tümü','Takviyeler','Cilt ve Bakım','Sporcu Beslenmesi','Makyaj'])assert(await dialog.getByRole('button',{name:label,exact:true}).isVisible());
+    for(const label of ['Tümü','Gıda Takviyeleri','Dermokozmetik ve Kişisel Bakım','Sporcu Beslenmesi','Makyaj ve Kozmetik'])assert(await dialog.getByRole('button',{name:label,exact:true}).isVisible());
     await dialog.locator('[data-filter-value="supplements"]').tap();await dialog.locator('[data-filter-value="care"]').tap();
     assert.equal(await dialog.locator('[data-filter-group][aria-pressed="true"]').count(),2);
    }
