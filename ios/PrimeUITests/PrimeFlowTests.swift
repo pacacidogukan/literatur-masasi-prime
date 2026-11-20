@@ -51,12 +51,19 @@ final class PrimeFlowTests: XCTestCase {
     }
     func testProfileNamePersists() {
         login(); tap("Profili aç"); tap("Profili düzenle")
+        let expectedName = "Test Kullanıcısı"
         let name = app.webViews.textFields["Profil adı"].firstMatch
-        XCTAssertTrue(name.waitForExistence(timeout: 15)); name.tap(); name.typeText("Test Kullanıcısı")
-        tap("İsmi kaydet"); tap("Geri")
-        XCTAssertTrue(app.webViews.staticTexts["Test Kullanıcısı"].waitForExistence(timeout: 15))
-        relaunch(); home(); tap("Profili aç")
-        XCTAssertTrue(app.webViews.staticTexts["Test Kullanıcısı"].waitForExistence(timeout: 15))
+        XCTAssertTrue(name.waitForExistence(timeout: 15))
+        name.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        name.typeText(expectedName)
+        XCTAssertEqual(name.value as? String, expectedName, app.debugDescription)
+        tap("İsmi kaydet")
+        XCTAssertTrue(app.webViews.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "İsmin kaydedildi.")).firstMatch.waitForExistence(timeout: 15), app.debugDescription)
+        tap("Geri"); tap("Profili düzenle")
+        XCTAssertEqual(name.value as? String, expectedName, app.debugDescription)
+        relaunch(); home(); tap("Profili aç"); tap("Profili düzenle")
+        XCTAssertTrue(name.waitForExistence(timeout: 15))
+        XCTAssertEqual(name.value as? String, expectedName, app.debugDescription)
     }
     func testAutomaticOpeningAndPersistence() { login(); relaunch(); home(); tap("Profili aç"); XCTAssertFalse(button("Çıkış Yap").exists) }
     func testDeleteAccessAndLocalData() { login(); tap("Profili aç");tap("Verilerimi sil");tap("Verileri sil");home();relaunch();home();tap("Favoriler");XCTAssertTrue(app.webViews.staticTexts["Henüz favorin yok"].waitForExistence(timeout:15)) }
