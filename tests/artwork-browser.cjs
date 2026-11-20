@@ -43,6 +43,7 @@ const rows=[{id:'valid',name:'Solgar',offer:'Test ayrıcalığı',asset:'solgar.
   await page.locator('[data-newest="1"]').tap();await headerStyle('.ps-back>span:first-of-type');assert.equal(await page.locator('.ps-newestpage h2').innerText(),'En Yeniler');
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
   // All three tab headers keep one usable search field and a 44px back target.
+  const browseHeadingMetrics=[];
   for(const name of ['Markalar','Kampanyalar','Favoriler']){
    await page.getByRole('button',{name,exact:true}).tap();
    const header=page.locator('.ps-pagesearchheader');
@@ -51,12 +52,19 @@ const rows=[{id:'valid',name:'Solgar',offer:'Test ayrıcalığı',asset:'solgar.
    const bounds=await header.evaluate(el=>{const b=el.querySelector('button').getBoundingClientRect(),s=el.querySelector('.ps-search').getBoundingClientRect();return {backWidth:b.width,backHeight:b.height,left:s.left,right:s.right,top:s.top,backTop:b.top,width:innerWidth};});
    assert(bounds.backWidth>=44&&bounds.backHeight>=44);
    assert(bounds.right<=bounds.width&&bounds.left>=0);
+   if(name!=='Favoriler'){
+    browseHeadingMetrics.push(await page.locator('.ps-filterresulthead').evaluate(el=>{const h=el.querySelector('h2'),p=el.querySelector('p'),main=el.closest('main'),tools=document.querySelector('.ps-browseheader'),next=el.nextElementSibling,hs=getComputedStyle(h),ps=getComputedStyle(p),r=el.getBoundingClientRect(),hr=h.getBoundingClientRect(),pr=p.getBoundingClientRect();return {topGap:r.top-tools.getBoundingClientRect().bottom,bottomGap:next.getBoundingClientRect().top-r.bottom,left:r.left,right:innerWidth-r.right,title:[hr.top-r.top,hr.height,hs.fontSize,hs.fontWeight,hs.color],count:[pr.top-hr.bottom,pr.height,ps.fontSize,ps.color],padding:getComputedStyle(main).padding};}));
+    assert.equal(await page.locator('[data-filter-open="sort"]').count(),1);
+    assert.equal(await page.locator('.ps-allfilters').evaluate(el=>getComputedStyle(el).color),'rgb(116, 120, 127)');
+    if(width===390){fs.mkdirSync('ci-artifacts/artwork',{recursive:true});await page.screenshot({path:'ci-artifacts/artwork/browse-'+name+'-'+engine.name()+'.png'});}
+   }
    if(name==='Kampanyalar'){
     const input=header.getByRole('textbox');await input.fill('Test ayrıcalığı');
     assert.equal(await page.locator('#ps-native-results [data-offer="valid"]').count(),1);
     await input.fill('');
    }
   }
+  assert.deepEqual(browseHeadingMetrics[0],browseHeadingMetrics[1],'Brands and campaigns must share all heading/count spacing and styles');
   // Approved full-height panel: independent rails, draft multi-select and dismissal.
   await page.getByRole('button',{name:'Kampanyalar',exact:true}).tap();
   const iconFilter=page.locator('[data-filter-open="all"]');
@@ -85,7 +93,14 @@ const rows=[{id:'valid',name:'Solgar',offer:'Test ayrıcalığı',asset:'solgar.
   if(width===390){fs.mkdirSync('ci-artifacts/artwork',{recursive:true});await page.screenshot({path:'ci-artifacts/artwork/filters-'+engine.name()+'.png'});}
   await page.locator('[data-filter-clean]').tap();await page.locator('[data-filter-apply]').tap();
   assert.equal(await page.locator('.ps-allfilters>span').count(),0);
-  assert.equal(await page.locator('[data-filter-open="sort"]').count(),0,'No standalone sort action');
+  await page.locator('[data-filter-open="sort"]').tap();
+  assert.equal(await dialog.locator('#ps-filter-title').innerText(),'Sırala');
+  assert.deepEqual(await dialog.locator('.ps-filterbody>section').evaluateAll(nodes=>nodes.map(n=>n.id)),['ps-filter-sort']);
+  await dialog.locator('[data-filter-sort="newest"]').tap();await dialog.locator('[data-filter-apply]').tap();
+  assert.equal(await page.locator('[data-filter-open="sort"]').getAttribute('aria-label'),'Sırala: En yeniler');
+  assert.equal(await page.locator('#ps-native-results [data-offer]').first().getAttribute('data-offer'),'valid');
+  await page.locator('[data-filter-open="sort"]').tap();await dialog.locator('[data-filter-clean]').tap();await dialog.locator('[data-filter-apply]').tap();
+  assert.equal(await page.locator('[data-filter-open="sort"]').getAttribute('aria-label'),'Sırala: Keşfet');
   for(const group of ['brands','rates','published','ending','codes','saved']){
    await page.locator('[data-filter-open="'+group+'"]').tap();
    assert.deepEqual(await dialog.locator('.ps-filterbody>section').evaluateAll(nodes=>nodes.map(n=>n.id)),['ps-filter-'+group]);

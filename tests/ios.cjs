@@ -178,6 +178,27 @@ run('campaignFilters.brands=["Orzax"];navigation.push(capturePage());campaignFil
 run('campaignFilters=emptyCampaignFilters();query="";filterDraft=null;hydrate('+JSON.stringify(rows)+')');
 console.log('PASS: multi-select OR/AND facets, expiry/publication unknowns, sorting, search, favorites, draft isolation and navigation restoration.');
 
+// The restored sort-only sheet must preserve other facets on apply, clear and cancel.
+run('campaignFilters=emptyCampaignFilters();campaignFilters.brands=["Solgar"];campaignFilters.rates=["10"];openCampaignFilters("sort")');
+assert.equal(run('filterGroup'),'sort');
+const sortSheet=run('campaignFilterSheetHTML()');
+assert.match(sortSheet,/id="ps-filter-title"[^>]*>Sırala</);
+assert.match(sortSheet,/id="ps-filter-sort"/);
+assert.doesNotMatch(sortSheet,/id="ps-filter-(brands|rates|published|ending|codes|saved)"/);
+run('handleCampaignFilterClick({filterSort:"newest"});closeCampaignFilters(true)');
+assert.equal(run('campaignFilters.sort'),'newest');
+assert.deepEqual(Array.from(run('campaignFilters.brands')),['Solgar']);
+assert.deepEqual(Array.from(run('campaignFilters.rates')),['10']);
+run('openCampaignFilters("sort");handleCampaignFilterClick({filterSort:"discount"});closeCampaignFilters(false)');
+assert.equal(run('campaignFilters.sort'),'newest','Dismissed sort draft must not apply');
+run('openCampaignFilters("sort");handleCampaignFilterClick({filterClean:"1"});closeCampaignFilters(true)');
+assert.equal(run('campaignFilters.sort'),'discover');
+assert.deepEqual(Array.from(run('campaignFilters.brands')),['Solgar'],'Clear sort must preserve brand facet');
+assert.deepEqual(Array.from(run('campaignFilters.rates')),['10'],'Clear sort must preserve rate facet');
+run('campaignFilters=emptyCampaignFilters()');
+console.log('PASS: sort-only apply, clear and cancel preserve other filters.');
+
+
 // All twelve categories resolve without losing coded/codeless gift behavior.
 assert.equal(run('cats.length-1'),12);
 for(const category of Array.from(run('cats.slice(1).map(c=>c[0])'))){
