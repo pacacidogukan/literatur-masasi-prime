@@ -285,7 +285,7 @@ function discountOffers(){return offers.filter(o=>discountThreshold==='all'?cate
 function discountpage(){const arr=discountOffers();return `${back('İndirimler')}<main class="ps-main"><div class="ps-brandhead"><h2>${discountThreshold==='all'?'Tüm indirimler':'%'+discountThreshold+' ve üzeri'}</h2><p>${new Set(arr.map(o=>o.brand)).size} marka · ${arr.length} kampanya</p></div>${feed(arr)}</main>`}
 function back(title){return `<div class="ps-back"><button data-action="back" class="ps-icon cursor-interaction" aria-label="Geri">${icon('chevron-left')}</button><span>${title}</span>${view==='detail'?`<button data-like="${esc(current.id)}" class="ps-icon cursor-interaction" aria-label="${favorites.has(current.id)?'Favorilerden çıkar':'Favorilere ekle'}" style="color:${favorites.has(current.id)?'#ff3131':'#74787f'}">${icon('bookmark')}</button>`:'<span class="ps-backspacer" aria-hidden="true"></span>'}</div>`}
 let sheetSnap='middle',copyNotice=false,sheetDrag=null,sheetMoved=false;
-function detailAction(o){if(!o.hasCode)return `<a class="ps-cta cursor-interaction" href="${esc(o.source)}" target="_blank" rel="noopener" style="margin-top:0">Kampanya sayfasına git</a>`;if(revealed)return `<div class="ps-realcodereveal"><strong>${esc(o.code)}</strong><button data-copy-preview="1" class="cursor-interaction">${icon('copy')}Kopyala</button></div><p class="ps-slidehelp">${o.demo?'Örnek kod · Alışverişte geçerli değildir':'Kodu kampanya koşullarına göre kullan'}</p>`;return `<div class="ps-slide ps-realtrack"><span class="ps-trackglyph">${icon('chevron-right')}</span><span class="ps-tracklabel">Kodu görmek için sağa kaydır</span><input id="ps-reveal" type="range" min="0" max="100" value="0" aria-label="Kodu açmak için sağa kaydır veya sağ ok tuşunu kullan"></div><p class="ps-slidehelp">Kodu açmak için butonu sağa kaydır</p>`}
+function detailAction(o){if(!o.hasCode)return `<a class="ps-cta cursor-interaction" href="${esc(o.source)}" target="_blank" rel="noopener" style="margin-top:0">Kampanya sayfasına git</a>`;if(revealed)return `<div class="ps-realcodereveal"><strong>${esc(o.code)}</strong><button data-copy-preview="1" class="cursor-interaction">${icon('copy')}Kopyala</button></div><p class="ps-slidehelp">${o.demo?'Örnek kod · Alışverişte geçerli değildir':'Kodu kampanya koşullarına göre kullan'}</p>`;return `<div class="ps-slide ps-realtrack"><span class="ps-tracklabel">Kodu görmek için sağa kaydır</span><input id="ps-reveal" type="range" min="0" max="100" value="0" aria-label="Kodu açmak için sağa kaydır veya sağ ok tuşunu kullan"><span class="ps-code-thumb" aria-hidden="true">${icon('chevron-right')}</span></div><p class="ps-slidehelp">Kodu açmak için butonu sağa kaydır</p>`}
 function demoBenefits(){return '';}
 function detail(){const o=current;const channel=o.demo?'Taslak kampanya':o.source.replace(/^https?:\/\//,'').split('/')[0].replace(/^www\./,'');return `<main class="ps-realdetail"><header class="ps-detailtop"><button data-action="back" class="cursor-interaction" aria-label="Geri">${icon('chevron-left')}</button><strong>Prime Ayrıcalıkları</strong><button data-like="${esc(o.id)}" role="switch" aria-checked="${favorites.has(o.id)}" class="cursor-interaction ${favorites.has(o.id)?'active':''}" aria-label="${esc(o.brand)} ${favorites.has(o.id)?'favorilerden çıkar':'favorilere ekle'}" aria-pressed="${favorites.has(o.id)}">${icon('bookmark')}</button></header><div class="ps-nativehero">${campaignImage(o,'detail')}</div><section class="ps-detailsheet" data-snap="${sheetSnap}" aria-label="Kampanya detay paneli"><div class="ps-dragzone"><button class="ps-sheethandle cursor-interaction" data-sheet-toggle="1" aria-label="Detay panelini genişlet veya daralt" aria-expanded="${sheetSnap==='expanded'}"><span></span></button><div class="ps-sheetpills"><span>${esc(o.brand)}</span><span>${esc(channel)}</span></div><h1>${esc(o.title)}</h1></div><div class="ps-sheetbody"><p>${esc(o.terms)}</p>${demoBenefits(o)}<div class="ps-sheetdate">${icon('calendar-days')}<span>Kampanya bitiş tarihi<strong>${esc(o.expiry)}</strong></span></div></div></section><div class="ps-slidefooter">${detailAction(o)}</div>${copyNotice?`<div class="ps-copyoverlay"><section class="ps-copydialog" role="dialog" aria-modal="true" aria-label="Kod kopyalandı"><button data-close-copy="1" class="ps-copyhandle cursor-interaction" aria-label="Kod penceresini kapat"><span></span></button><h2>Kod kopyalandı</h2><p>${o.demo?'Bu örnek kod gerçek alışverişte geçerli değildir.':'Kampanya kodunu alışveriş sırasında kullanabilirsin.'}</p><div class="ps-code">${esc(o.code)}</div>${o.demo?'':`<a href="${esc(o.source)}" target="_blank" rel="noopener" class="ps-cta cursor-interaction">Web sitesine git${icon('external-link')}</a>`}</section></div>`:''}</main>`}
 function brandContent(){const arr=filteredCampaigns(campaignFilters,'brands');const names=[...new Set(arr.map(o=>o.brand))];const heading=browseResultHeading('Markalar',names.length,'marka');if(query.trim())return heading+campaignRows(arr,'Aramana uygun kampanya bulunamadı.');return heading+`<div class="ps-brandgrid">${names.map(n=>`<button class="ps-brandtile cursor-interaction" data-brand="${esc(n)}" aria-label="${esc(n)} kampanyalarını aç"><img class="ps-tilelogo" loading="lazy" decoding="async" src="${logos[n]}" alt="${esc(n)} logosu"></button>`).join('')}</div>`;}
@@ -510,7 +510,53 @@ else if(d.action==='reset'){type='Tümü';query='';view=returnView;}
 render();if(route)screen.scrollTop=0;else screen.scrollTop=previous.y;
 const categoryStrip=root.querySelector('.ps-rounds');if(categoryStrip)categoryStrip.scrollLeft=categoryScroll;if(d.type){const rail=root.querySelector('.ps-categorytabs'),active=rail?.querySelector('[aria-pressed="true"]');if(rail&&active)rail.scrollLeft=Math.max(0,active.offsetLeft-rail.offsetLeft-16);}
 });
-root.addEventListener('input',e=>{if(e.target.id==='ps-favorites-query'){favoriteQuery=e.target.value;const results=root.querySelector('#ps-favorites-results');if(results)results.innerHTML=favoritesContent();if(typeof lucide!=='undefined')lucide.createIcons();return;}if(e.target.id==='ps-native-query'&&['campaigns','category'].includes(view)){query=e.target.value;const results=root.querySelector('#ps-native-results');if(results)results.innerHTML=campaignFilterResults();syncArtworkFrames();return;}if(e.target.id==='ps-native-query'){query=e.target.value;const results=root.querySelector('#ps-native-results');results.className=query.trim()?'':'ps-nativegrid';results.innerHTML=query.trim()?searchResults():nativeGroups(matchingBrands().filter(n=>campaignBrand==='Tümü'||campaignBrand===n),offers);const filters=root.querySelector('.ps-nativefilters');if(filters)filters.hidden=!!query.trim();syncArtworkFrames();return;}if(e.target.id==='ps-reveal'&&Number(e.target.value)>85){revealCode();return;}if(e.target.id==='ps-search'){query=e.target.value;const discoveryEl=root.querySelector('#ps-discovery');if(discoveryEl){discoveryEl.innerHTML=discovery();const categories=root.querySelector('.ps-rounds');if(categories)categories.hidden=!!query.trim();}else if(view==='brands'){const content=root.querySelector('#ps-brand-results');if(content)content.innerHTML=brandContent();}syncArtworkFrames();if(typeof lucide!=='undefined')lucide.createIcons();}});
+root.addEventListener('input',e=>{if(e.target.id==='ps-favorites-query'){favoriteQuery=e.target.value;const results=root.querySelector('#ps-favorites-results');if(results)results.innerHTML=favoritesContent();if(typeof lucide!=='undefined')lucide.createIcons();return;}if(e.target.id==='ps-native-query'&&['campaigns','category'].includes(view)){query=e.target.value;const results=root.querySelector('#ps-native-results');if(results)results.innerHTML=campaignFilterResults();syncArtworkFrames();return;}if(e.target.id==='ps-native-query'){query=e.target.value;const results=root.querySelector('#ps-native-results');results.className=query.trim()?'':'ps-nativegrid';results.innerHTML=query.trim()?searchResults():nativeGroups(matchingBrands().filter(n=>campaignBrand==='Tümü'||campaignBrand===n),offers);const filters=root.querySelector('.ps-nativefilters');if(filters)filters.hidden=!!query.trim();syncArtworkFrames();return;}if(e.target.id==='ps-search'){query=e.target.value;const discoveryEl=root.querySelector('#ps-discovery');if(discoveryEl){discoveryEl.innerHTML=discovery();const categories=root.querySelector('.ps-rounds');if(categories)categories.hidden=!!query.trim();}else if(view==='brands'){const content=root.querySelector('#ps-brand-results');if(content)content.innerHTML=brandContent();}syncArtworkFrames();if(typeof lucide!=='undefined')lucide.createIcons();}});
+
+let codeDrag=null;
+function codeSliderTravel(thumb){
+ return Math.max(1,thumb.parentElement.clientWidth-2*thumb.offsetLeft-thumb.offsetWidth);
+}
+function moveCodeThumb(thumb,distance){
+ thumb.style.transform=`translateX(${distance}px)`;
+ thumb.previousElementSibling.value=String(Math.round(100*distance/codeSliderTravel(thumb)));
+}
+function completeCodeSlide(thumb){
+ revealCode().finally(()=>{if(thumb.isConnected)moveCodeThumb(thumb,0);});
+}
+root.addEventListener('pointerdown',e=>{
+ const thumb=e.target.closest('.ps-code-thumb');
+ if(!thumb||!e.isPrimary||e.button!==0||revealBusy)return;
+ codeDrag={thumb,id:e.pointerId,x:e.clientX,y:e.clientY,distance:0};
+ thumb.setPointerCapture(e.pointerId);
+});
+root.addEventListener('pointermove',e=>{
+ const drag=codeDrag;
+ if(!drag||e.pointerId!==drag.id)return;
+ const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+ drag.distance=dx>Math.abs(dy)?Math.min(dx,codeSliderTravel(drag.thumb)):0;
+ moveCodeThumb(drag.thumb,drag.distance);
+});
+function finishCodeDrag(e){
+ const drag=codeDrag;
+ if(!drag||e.pointerId!==drag.id)return;
+ codeDrag=null;
+ if(!drag.thumb.isConnected)return;
+ if(e.type==='pointerup'&&drag.distance>codeSliderTravel(drag.thumb)*.85){
+  completeCodeSlide(drag.thumb);
+ }else{
+  moveCodeThumb(drag.thumb,0);
+ }
+}
+for(const event of ['pointerup','pointercancel','lostpointercapture'])root.addEventListener(event,finishCodeDrag);
+// The native range remains available to assistive technologies and keyboards.
+root.addEventListener('input',e=>{
+ if(e.target.id!=='ps-reveal')return;
+ const thumb=e.target.nextElementSibling;
+ if(!thumb?.matches('.ps-code-thumb')||revealBusy||codeDrag)return;
+ const fraction=Number(e.target.value)/100;
+ moveCodeThumb(thumb,codeSliderTravel(thumb)*fraction);
+ if(fraction>.85)completeCodeSlide(thumb);
+});
 
 let copyDrag=null,copySuppressClickUntil=0;
 function closeCopySheet(){copyDrag=null;copyNotice=false;render();screen.querySelector('[data-copy-preview]')?.focus();}

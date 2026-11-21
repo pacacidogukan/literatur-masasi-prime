@@ -201,6 +201,35 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   await page.getByRole('button',{name:'Solgar: Test ayrıcalığı',exact:true}).locator('.ps-artwork-frame').tap();
   await page.getByText('Prime Ayrıcalıkları',{exact:true}).waitFor();
   await headerStyle('.ps-detailtop>strong');
+  if(width===390){
+   const track=page.locator('.ps-realtrack'),slider=track.getByRole('slider'),thumb=track.locator('.ps-code-thumb');
+   const rail=await track.boundingBox(),start=await thumb.boundingBox();
+   const x=start.x+start.width/2,y=start.y+start.height/2;
+   const end=rail.x+rail.width-14;
+   for(const fraction of [.45,.95]){
+    await page.touchscreen.tap(rail.x+rail.width*fraction,y);
+    assert.equal(await slider.inputValue(),'0','Tapping the red track must leave the thumb at the start');
+   }
+   await page.mouse.move(rail.x+rail.width*.45,y);
+   await page.mouse.down();
+   await page.mouse.move(end,y,{steps:8});
+   await page.mouse.up();
+   assert.equal(await slider.inputValue(),'0','A drag starting on the track cannot reveal the code');
+   for(const dx of [-15,70]){
+    await page.mouse.move(x,y);
+    await page.mouse.down();
+    await page.mouse.move(x+dx,y,{steps:6});
+    if(dx>0)assert(Number(await slider.inputValue())>0,'The thumb follows a rightward drag');
+    await page.mouse.up();
+    assert.equal(await slider.inputValue(),'0','Releasing an incomplete drag resets the thumb');
+   }
+   await page.mouse.move(x,y);
+   await page.mouse.down();
+   await page.mouse.move(end,y,{steps:10});
+   assert(await slider.isVisible(),'Holding at the end must wait for release');
+   await page.mouse.up();
+   await page.locator('.ps-realcodereveal strong').filter({hasText:/^TEST$/}).waitFor();
+  }
   for(const g of await geometry('.ps-nativehero'))assert(Math.abs(g.w/g.h-1.5)<.002);assert(await page.evaluate(()=>document.querySelector('.ps-detailsheet').getBoundingClientRect().top<document.querySelector('.ps-slidefooter').getBoundingClientRect().top-80),'Detail drag handle/conditions must remain above footer');
   await page.getByRole('button',{name:'Geri',exact:true}).tap();await page.getByRole('button',{name:'Ana Sayfa',exact:true}).tap();
   await page.getByRole('textbox',{name:'Marka veya kampanya ara'}).fill('Test ayrıcalığı');assert.equal(await page.locator('.ps-searchresults .ps-nativelist button').count(),1);assert.equal(await page.locator('#ps-discovery .ps-carousel').count(),0);

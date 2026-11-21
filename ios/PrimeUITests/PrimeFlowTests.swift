@@ -258,6 +258,11 @@ final class PrimeFlowTests: XCTestCase {
         login(); home(); openSolgarCampaign()
         let thumb = app.webViews.sliders["Kodu açmak için sağa kaydır veya sağ ok tuşunu kullan"].firstMatch
         XCTAssertTrue(thumb.waitForExistence(timeout: 15))
+        let trackTaps: [CGFloat] = [0.45, 0.94]
+        for position in trackTaps {
+            thumb.coordinate(withNormalizedOffset: CGVector(dx: position, dy: 0.5)).tap()
+            XCTAssertFalse(app.webViews.staticTexts["SPRING26"].exists)
+        }
         let start = thumb.coordinate(withNormalizedOffset: CGVector(dx: 0.08, dy: 0.5))
         start.press(forDuration: 0.1, thenDragTo: start.withOffset(CGVector(dx: app.frame.width * 0.72, dy: 0)))
         XCTAssertTrue(app.webViews.staticTexts["SPRING26"].waitForExistence(timeout: 15))
