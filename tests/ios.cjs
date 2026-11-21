@@ -264,3 +264,25 @@ bridge.postMessage=originalPost;
 console.log('PASS: live feed refresh, new/unpublished/changed offers, detail and favorite cleanup, navigation preservation, hidden-page throttle, error retention, single flight and stale-response rejection.');
 
 assert.equal(run("website('javascript:alert(1)')"),'');assert.equal(run("website('https://user:pass@example.com')"),'');console.log('PASS: native production feed, demo/expiry exclusion, categories, thresholds, server-only reveal, native copy failures, favorites, delete, retry and sheet dismissal.');})().catch(e=>{console.error(e);process.exit(1)});
+
+// Blank areas never activate a tab; every genuine tap activates exactly once.
+{
+ const source=fs.readFileSync('ios/ui/app.js','utf8');
+ const handlers={},options={};let clicks=0,hit=null;
+ const button={disabled:false,click(){clicks++},closest(){return this}};
+ const blank={closest(){return null}};
+ const nav={inert:false,contains:x=>x===button,addEventListener(type,fn,opts){handlers[type]=fn;options[type]=opts}};
+ const guard=source.slice(source.indexOf('function installNavigationTouchGuard('),source.indexOf("installNavigationTouchGuard(root.querySelector"));
+ vm.runInNewContext(guard+';installNavigationTouchGuard(nav)',{nav,document:{elementFromPoint:()=>hit}});
+ const touch=(x=20,y=30)=>({identifier:1,clientX:x,clientY:y});
+ function event(target,touches,changedTouches=[]){return {target,touches,changedTouches,cancelable:true,prevented:false,preventDefault(){this.prevented=true}}}
+ function tap(target){hit=target;const start=event(target,[touch()]);handlers.touchstart(start);assert(start.prevented);const end=event(target,[],[touch()]);handlers.touchend(end);assert(end.prevented)}
+ assert.equal(options.touchstart.passive,false);assert.equal(options.touchend.passive,false);
+ tap(blank);tap(blank);assert.equal(clicks,0);
+ tap(button);assert.equal(clicks,1);tap(button);assert.equal(clicks,2);
+ handlers.touchstart(event(button,[touch()]));handlers.touchmove(event(button,[touch(50)]));handlers.touchend(event(button,[],[touch(50)]));assert.equal(clicks,2);
+ handlers.touchstart(event(button,[touch()]));handlers.touchcancel();handlers.touchend(event(button,[],[touch()]));assert.equal(clicks,2);
+ handlers.touchstart(event(button,[touch()]));hit=blank;handlers.touchend(event(button,[],[touch()]));assert.equal(clicks,2);
+ nav.inert=true;tap(button);assert.equal(clicks,2);
+ console.log('Navigation touch guard: blank taps, repeated taps, drags, cancellation and inert sheets passed');
+}

@@ -49,6 +49,48 @@ final class PrimeFlowTests: XCTestCase {
         XCTAssertEqual(app.webViews.switches.matching(NSPredicate(format: "label CONTAINS %@", "favorilere")).count, 0)
         tap("Solgar: Test ayrıcalığı")
     }
+    func testBottomNavigationDoubleTapsDoNotZoom() {
+        home()
+        let labels = ["Ana Sayfa", "Markalar", "Kampanyalar", "Favoriler"]
+        let web = app.webViews.firstMatch
+        func point(_ x: CGFloat, _ y: CGFloat) -> XCUICoordinate {
+            app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: x, dy: y))
+        }
+        func settle() {
+            // Wait through WebKit's double-tap recognition and zoom animation.
+            let pause = expectation(description: "Smart zoom settled")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) { pause.fulfill() }
+            wait(for: [pause], timeout: 2)
+        }
+        for label in labels {
+            tap(label)
+            let before = labels.map { button($0).frame }
+            let frame = web.frame
+            var points = [CGPoint(x: frame.minX + 2, y: before[0].midY),
+                          CGPoint(x: frame.maxX - 2, y: before[0].midY),
+                          CGPoint(x: frame.midX, y: frame.maxY - 2)]
+            for i in 0..<3 {
+                points.append(CGPoint(x: (before[i].maxX + before[i+1].minX)/2, y: before[i].midY))
+            }
+            for p in points {
+                point(p.x, p.y).doubleTap(); settle()
+                for (i, name) in labels.enumerated() {
+                    let after = button(name).frame
+                    XCTAssertEqual(after.width, before[i].width, accuracy: 1, "Zoom after blank-area tap: \(label)")
+                    XCTAssertEqual(after.minX, before[i].minX, accuracy: 1)
+                    XCTAssertEqual(after.minY, before[i].minY, accuracy: 1)
+                }
+            }
+            button(label).coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).doubleTap()
+            settle()
+            XCTAssertEqual(button(label).frame.width, before[labels.firstIndex(of: label)!].width, accuracy: 1)
+        }
+        tap("Markalar")
+        XCTAssertTrue(button("Solgar kampanyalarını aç").waitForExistence(timeout: 15))
+        tap("Favoriler")
+        XCTAssertTrue(app.webViews.staticTexts["Henüz favorin yok"].waitForExistence(timeout: 15))
+        tap("Ana Sayfa"); home()
+    }
     func testProfileNamePersists() {
         login(); tap("Profili aç"); tap("Profili düzenle")
         let expectedName = "Test Kullanıcısı"

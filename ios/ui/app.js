@@ -2,6 +2,36 @@
 const artworkContract=globalThis.primeArtworkContract;
 const root=document.getElementById('prime-square-campaigns'),screen=root.querySelector('#ps-screen');
 
+// Own single-finger navigation taps before WKWebView can interpret a second
+// touch as smart zoom. Keep keyboard/VoiceOver clicks on the normal route.
+function installNavigationTouchGuard(nav){
+ if(!nav)return;
+ let tap=null;
+ nav.addEventListener('touchstart',e=>{
+  tap=null;
+  if(e.touches.length!==1||!e.cancelable)return;
+  const t=e.touches[0];
+  tap={id:t.identifier,x:t.clientX,y:t.clientY,button:e.target.closest('button[data-view]')};
+  e.preventDefault();
+ },{passive:false});
+ nav.addEventListener('touchmove',e=>{
+  if(!tap)return;
+  const t=Array.from(e.touches).find(t=>t.identifier===tap.id);
+  if(!t||e.touches.length!==1||Math.hypot(t.clientX-tap.x,t.clientY-tap.y)>10)tap=null;
+ },{passive:true});
+ nav.addEventListener('touchcancel',()=>{tap=null;},{passive:true});
+ nav.addEventListener('touchend',e=>{
+  const start=tap;tap=null;
+  if(!start)return;
+  if(e.cancelable)e.preventDefault();
+  const t=Array.from(e.changedTouches).find(t=>t.identifier===start.id);
+  if(!t||e.touches.length||Math.hypot(t.clientX-start.x,t.clientY-start.y)>10)return;
+  const end=document.elementFromPoint(t.clientX,t.clientY)?.closest('button[data-view]');
+  if(start.button&&end===start.button&&nav.contains(end)&&!end.disabled&&!nav.inert)end.click();
+ },{passive:false});
+}
+installNavigationTouchGuard(root.querySelector('.ps-nav'));
+
 // Shared card ordering: stable while browsing, fresh for each app launch.
 function campaignRank(value,seed){let n=2166136261;for(const ch of String(seed)+'|'+value)n=Math.imul(n^ch.charCodeAt(0),16777619);return n>>>0;}
 const campaignSessionSeed=Math.random();
