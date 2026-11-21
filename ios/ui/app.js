@@ -533,9 +533,11 @@ root.addEventListener('pointerdown',e=>{
  const bounds=thumb.getBoundingClientRect();
  const x=e.clientX-bounds.left-bounds.width/2,y=e.clientY-bounds.top-bounds.height/2;
  if(Math.hypot(x,y)>bounds.width/2)return;
+ e.preventDefault();
  codeDrag={thumb,id:e.pointerId,x:e.clientX,y:e.clientY,distance:0};
  thumb.setPointerCapture(e.pointerId);
 });
+root.addEventListener('dragstart',e=>{if(e.target.closest('.ps-code-thumb'))e.preventDefault();});
 root.addEventListener('pointermove',e=>{
  const drag=codeDrag;
  if(!drag||e.pointerId!==drag.id)return;
