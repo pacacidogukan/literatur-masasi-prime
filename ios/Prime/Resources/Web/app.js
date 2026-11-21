@@ -32,6 +32,33 @@ function installNavigationTouchGuard(nav){
 }
 installNavigationTouchGuard(root.querySelector('.ps-nav'));
 
+// Cancel only stationary single-finger filter taps. Starting or moving a
+// touch remains native so the sheet can scroll, pinch and drag to dismiss.
+function installFilterTouchGuard(host){
+ let tap=null;
+ host.addEventListener('touchstart',e=>{
+  tap=null;
+  if(e.touches.length!==1)return;
+  const t=e.touches[0];
+  tap={id:t.identifier,x:t.clientX,y:t.clientY,button:e.target.closest('button')};
+ },{passive:true});
+ host.addEventListener('touchmove',e=>{
+  if(!tap)return;
+  const t=Array.from(e.touches).find(t=>t.identifier===tap.id);
+  if(!t||e.touches.length!==1||Math.hypot(t.clientX-tap.x,t.clientY-tap.y)>10)tap=null;
+ },{passive:true});
+ host.addEventListener('touchcancel',()=>{tap=null;},{passive:true});
+ host.addEventListener('touchend',e=>{
+  const start=tap;tap=null;
+  if(!start||!e.cancelable)return;
+  const t=Array.from(e.changedTouches).find(t=>t.identifier===start.id);
+  if(!t||e.touches.length||Math.hypot(t.clientX-start.x,t.clientY-start.y)>10)return;
+  e.preventDefault();
+  const end=document.elementFromPoint(t.clientX,t.clientY)?.closest('button');
+  if(start.button&&end===start.button&&host.contains(end)&&!end.disabled&&!host.inert)end.click();
+ },{passive:false});
+}
+
 // Shared card ordering: stable while browsing, fresh for each app launch.
 function campaignRank(value,seed){let n=2166136261;for(const ch of String(seed)+'|'+value)n=Math.imul(n^ch.charCodeAt(0),16777619);return n>>>0;}
 const campaignSessionSeed=Math.random();
@@ -415,7 +442,7 @@ function redrawCampaignFilterSheet(){
 }
 function openCampaignFilters(group='all'){
  if(filterOpen)return;filterFocus=document.activeElement;filterDraft=cloneCampaignFilters(campaignFilters);filterOpen=true;filterGroup=group==='sort'||Object.hasOwn(filterTitles,group)?group:'all';filterAllBrands=false;
- const host=document.createElement('div');host.className='ps-filteroverlay';host.innerHTML=campaignFilterSheetHTML();root.append(host);
+ const host=document.createElement('div');host.className='ps-filteroverlay';host.innerHTML=campaignFilterSheetHTML();root.append(host);installFilterTouchGuard(host);
  screen.inert=true;const nav=root.querySelector('.ps-nav');if(nav)nav.inert=true;
  host.querySelector('#ps-filter-title')?.focus();
 }
