@@ -287,7 +287,7 @@ assert.equal(run("website('javascript:alert(1)')"),'');assert.equal(run("website
  console.log('Navigation touch guard: blank taps, repeated taps, drags, cancellation and inert sheets passed');
 }
 
-// Filter taps are handled once without taking over scrolling or pinching.
+// Filter taps are handled once. The shared WebView policy owns multi-touch zoom.
 {
  const source=fs.readFileSync('ios/ui/app.js','utf8');
  const handlers={},options={};let clicks=0,hit=null;
