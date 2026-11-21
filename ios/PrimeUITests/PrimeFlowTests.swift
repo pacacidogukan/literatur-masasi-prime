@@ -258,13 +258,20 @@ final class PrimeFlowTests: XCTestCase {
         login(); home(); openSolgarCampaign()
         let thumb = app.webViews.sliders["Kodu açmak için sağa kaydır veya sağ ok tuşunu kullan"].firstMatch
         XCTAssertTrue(thumb.waitForExistence(timeout: 15))
-        let trackTaps: [CGFloat] = [0.45, 0.94]
-        for position in trackTaps {
-            thumb.coordinate(withNormalizedOffset: CGVector(dx: position, dy: 0.5)).tap()
+        let initialFrame = thumb.frame
+        let window = app.coordinate(withNormalizedOffset: .zero)
+        let trackEnd = app.webViews.firstMatch.frame.maxX - 44
+        let offsetY = initialFrame.midY - app.frame.minY
+        for trackX in [(initialFrame.midX + trackEnd) / 2, trackEnd] {
+            window.withOffset(CGVector(dx: trackX - app.frame.minX, dy: offsetY)).tap()
+            XCTAssertEqual(thumb.frame, initialFrame)
             XCTAssertFalse(app.webViews.staticTexts["SPRING26"].exists)
         }
-        let start = thumb.coordinate(withNormalizedOffset: CGVector(dx: 0.08, dy: 0.5))
-        start.press(forDuration: 0.1, thenDragTo: start.withOffset(CGVector(dx: app.frame.width * 0.72, dy: 0)))
+        thumb.tap()
+        XCTAssertEqual(thumb.frame, initialFrame)
+        let start = thumb.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        let end = window.withOffset(CGVector(dx: trackEnd - app.frame.minX, dy: offsetY))
+        start.press(forDuration: 0.1, thenDragTo: end)
         XCTAssertTrue(app.webViews.staticTexts["SPRING26"].waitForExistence(timeout: 15))
         let copy = button("Kopyala")
         XCTAssertTrue(copy.waitForExistence(timeout: 15))

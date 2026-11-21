@@ -202,31 +202,48 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   await page.getByText('Prime Ayrıcalıkları',{exact:true}).waitFor();
   await headerStyle('.ps-detailtop>strong');
   if(width===390){
-   const track=page.locator('.ps-realtrack'),slider=track.getByRole('slider'),thumb=track.locator('.ps-code-thumb');
+   const track=page.locator('.ps-realtrack'),thumb=track.getByRole('slider');
+   assert.equal(await track.locator('input').count(),0,'Track must not expose a native range hit target');
    const rail=await track.boundingBox(),start=await thumb.boundingBox();
    const x=start.x+start.width/2,y=start.y+start.height/2;
    const end=rail.x+rail.width-14;
-   for(const fraction of [.45,.95]){
-    await page.touchscreen.tap(rail.x+rail.width*fraction,y);
-    assert.equal(await slider.inputValue(),'0','Tapping the red track must leave the thumb at the start');
+   const value=()=>thumb.getAttribute('aria-valuenow');
+   async function assertAtStart(message){
+    assert.equal(await value(),'0',message);
+    assert.equal((await thumb.boundingBox()).x,start.x,message);
    }
-   await page.mouse.move(rail.x+rail.width*.45,y);
-   await page.mouse.down();
-   await page.mouse.move(end,y,{steps:8});
-   await page.mouse.up();
-   assert.equal(await slider.inputValue(),'0','A drag starting on the track cannot reveal the code');
-   for(const dx of [-15,70]){
+   for(const tapX of [rail.x+rail.width*.45,rail.x+rail.width*.95,x,x]){
+    await page.touchscreen.tap(tapX,y);
+    await assertAtStart('Touching the track, thumb or arrow must not move the thumb');
+   }
+   for(const origin of [[rail.x+rail.width*.45,y],[start.x+1,start.y+1]]){
+    await page.mouse.move(...origin);
+    await page.mouse.down();
+    await page.mouse.move(end,origin[1],{steps:8});
+    await assertAtStart('Only an origin inside the white circle may move the thumb');
+    await page.mouse.up();
+   }
+   for(const origin of [[x-15,y],[x,y+20]]){
     await page.mouse.move(x,y);
     await page.mouse.down();
-    await page.mouse.move(x+dx,y,{steps:6});
-    if(dx>0)assert(Number(await slider.inputValue())>0,'The thumb follows a rightward drag');
+    await page.mouse.move(...origin,{steps:4});
+    await page.mouse.move(end,y,{steps:8});
+    await assertAtStart('A drag that starts leftward or vertically is ignored until release');
     await page.mouse.up();
-    assert.equal(await slider.inputValue(),'0','Releasing an incomplete drag resets the thumb');
    }
    await page.mouse.move(x,y);
    await page.mouse.down();
+   await page.mouse.move(x+3,y);
+   await assertAtStart('Touch jitter must not move the thumb');
+   await page.mouse.move(x+70,y,{steps:6});
+   assert(Number(await value())>0,'The thumb follows a rightward drag');
+   assert((await thumb.boundingBox()).x>start.x);
+   await page.mouse.up();
+   await assertAtStart('Releasing an incomplete drag returns the thumb to the start');
+   await page.mouse.move(x,y);
+   await page.mouse.down();
    await page.mouse.move(end,y,{steps:10});
-   assert(await slider.isVisible(),'Holding at the end must wait for release');
+   assert(await thumb.isVisible(),'Holding at the end must wait for release');
    await page.mouse.up();
    await page.locator('.ps-realcodereveal strong').filter({hasText:/^TEST$/}).waitFor();
   }
