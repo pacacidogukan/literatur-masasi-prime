@@ -581,3 +581,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-profilecontent .document h1{margin-top:0}
 #prime-square-campaigns .ps-profilecontent .document p{margin:0 0 14px;font-size:14px;line-height:1.6;overflow-wrap:anywhere}
 #prime-square-campaigns .ps-profilecontent .text-link{display:block;min-height:44px;margin:10px auto 0;padding:10px 14px;color:var(--ps-muted);background:none;border:0;font-size:14px}
+
+/* Suppress smart double-tap zoom across filter controls, gaps and scroll areas.
+   manipulation preserves panning and pinch zoom; the header keeps its drag policy. */
+#prime-square-campaigns .ps-filteroverlay,#prime-square-campaigns .ps-filterbody,#prime-square-campaigns .ps-discoverytools,#prime-square-campaigns .ps-filterresulthead{touch-action:manipulation}
