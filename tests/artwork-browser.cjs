@@ -75,6 +75,21 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   const dialog=page.getByRole('dialog');await dialog.waitFor();assert.equal(await dialog.locator('.ps-filterclose .lucide-x').count(),1);
   const bounds=await dialog.boundingBox();assert(bounds.y<=1&&Math.abs(bounds.height-1000)<2,'Sheet must cover entire web viewport below native status bar');
   assert(await page.locator('#ps-screen').evaluate(el=>el.inert));
+  // All sheet filter families share compact, centered, gray controls (selected too).
+  const filterMetrics=await dialog.locator('.ps-filterchips button').evaluateAll(nodes=>nodes.map(el=>{
+   const s=getComputedStyle(el),r=el.getBoundingClientRect();
+   return {label:el.textContent,color:s.color,align:s.alignItems,justify:s.justifyContent,textAlign:s.textAlign,
+    top:s.paddingTop,bottom:s.paddingBottom,left:s.paddingLeft,right:s.paddingRight,minHeight:s.minHeight,
+    height:r.height,overflow:el.scrollWidth-el.clientWidth};
+  }));
+  assert(filterMetrics.length>20,'Exercise all filter groups, not just the quick toolbar');
+  for(const m of filterMetrics){
+   assert.equal(m.color,'rgb(116, 120, 127)',m.label);
+   assert.equal(m.align,'center',m.label);assert.equal(m.justify,'center',m.label);assert.equal(m.textAlign,'center',m.label);
+   assert.equal(m.top,m.bottom,m.label);assert.equal(m.left,m.right,m.label);
+   assert.equal(m.minHeight,'36px',m.label);assert(m.height>=36&&m.overflow<=1,'Clipped filter: '+m.label);
+  }
+
   await page.locator('[data-filter-group="brands"][data-filter-value="Solgar"]').tap();
   await page.locator('[data-filter-group="brands"][data-filter-value="Other"]').tap();
   assert.equal(await dialog.locator('[data-filter-group="brands"][aria-pressed="true"]').count(),2);

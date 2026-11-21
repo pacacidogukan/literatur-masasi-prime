@@ -504,13 +504,13 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-allfilters{color:var(--ps-muted);position:relative;flex:none;width:44px;height:36px;display:grid;place-items:center;border:1px solid #e3e4e7;border-radius:10px;background:white}
 #prime-square-campaigns .ps-allfilters>span{position:absolute;right:-5px;top:-5px;min-width:18px;height:18px;border-radius:10px;background:var(--ps-red);color:white;font-size:11px;line-height:18px;text-align:center;padding:0 3px}
 #prime-square-campaigns .ps-quickrail{display:flex;gap:8px;min-width:0;overflow-x:auto;scrollbar-width:none;border-left:1px solid #eceef0;padding:0 16px 0 12px;overscroll-behavior-x:contain}
-#prime-square-campaigns .ps-quickrail button{color:var(--ps-muted);flex:none;display:flex;align-items:center;gap:5px;min-height:36px;padding:4px 12px;border:1px solid #e3e4e7;border-radius:10px;background:#fff;font-size:13px;white-space:nowrap}
+#prime-square-campaigns .ps-quickrail button{color:var(--ps-muted);flex:none;display:flex;align-items:center;justify-content:center;text-align:center;gap:5px;min-height:36px;padding:4px 12px;border:1px solid #e3e4e7;border-radius:10px;background:#fff;font-size:13px;white-space:nowrap}
 #prime-square-campaigns .ps-quickrail svg{width:13px;height:13px}
 #prime-square-campaigns .ps-quickrail .selected{background:#ffeded;border-color:#ffcdcd;color:var(--ps-muted)}
 #prime-square-campaigns .ps-filterresulthead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:8px 0 20px}
 #prime-square-campaigns .ps-filterresulthead h2{font-size:19px;margin:0;color:var(--ps-title-color)}
 #prime-square-campaigns .ps-filterresulthead p{font-size:13px;color:#74787f;margin:5px 0 0}
-#prime-square-campaigns .ps-filterresulthead button{color:var(--ps-muted);display:flex;align-items:center;gap:5px;flex:none;min-height:36px;padding:4px 12px;background:#fff;border:1px solid #e3e4e7;border-radius:10px;font-size:13px}
+#prime-square-campaigns .ps-filterresulthead button{color:var(--ps-muted);display:flex;align-items:center;justify-content:center;text-align:center;gap:5px;flex:none;min-height:36px;padding:4px 12px;background:#fff;border:1px solid #e3e4e7;border-radius:10px;font-size:13px}
 #prime-square-campaigns .ps-sortcontrol svg{width:18px;height:18px;stroke-width:1.8}
 #prime-square-campaigns .ps-empty [data-filter-reset]{display:block;min-height:44px;margin:16px auto 0;background:#ffeded;border:0;border-radius:10px;color:var(--ps-red);padding:10px 16px}
 #prime-square-campaigns .ps-filteroverlay{position:fixed;inset:0;z-index:1000;background:#0003;display:flex;align-items:stretch;isolation:isolate;overscroll-behavior:contain}
@@ -524,13 +524,13 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-filterbody section{margin:0 0 27px;scroll-margin-top:12px}
 #prime-square-campaigns .ps-filterbody h3{font-size:16px;line-height:1.3;margin:0 0 10px;font-weight:600}
 #prime-square-campaigns .ps-filterchips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-#prime-square-campaigns .ps-filterchips button{display:flex;gap:7px;align-items:center;justify-content:center;min-height:44px;max-width:100%;padding:9px 12px;background:white;border:1px solid #e3e4e7;border-radius:10px;font-size:13px;line-height:1.35;overflow-wrap:anywhere;text-align:center}
-#prime-square-campaigns .ps-filterchips button[aria-pressed=true]{background:#ffeded;border-color:#ffb8b8;color:var(--ps-red);font-weight:600}
-#prime-square-campaigns .ps-filterchips button span{color:#74787f;font-weight:400}
-#prime-square-campaigns .ps-filterchips .ps-brandsmore{border-radius:24px}
+#prime-square-campaigns .ps-filterchips button{color:var(--ps-muted);display:flex;gap:7px;align-items:center;justify-content:center;min-height:36px;max-width:100%;padding:4px 12px;background:white;border:1px solid #e3e4e7;border-radius:10px;font-size:13px;line-height:1.35;overflow-wrap:anywhere;text-align:center}
+#prime-square-campaigns .ps-filterchips button[aria-pressed=true]{background:#ffeded;border-color:#ffb8b8;color:var(--ps-muted);font-weight:600}
+#prime-square-campaigns .ps-filterchips button span{color:inherit;font-weight:400;line-height:inherit;flex-shrink:0}
+#prime-square-campaigns .ps-filterchips .ps-brandsmore{border-radius:10px}
 #prime-square-campaigns .ps-brandsmore svg{width:16px;height:16px}
 #prime-square-campaigns .ps-filterfooter{display:flex;gap:12px;flex:none;padding:14px 16px max(14px,env(safe-area-inset-bottom));background:#fff;border-top:1px solid #eceef0}
-#prime-square-campaigns .ps-filterfooter button{min-height:48px;border:1px solid #e3e4e7;border-radius:12px;background:#fff;color:#74787f;padding:10px 14px;font-size:14px;font-weight:600}
+#prime-square-campaigns .ps-filterfooter button{display:flex;align-items:center;justify-content:center;text-align:center;min-height:48px;border:1px solid #e3e4e7;border-radius:12px;background:#fff;color:#74787f;padding:10px 14px;font-size:14px;font-weight:600}
 #prime-square-campaigns .ps-filterfooter [data-filter-apply]{flex:1;background:var(--ps-red);color:#fff;border-color:var(--ps-red)}
 @media(min-width:700px){#prime-square-campaigns .ps-filterbody{padding-left:max(24px,calc((100vw - 680px)/2));padding-right:max(24px,calc((100vw - 680px)/2))}#prime-square-campaigns .ps-filterfooter{padding-left:max(24px,calc((100vw - 680px)/2));padding-right:max(24px,calc((100vw - 680px)/2))}}
 
