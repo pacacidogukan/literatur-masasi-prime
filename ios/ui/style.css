@@ -411,6 +411,28 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-home{--ps-home-gap:12px}
 #prime-square-campaigns .ps-main.ps-home{display:flex;flex-direction:column;gap:var(--ps-home-gap);padding:var(--ps-home-gap) 0}
 #prime-square-campaigns .ps-home #ps-discovery{display:flex;flex-direction:column;gap:var(--ps-home-gap);min-width:0}
+#prime-square-campaigns .ps-productrail{
+ display:flex;
+ flex-wrap:nowrap;
+ gap:var(--ps-home-gap);
+ overflow-x:auto;
+ overscroll-behavior-x:contain;
+ scrollbar-width:none;
+ padding-inline:var(--ps-home-gap);
+ scroll-padding-inline:var(--ps-home-gap);
+}
+#prime-square-campaigns .ps-productrail button{
+ flex:none;
+ min-height:36px;
+ padding:4px 12px;
+ border:0;
+ border-radius:10px;
+ background:#fff;
+ color:var(--ps-muted);
+ font-size:13px;
+ white-space:nowrap;
+}
+#prime-square-campaigns .ps-productrail button:focus-visible{outline-offset:-2px}
 #prime-square-campaigns .ps-home .ps-rounds{padding:0 var(--ps-home-gap);margin:0;scroll-padding-left:var(--ps-home-gap)}
 #prime-square-campaigns .ps-home #ps-discovery>.ps-carousel{gap:var(--ps-home-gap);padding:0 var(--ps-home-gap);margin:0;scroll-padding-left:var(--ps-home-gap)}
 #prime-square-campaigns .ps-home #ps-discovery>.ps-codefeature{margin:0 var(--ps-home-gap)}

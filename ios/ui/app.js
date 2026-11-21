@@ -139,8 +139,8 @@ try{const saved=JSON.parse(localStorage.getItem(storageKey));if(Array.isArray(sa
 function persistFavorites(){return writeLocal(storageKey,[...favorites]);}
 function toggleFavorite(id){const next=new Set(favorites);next.has(id)?next.delete(id):next.add(id);if(!writeLocal(storageKey,[...next])){showError('Favori tercihin kaydedilemedi. Cihazında boş alan açıp tekrar dene.');return false;}favorites=next;return true;}
 const navigation=[];
-function capturePage(){return {view,type,brand,query,current,returnView,selectedCategory,discountThreshold,campaignBrand,campaignGroup,campaignOrigin,campaignFilters:cloneCampaignFilters(campaignFilters),y:screen.scrollTop,rails:[...screen.querySelectorAll('.ps-carousel,.ps-coderail,.ps-lastdayrail,.ps-rounds,.ps-brandrounds,.ps-nativerail')].map(e=>e.scrollLeft)};}
-function restorePage(p){({view,type,brand,query,current,returnView,selectedCategory,discountThreshold,campaignBrand,campaignGroup,campaignOrigin}=p);campaignFilters=cloneCampaignFilters(p.campaignFilters||emptyCampaignFilters());render();screen.scrollTop=p.y;screen.querySelectorAll('.ps-carousel,.ps-coderail,.ps-lastdayrail,.ps-rounds,.ps-brandrounds,.ps-nativerail').forEach((e,i)=>e.scrollLeft=p.rails[i]||0);}
+function capturePage(){return {view,type,brand,query,current,returnView,selectedCategory,discountThreshold,campaignBrand,campaignGroup,campaignOrigin,campaignFilters:cloneCampaignFilters(campaignFilters),y:screen.scrollTop,rails:[...screen.querySelectorAll('.ps-carousel,.ps-coderail,.ps-lastdayrail,.ps-rounds,.ps-brandrounds,.ps-nativerail,.ps-productrail')].map(e=>e.scrollLeft)};}
+function restorePage(p){({view,type,brand,query,current,returnView,selectedCategory,discountThreshold,campaignBrand,campaignGroup,campaignOrigin}=p);campaignFilters=cloneCampaignFilters(p.campaignFilters||emptyCampaignFilters());render();screen.scrollTop=p.y;screen.querySelectorAll('.ps-carousel,.ps-coderail,.ps-lastdayrail,.ps-rounds,.ps-brandrounds,.ps-nativerail,.ps-productrail').forEach((e,i)=>e.scrollLeft=p.rails[i]||0);}
 async function copyCurrentCode(){try{if(!current?.code||expired(current))throw Error('Kod kullanılamıyor.');await server('copy',{text:current.code});copyNotice=true;render();screen.querySelector('.ps-copyhandle')?.focus();}catch(e){showError('Kod panoya kopyalanamadı. Tekrar deneyebilirsin.');}}
 const icon=n=>iconMarkup[n]||iconMarkup.tag||'';
 const esc=s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
@@ -272,7 +272,10 @@ const newestWindow=7*86400;
 function newestOffers(source=offers,time=Math.floor(Date.now()/1000)){return source.filter(o=>Number.isFinite(o.publishedAt)&&o.publishedAt>0&&o.publishedAt<=time&&o.publishedAt>=time-newestWindow&&!expired(o)).sort((a,b)=>b.publishedAt-a.publishedAt||a.id.localeCompare(b.id));}
 function newestFeature(source){const arr=spreadCampaigns(newestOffers(source).filter(o=>o.artworkReady),'newest');return `<section class="ps-recentcampaigns"><div class="ps-sectionheading"><h2>En Yeni Kampanyalar</h2><button type="button" class="ps-seeall cursor-interaction" data-newest="1" aria-label="Son 7 günde yayınlanan kampanyaları keşfet">Keşfet${icon('chevron-right')}</button></div>${arr.length?carousel(arr,'small'):'<div class="ps-newestempty">Son 7 günde yayınlanan yeni bir kampanya bulunmuyor.</div>'}</section>`;}
 function newestPage(){const arr=newestOffers();const names=[...new Set(arr.map(o=>o.brand))];return `${back('En Yeni Kampanyalar')}<main class="ps-main ps-newestpage"><div class="ps-brandhead"><h2>En Yeniler</h2><p>${names.length} marka · ${arr.length} kampanya</p></div><div class="ps-nativegrid">${arr.length?nativeGroups(names,arr):'<div class="ps-empty">Son 7 günde yayınlanan yeni bir kampanya bulunmuyor.</div>'}</div></main>`;}
-function discovery(){if(query.trim())return searchResults();const arr=spreadCampaigns(offers.filter(matchesSearch),'discovery');const top=arr.filter(o=>o.artworkReady).slice(0,20);return `${arr.length?'':`<div class="ps-empty" role="status">${query?'Aramana uygun kampanya bulunamadı.':'Yeni ayrıcalıklar yakında'}</div>`}<section class="ps-brandcampaigns"><div class="ps-sectionheading"><h2>Marka Kampanyaları</h2><button type="button" class="ps-seeall cursor-interaction" data-home-all="1" aria-label="Tüm marka kampanyalarını gör">Tümünü Gör${icon('chevron-right')}</button></div>${carousel(top,'large')}</section>${categoryRounds()}${codeFeature(arr)}${newestFeature(arr)}${lastDayFeature(arr)}${brandRounds()}${discountTiles()}`}
+function productCategoryRail(){
+ return `<section class="ps-productrail" aria-label="Ürün kategorileri" tabindex="0">${productCategoryOptions.map(([id,label])=>`<button type="button" data-home-product="${id}">${label}</button>`).join('')}</section>`;
+}
+function discovery(){if(query.trim())return searchResults();const arr=spreadCampaigns(offers.filter(matchesSearch),'discovery');const top=arr.filter(o=>o.artworkReady).slice(0,20);return `${productCategoryRail()}${arr.length?'':`<div class="ps-empty" role="status">${query?'Aramana uygun kampanya bulunamadı.':'Yeni ayrıcalıklar yakında'}</div>`}<section class="ps-brandcampaigns"><div class="ps-sectionheading"><h2>Marka Kampanyaları</h2><button type="button" class="ps-seeall cursor-interaction" data-home-all="1" aria-label="Tüm marka kampanyalarını gör">Tümünü Gör${icon('chevron-right')}</button></div>${carousel(top,'large')}</section>${categoryRounds()}${codeFeature(arr)}${newestFeature(arr)}${lastDayFeature(arr)}${brandRounds()}${discountTiles()}`}
 
 const discountRates={};
 let discountThreshold='all';
@@ -481,10 +484,15 @@ if(d.codeSlide!==undefined){moveCodeBanner(Number(d.codeSlide));return;}
 if(d.copyPreview){copyCurrentCode();return;}
 if(d.settingsBack||d.action==='back'){const p=navigation.pop();if(p){restorePage(p);return;}view=view==='settings'?'home':settingsViews.includes(view)?'settings':'home';render();screen.scrollTop=0;return;}
 const previous=capturePage();
-const route=d.newest||d.homeAll||d.view||d.discount||d.campaignGroup||d.brand||d.offer||d.type||d.nativeSearch;
+const route=d.homeProduct||d.newest||d.homeAll||d.view||d.discount||d.campaignGroup||d.brand||d.offer||d.type||d.nativeSearch;
 if(route){if(d.view&&['home','brands','campaigns','favorites'].includes(d.view))navigation.length=0;else navigation.push(previous);}
 if(d.view){if(d.view==='personal'){profileNameDraft=settingsName;profileMessage='';profileError='';}if(['campaigns','home','brands'].includes(d.view)){campaignFilters=emptyCampaignFilters();campaignBrand='Tümü';}if(d.view==='home')categoryScroll=0;if(d.view==='brands')selectedCategory='Tümü';if(d.view==='filter')returnView=view;view=d.view;query='';type='Tümü';}
 else if(d.newest){type='Tümü';query='';view='newest';}
+else if(d.homeProduct){
+ campaignFilters=emptyCampaignFilters();
+ campaignFilters.products=[d.homeProduct];
+ campaignBrand='Tümü';type='Tümü';query='';view='campaigns';
+}
 else if(d.homeAll){campaignFilters=emptyCampaignFilters();campaignBrand='Tümü';type='Tümü';query='';view='campaigns';}
 else if(d.discount){discountThreshold=d.discount;type='Tümü';query='';if(d.discount==='all'){campaignFilters=emptyCampaignFilters();campaignBrand='Tümü';view='campaigns';}else view='discount';}
 else if(d.campaignBrand){campaignBrand=d.campaignBrand;view='campaigns';}

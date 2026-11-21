@@ -16,6 +16,32 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   await page.addInitScript(rows=>{window.webkit={messageHandlers:{primeAPI:{postMessage:async({path})=>({status:200,data:path==='campaigns'?{campaigns:rows}:path==='reveal'?{code:'TEST'}:{authorized:true,ok:true}})}}};},rows);
   await page.goto(url);await page.getByRole('button',{name:'Ana Sayfa',exact:true}).waitFor();await page.locator('.ps-poster.large').first().waitFor();
   await page.waitForFunction(()=>[...document.querySelectorAll('.ps-poster.large img')].every(i=>i.complete&&i.naturalWidth));
+  const productRail=page.getByRole('region',{name:'Ürün kategorileri'});
+  assert.equal(await productRail.getByRole('heading').count(),0);
+  assert.deepEqual(await productRail.getByRole('button').allTextContents(),['Gıda Takviyeleri','Dermokozmetik ve Kişisel Bakım','Sporcu Beslenmesi','Makyaj ve Kozmetik']);
+  const productSpacing=await productRail.evaluate(el=>{
+   const rail=el.getBoundingClientRect(),buttons=[...el.querySelectorAll('button')];
+   const cards=buttons.map(button=>button.getBoundingClientRect());
+   const style=getComputedStyle(el);
+   return {
+    gaps:[cards[0].left-rail.left,cards[1].left-cards[0].right,parseFloat(style.paddingInlineEnd),
+      rail.top-document.querySelector('.ps-header').getBoundingClientRect().bottom,
+      el.nextElementSibling.getBoundingClientRect().top-rail.bottom],
+    singleRow:cards.every(card=>card.top===cards[0].top),
+    borderless:buttons.every(button=>getComputedStyle(button).borderTopWidth==='0px'),
+    scrollable:el.scrollWidth>el.clientWidth
+   };
+  });
+  assert(productSpacing.gaps.every(gap=>Math.abs(gap-12)<.5),JSON.stringify(productSpacing));
+  assert(productSpacing.singleRow&&productSpacing.borderless);
+  if(width===320){
+   assert(productSpacing.scrollable);
+   await productRail.getByRole('button',{name:'Makyaj ve Kozmetik'}).tap();
+   await page.locator('#ps-native-results [data-offer="legacy"]').waitFor();
+   assert.equal(await page.locator('#ps-native-results [data-offer]').count(),1);
+   await page.getByRole('button',{name:'Geri',exact:true}).tap();
+   assert(await productRail.evaluate(el=>el.scrollLeft>0),'Returning home should restore the category scroll position');
+  }
   const circleGap=await page.locator('.ps-brandrounds button>b').evaluateAll(nodes=>{const a=nodes[0].getBoundingClientRect(),b=nodes[1].getBoundingClientRect();return b.left-a.right;});
   assert(Math.abs(circleGap-12)<.5,'Visible brand-circle gap must be halved from 24px to 12px');
   // Category artwork is a four-column square grid after the brand campaign carousel.
