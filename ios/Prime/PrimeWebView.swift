@@ -38,6 +38,7 @@ struct PrimeWebView: UIViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator(isLaunching: $isLaunching) }
     func makeUIView(context: Context) -> PrimeWebContainer {
         let configuration = WKWebViewConfiguration()
+        configuration.ignoresViewportScaleLimits = false
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--prime-ui-tests") {
             configuration.userContentController.addUserScript(WKUserScript(source: """
@@ -66,6 +67,8 @@ struct PrimeWebView: UIViewRepresentable {
         view.backgroundColor = isLaunching ? .white : PrimeSurface.header
         view.scrollView.backgroundColor = isLaunching ? .white : PrimeSurface.header
         view.scrollView.contentInsetAdjustmentBehavior = .never
+        view.scrollView.pinchGestureRecognizer?.isEnabled = false
+        view.allowsLinkPreview = false
         view.allowsBackForwardNavigationGestures = false
         if let root = Bundle.main.url(forResource: "Web", withExtension: nil),
            FileManager.default.fileExists(atPath: root.appendingPathComponent("index.html").path) {

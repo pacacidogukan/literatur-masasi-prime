@@ -91,6 +91,33 @@ final class PrimeFlowTests: XCTestCase {
         XCTAssertTrue(app.webViews.staticTexts["Henüz favorin yok"].waitForExistence(timeout: 15))
         tap("Ana Sayfa"); home()
     }
+    func testAppScreensKeepTheirScaleDuringPinchAndLongPress() {
+        home()
+        let web = app.webViews.firstMatch
+        let nav = button("Ana Sayfa")
+        for label in ["Ana Sayfa", "Markalar", "Kampanyalar", "Favoriler"] {
+            tap(label)
+            let before = nav.frame
+            XCTAssertFalse(before.isEmpty, label)
+            func assertScaleIsUnchanged() {
+                let after = nav.frame
+                XCTAssertEqual(after.width, before.width, accuracy: 1, label)
+                XCTAssertEqual(after.minX, before.minX, accuracy: 1, label)
+                XCTAssertEqual(after.minY, before.minY, accuracy: 1, label)
+            }
+
+            web.pinch(withScale: 1.6, velocity: 1)
+            assertScaleIsUnchanged()
+            web.pinch(withScale: 0.65, velocity: -1)
+            assertScaleIsUnchanged()
+            web.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.34))
+                .press(forDuration: 1.0)
+            assertScaleIsUnchanged()
+        }
+        tap("Markalar")
+        XCTAssertTrue(button("Solgar kampanyalarını aç").waitForExistence(timeout: 15))
+    }
+
     func testProfileNamePersists() {
         login(); tap("Profili aç"); tap("Profili düzenle")
         let expectedName = "Test Kullanıcısı"

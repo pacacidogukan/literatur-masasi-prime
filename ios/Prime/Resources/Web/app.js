@@ -33,7 +33,7 @@ function installNavigationTouchGuard(nav){
 installNavigationTouchGuard(root.querySelector('.ps-nav'));
 
 // Cancel only stationary single-finger filter taps. Starting or moving a
-// touch remains native so the sheet can scroll, pinch and drag to dismiss.
+// touch remains native so the sheet can scroll and drag to dismiss.
 function installFilterTouchGuard(host){
  let tap=null;
  host.addEventListener('touchstart',e=>{
