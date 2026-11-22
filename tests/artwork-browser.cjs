@@ -71,11 +71,12 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   async function checkSearchStyle(){
    const metrics=await page.locator('.ps-search').evaluate(el=>{
     const css=getComputedStyle(el),box=el.getBoundingClientRect();
-    const input=el.querySelector('input').getBoundingClientRect();
+    const field=el.querySelector('input'),input=field.getBoundingClientRect();
     return {background:css.backgroundColor,border:css.borderTopColor,radius:css.borderTopLeftRadius,
+     fontSize:getComputedStyle(field).fontSize,placeholderSize:getComputedStyle(field,'::placeholder').fontSize,
      height:box.height,centerOffset:Math.abs((box.top+box.bottom-input.top-input.bottom)/2)};
    });
-   assert.deepEqual(metrics,{background:'rgb(255, 255, 255)',border:'rgb(237, 237, 239)',radius:'10px',height:36,centerOffset:0});
+   assert.deepEqual(metrics,{background:'rgb(255, 255, 255)',border:'rgb(237, 237, 239)',radius:'10px',fontSize:'13px',placeholderSize:'13px',height:36,centerOffset:0});
   }
   await checkSearchStyle();
   // All three tab headers keep one usable search field and a 44px back target.
@@ -91,6 +92,8 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    assert(bounds.right<=bounds.width&&bounds.left>=0);
    if(name!=='Favoriler'){
     browseHeadingMetrics.push(await page.locator('.ps-filterresulthead').evaluate(el=>{const h=el.querySelector('h2'),p=el.querySelector('p'),main=el.closest('main'),tools=document.querySelector('.ps-browseheader'),next=el.nextElementSibling,hs=getComputedStyle(h),ps=getComputedStyle(p),r=el.getBoundingClientRect(),hr=h.getBoundingClientRect(),pr=p.getBoundingClientRect();return {topGap:r.top-tools.getBoundingClientRect().bottom,bottomGap:next.getBoundingClientRect().top-r.bottom,left:r.left,right:innerWidth-r.right,title:[hr.top-r.top,hr.height,hs.fontSize,hs.fontWeight,hs.color],count:[pr.top-hr.bottom,pr.height,ps.fontSize,ps.color],padding:getComputedStyle(main).padding};}));
+    const resultTitle=await page.locator('.ps-filterresulthead h2').evaluate(el=>{const s=getComputedStyle(el);return [s.fontFamily,s.fontSize,s.fontWeight,s.color,s.letterSpacing]});
+    assert.deepEqual(resultTitle,sectionStyle);
     assert.equal(await page.locator('[data-filter-open="sort"]').count(),1);
     assert.deepEqual(await page.locator('.ps-allfilters').evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderTopColor];}),['rgb(255, 49, 49)','rgb(237, 237, 239)']);
     const activeTab=page.locator('.ps-categorytabs button[aria-pressed="true"]');
@@ -98,10 +101,10 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
     assert.deepEqual(await page.locator('.ps-quickrail button').first().evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderTopColor,s.backgroundColor,s.fontWeight];}),['rgb(255, 49, 49)','rgb(237, 237, 239)','rgb(255, 255, 255)','700']);
     const stripStyle=await page.locator('.ps-quickfilters').evaluate(el=>{
      const css=getComputedStyle(el),results=el.closest('.ps-browseheader').nextElementSibling;
-     return [css.backgroundColor,css.borderBottomWidth,getComputedStyle(results).backgroundColor,
+     return [parseFloat(css.paddingInlineStart),css.backgroundColor,css.borderBottomWidth,getComputedStyle(results).backgroundColor,
        results.getBoundingClientRect().top-el.getBoundingClientRect().bottom];
     });
-    assert.deepEqual(stripStyle,['rgb(247, 247, 248)','0px','rgb(247, 247, 248)',0]);
+    assert.deepEqual(stripStyle,[productSpacing.gaps[0],'rgb(247, 247, 248)','0px','rgb(247, 247, 248)',0]);
     assert.equal(await page.locator('.ps-quickrail button svg,.ps-sortcontrol svg').count(),0);
     const quick=page.locator('.ps-quickrail button').first(),quickBounds=await quick.boundingBox();
     await page.mouse.move(quickBounds.x+quickBounds.width/2,quickBounds.y+quickBounds.height/2);
@@ -164,6 +167,18 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   assert.equal(await dialog.locator('[data-filter-group="brands"][aria-pressed="true"]').count(),1);
   if(width===390){fs.mkdirSync('ci-artifacts/artwork',{recursive:true});await page.screenshot({path:'ci-artifacts/artwork/filters-'+engine.name()+'.png'});}
   await page.locator('[data-filter-clean]').tap();await page.locator('[data-filter-apply]').tap();
+  assert.equal(await page.locator('.ps-allfilters>span').count(),0);
+  await page.locator('[data-filter-open="rates"]').tap();
+  const clearStyle=el=>{
+   const css=getComputedStyle(el);
+   return [css.backgroundColor,css.borderColor,css.borderRadius,css.color,css.fontSize,css.fontWeight,css.minHeight];
+  };
+  const panelClearStyle=await dialog.locator('[data-filter-clean]').evaluate(clearStyle);
+  await dialog.locator('[data-filter-value="50"]').tap();
+  await dialog.locator('[data-filter-apply]').tap();
+  const emptyReset=page.locator('[data-filter-reset]');
+  assert.deepEqual(await emptyReset.evaluate(clearStyle),panelClearStyle);
+  await emptyReset.tap();
   assert.equal(await page.locator('.ps-allfilters>span').count(),0);
   await page.locator('[data-filter-open="sort"]').tap();
   assert.equal(await dialog.locator('#ps-filter-title').innerText(),'Sırala');
