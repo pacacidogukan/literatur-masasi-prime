@@ -21,34 +21,38 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    await document.fonts.ready;
    const family=selector=>getComputedStyle(document.querySelector(selector)).fontFamily.split(',')[0].replaceAll('"','');
    return {loaded:faces.some(face=>face.family==='Outfit'&&face.status==='loaded'),
-    controls:['.ps-search input','.ps-productrail button','.ps-nav button','.ps-sectionheading h2'].map(family)};
+    controls:['.ps-homebrand span','.ps-homequick button','.ps-nav button','.ps-sectionheading h2'].map(family)};
   });
   assert.deepEqual(outfit,{loaded:true,controls:['Outfit','Outfit','Outfit','Outfit']});
-  const productRail=page.getByRole('region',{name:'Ürün kategorileri'});
-  assert.equal(await productRail.getByRole('heading').count(),0);
-  assert.deepEqual(await productRail.getByRole('button').allTextContents(),['Gıda Takviyeleri','Dermokozmetik ve Kişisel Bakım','Sporcu Beslenmesi','Makyaj ve Kozmetik']);
-  const productSpacing=await productRail.evaluate(el=>{
-   const rail=el.getBoundingClientRect(),buttons=[...el.querySelectorAll('button')];
-   const cards=buttons.map(button=>button.getBoundingClientRect());
-   const style=getComputedStyle(el);
-   return {
-    gaps:[cards[0].left-rail.left,cards[1].left-cards[0].right,parseFloat(style.paddingInlineEnd),
-      rail.top-document.querySelector('.ps-header').getBoundingClientRect().bottom,
-      el.nextElementSibling.getBoundingClientRect().top-rail.bottom],
-    singleRow:cards.every(card=>card.top===cards[0].top),
-    outlined:buttons.every(button=>{const css=getComputedStyle(button);return css.borderTopColor==='rgb(237, 237, 239)'&&css.backgroundColor==='rgb(255, 255, 255)'&&css.color==='rgb(255, 49, 49)'&&css.fontWeight==='700';}),
-    scrollable:el.scrollWidth>el.clientWidth
-   };
-  });
-  assert(productSpacing.gaps.every(gap=>Math.abs(gap-12)<.5),JSON.stringify(productSpacing));
-  assert(productSpacing.singleRow&&productSpacing.outlined);
+  const homeHeader=page.locator('.ps-homeheader');
+  const shortcuts=homeHeader.locator('.ps-homequick button');
+  assert.deepEqual(await shortcuts.allTextContents(),['Kampanya kategorileri','Ürün kategorilerini keşfet','Tüm markalar']);
+  assert.equal(await homeHeader.locator('input,img').count(),0);
+  assert.equal(await page.locator('.ps-productrail').count(),0);
+  const shortcutLayout=await shortcuts.evaluateAll(nodes=>nodes.map(el=>({
+   top:el.getBoundingClientRect().top,height:el.getBoundingClientRect().height,
+   icon:el.querySelector('svg').getAttribute('class'),color:getComputedStyle(el).color,overflow:el.scrollWidth-el.clientWidth
+  })));
+  assert.equal(new Set(shortcutLayout.map(b=>b.icon)).size,3);
+  assert(shortcutLayout.every(b=>b.top===shortcutLayout[0].top&&b.height===shortcutLayout[0].height&&b.color==='rgb(255, 255, 255)'&&b.overflow<=1));
   if(width===320){
-   assert(productSpacing.scrollable);
-   await productRail.getByRole('button',{name:'Makyaj ve Kozmetik'}).tap();
+   await shortcuts.nth(0).tap();
+   assert(await page.locator('#ps-screen').evaluate(el=>el.scrollTop>0));
+   await page.locator('#ps-screen').evaluate(el=>el.scrollTop=0);
+   await shortcuts.nth(1).tap();
+   const products=page.getByRole('dialog');
+   assert.equal(await products.locator('h2').innerText(),'Ürün Kategorisi');
+   await products.getByRole('button',{name:'Makyaj ve Kozmetik',exact:true}).tap();
+   await products.locator('[data-filter-apply]').tap();
    await page.locator('#ps-native-results [data-offer="legacy"]').waitFor();
    assert.equal(await page.locator('#ps-native-results [data-offer]').count(),1);
    await page.getByRole('button',{name:'Geri',exact:true}).tap();
-   assert(await productRail.evaluate(el=>el.scrollLeft>0),'Returning home should restore the category scroll position');
+   await shortcuts.nth(2).tap();
+   await page.locator('.ps-brandspage').waitFor();
+   await page.getByRole('button',{name:'Geri',exact:true}).tap();
+   await homeHeader.locator('.ps-homehero').tap();
+   await page.locator('#ps-native-results').waitFor();
+   await page.getByRole('button',{name:'Geri',exact:true}).tap();
   }
   const circleGap=await page.locator('.ps-brandrounds button>b').evaluateAll(nodes=>{const a=nodes[0].getBoundingClientRect(),b=nodes[1].getBoundingClientRect();return b.left-a.right;});
   assert(Math.abs(circleGap-12)<.5,'Visible brand-circle gap must be halved from 24px to 12px');
@@ -86,7 +90,6 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    });
    assert.deepEqual(metrics,{background:'rgb(255, 255, 255)',border:'rgb(237, 237, 239)',radius:'10px',fontSize:'13px',placeholderSize:'13px',height:36,centerOffset:0});
   }
-  await checkSearchStyle();
   // All three tab headers keep one usable search field and a 44px back target.
   const browseHeadingMetrics=[];
   for(const name of ['Markalar','Kampanyalar','Favoriler']){
@@ -112,7 +115,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
      return [parseFloat(css.paddingInlineStart),css.backgroundColor,css.borderBottomWidth,getComputedStyle(results).backgroundColor,
        results.getBoundingClientRect().top-el.getBoundingClientRect().bottom];
     });
-    assert.deepEqual(stripStyle,[productSpacing.gaps[0],'rgb(247, 247, 248)','0px','rgb(247, 247, 248)',0]);
+    assert.deepEqual(stripStyle,[12,'rgb(247, 247, 248)','0px','rgb(247, 247, 248)',0]);
     assert.equal(await page.locator('.ps-quickrail button svg,.ps-sortcontrol svg').count(),0);
     const quick=page.locator('.ps-quickrail button').first(),quickBounds=await quick.boundingBox();
     await page.mouse.move(quickBounds.x+quickBounds.width/2,quickBounds.y+quickBounds.height/2);
@@ -303,9 +306,15 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   }
   for(const g of await geometry('.ps-nativehero'))assert(Math.abs(g.w/g.h-1.5)<.002);assert(await page.evaluate(()=>document.querySelector('.ps-detailsheet').getBoundingClientRect().top<document.querySelector('.ps-slidefooter').getBoundingClientRect().top-80),'Detail drag handle/conditions must remain above footer');
   await page.getByRole('button',{name:'Geri',exact:true}).tap();await page.getByRole('button',{name:'Ana Sayfa',exact:true}).tap();
-  await page.getByRole('textbox',{name:'Marka veya kampanya ara'}).fill('Test ayrıcalığı');assert.equal(await page.locator('.ps-searchresults .ps-nativelist button').count(),1);assert.equal(await page.locator('#ps-discovery .ps-carousel').count(),0);
-  await page.locator('.ps-searchresults strong').tap();await page.getByText('Prime Ayrıcalıkları',{exact:true}).waitFor();
-  await page.getByRole('button',{name:'Geri',exact:true}).tap();await page.getByRole('textbox',{name:'Marka veya kampanya ara'}).fill('Eski format');await page.locator('.ps-searchresults strong').tap();await page.getByText('Prime Ayrıcalıkları',{exact:true}).waitFor();assert.equal(await page.locator('.ps-nativehero img').count(),0,'Legacy portrait must never enter the detail slot');
+  await page.getByRole('button',{name:'Kampanyalar',exact:true}).tap();
+  await page.getByRole('textbox',{name:'Marka veya kampanya ara'}).fill('Test ayrıcalığı');
+  assert.equal(await page.locator('#ps-native-results .ps-nativelist button').count(),1);
+  await page.locator('#ps-native-results .ps-nativelist strong').tap();await page.getByText('Prime Ayrıcalıkları',{exact:true}).waitFor();
+  await page.getByRole('button',{name:'Geri',exact:true}).tap();
+  await page.getByRole('textbox',{name:'Marka veya kampanya ara'}).fill('Eski format');
+  await page.locator('#ps-native-results .ps-nativelist strong').tap();
+  await page.getByText('Prime Ayrıcalıkları',{exact:true}).waitFor();
+  assert.equal(await page.locator('.ps-nativehero img').count(),0,'Legacy portrait must never enter the detail slot');
   await page.getByRole('button',{name:'Ana Sayfa',exact:true}).count();
   if(width===390){fs.mkdirSync('ci-artifacts/artwork',{recursive:true});await page.screenshot({path:'ci-artifacts/artwork/legacy-accessible.png'});}
   assert.deepEqual(errors,[],JSON.stringify({width,errors}));await page.close();console.log('PASS: '+engine.name()+' nested clicks and six-format geometry at '+width+'px');

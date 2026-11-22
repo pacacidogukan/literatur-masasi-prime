@@ -230,7 +230,6 @@
 #prime-square-campaigns .ps-codebanner{aspect-ratio:3/1;padding:0;display:block}
 #prime-square-campaigns .ps-codebanner-art{display:block;width:100%;height:100%;object-fit:fill}
 
-#prime-square-campaigns .ps-header:has(+ .ps-home){padding-bottom:0}
 #prime-square-campaigns .ps-main.ps-home{padding-top:0}
 #prime-square-campaigns .ps-home .ps-rounds{padding-top:24px;padding-bottom:24px}
 
@@ -411,23 +410,6 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-home{--ps-home-gap:var(--ps-content-inset)}
 #prime-square-campaigns .ps-main.ps-home{display:flex;flex-direction:column;gap:var(--ps-home-gap);padding:var(--ps-home-gap) 0}
 #prime-square-campaigns .ps-home #ps-discovery{display:flex;flex-direction:column;gap:var(--ps-home-gap);min-width:0}
-#prime-square-campaigns .ps-productrail{
- display:flex;
- flex-wrap:nowrap;
- gap:var(--ps-home-gap);
- overflow-x:auto;
- overscroll-behavior-x:contain;
- scrollbar-width:none;
- padding-inline:var(--ps-home-gap);
- scroll-padding-inline:var(--ps-home-gap);
-}
-#prime-square-campaigns .ps-productrail button{
- flex:none;
- min-height:36px;
- padding:4px 12px;
- white-space:nowrap;
-}
-#prime-square-campaigns .ps-productrail button:focus-visible{outline-offset:-2px}
 #prime-square-campaigns .ps-home .ps-rounds{padding:0 var(--ps-home-gap);margin:0;scroll-padding-left:var(--ps-home-gap)}
 #prime-square-campaigns .ps-home #ps-discovery>.ps-carousel{gap:var(--ps-home-gap);padding:0 var(--ps-home-gap);margin:0;scroll-padding-left:var(--ps-home-gap)}
 #prime-square-campaigns .ps-home #ps-discovery>.ps-codefeature{margin:0 var(--ps-home-gap)}
@@ -435,12 +417,11 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-home #ps-discovery>.ps-brandrounds{gap:0;padding:0 var(--ps-home-gap);margin:0;scroll-padding-left:var(--ps-home-gap)}
 #prime-square-campaigns .ps-home .ps-discountheading{margin:0 var(--ps-home-gap)}
 #prime-square-campaigns .ps-home .ps-discountgrid{gap:var(--ps-home-gap);padding:0 var(--ps-home-gap);margin:0}
-#prime-square-campaigns .ps-header:has(+ .ps-home){padding-left:12px;padding-right:12px}
 
 /* Shared slim search field, centered alongside the existing settings icon. */
 #prime-square-campaigns .ps-search{height:36px;padding:0 12px;align-items:center}
 #prime-square-campaigns .ps-search input{height:22px;line-height:22px;padding:0;margin:0}
-#prime-square-campaigns .ps-header,#prime-square-campaigns .ps-header:has(+ .ps-home){padding-top:4px;padding-bottom:4px}
+#prime-square-campaigns .ps-header{padding-top:4px;padding-bottom:4px}
 #prime-square-campaigns .ps-searchrow{min-height:44px;align-items:center}
 #prime-square-campaigns .ps-searchrow>.ps-icon{min-width:44px;min-height:44px}
 
@@ -543,7 +524,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-filterbody h3{font-size:16px;line-height:1.3;margin:0 0 10px;font-weight:600}
 #prime-square-campaigns .ps-filterchips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 #prime-square-campaigns .ps-filterchips button{display:flex;gap:7px;align-items:center;justify-content:center;min-height:36px;max-width:100%;padding:4px 12px;line-height:1.35;overflow-wrap:anywhere;text-align:center}
-#prime-square-campaigns :is(.ps-productrail,.ps-quickrail,.ps-filterchips) button,
+#prime-square-campaigns :is(.ps-quickrail,.ps-filterchips) button,
 #prime-square-campaigns .ps-filterresulthead .ps-sortcontrol{background:#fff;border:1px solid var(--ps-filter-border);border-radius:10px;color:var(--ps-red);font-size:var(--ps-filter-font-size);font-weight:700}
 #prime-square-campaigns .ps-quickrail button.selected,
 #prime-square-campaigns .ps-filterchips button[aria-pressed=true],
@@ -604,3 +585,57 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-profilecontent .document h1{margin-top:0}
 #prime-square-campaigns .ps-profilecontent .document p{margin:0 0 14px;font-size:14px;line-height:1.6;overflow-wrap:anywhere}
 #prime-square-campaigns .ps-profilecontent .text-link{display:block;min-height:44px;margin:10px auto 0;padding:10px 14px;color:var(--ps-muted);background:none;border:0;font-size:14px}
+
+#prime-square-campaigns .ps-homeheader {
+  padding:16px 18px 20px;
+  background:linear-gradient(145deg,#ff3131 0%,#eb2029 58%,#c91524 100%);
+  color:white;
+}
+#prime-square-campaigns .ps-homebrand {
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:19px;
+}
+#prime-square-campaigns .ps-homebrand span {
+  font-size:43px;font-weight:800;line-height:1.12;letter-spacing:-1.7px;
+}
+#prime-square-campaigns .ps-homeheader button {
+  border:1px solid #ffffff38;
+  background:#ffffff17;
+  color:white;
+}
+#prime-square-campaigns .ps-homeheader button:focus-visible {
+  outline-color:white;
+  outline-offset:2px;
+}
+#prime-square-campaigns .ps-homebrand button {
+  display:grid;place-items:center;
+  width:44px;height:44px;border-radius:14px;
+}
+#prime-square-campaigns .ps-homehero {
+  display:flex;flex-direction:column;justify-content:center;align-items:flex-start;
+  width:100%;min-height:150px;border-radius:20px;
+  padding:16px;text-align:left;
+}
+#prime-square-campaigns .ps-homehero strong {
+  font-size:24px;line-height:1.1;letter-spacing:-.4px;font-weight:650;
+}
+#prime-square-campaigns .ps-homehero span {
+  margin-top:9px;font-size:13px;color:#fff6f6;
+}
+#prime-square-campaigns .ps-homehero b {
+  display:flex;align-items:center;gap:5px;margin-top:8px;font-size:13px;
+}
+#prime-square-campaigns .ps-homequick {
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;margin-top:12px;
+}
+#prime-square-campaigns .ps-homequick button {
+  display:flex;flex-direction:column;align-items:flex-start;gap:7px;
+  min-height:96px;padding:10px 9px;border-radius:16px;text-align:left;
+  font-size:14px;line-height:1.13;font-weight:550;overflow-wrap:anywhere;
+}
+#prime-square-campaigns .ps-homequick i {
+  display:grid;place-items:center;
+  width:24px;height:24px;border-radius:8px;background:#ffffff21;
+}
+#prime-square-campaigns .ps-homequick svg {width:15px;height:15px}

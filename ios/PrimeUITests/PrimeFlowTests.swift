@@ -173,6 +173,7 @@ final class PrimeFlowTests: XCTestCase {
     }
     func testSearchFindsBrandsAndCampaignTitles() {
         login()
+        tap("Kampanyalar")
         let search = app.webViews.textFields["Marka veya kampanya ara"].firstMatch
         XCTAssertTrue(search.waitForExistence(timeout: 15))
         search.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
