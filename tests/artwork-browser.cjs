@@ -85,7 +85,12 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
     const activeTab=page.locator('.ps-categorytabs button[aria-pressed="true"]');
     assert.deepEqual(await activeTab.evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderBottomColor,getComputedStyle(el.parentElement).backgroundColor];}),['rgb(255, 255, 255)','rgb(255, 255, 255)','rgb(255, 49, 49)']);
     assert.deepEqual(await page.locator('.ps-quickrail button').first().evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderTopColor,s.backgroundColor,s.fontWeight];}),['rgb(255, 49, 49)','rgb(227, 228, 231)','rgb(255, 255, 255)','700']);
-    assert.equal(await page.locator('.ps-quickfilters').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(247, 247, 248)');
+    const stripStyle=await page.locator('.ps-quickfilters').evaluate(el=>{
+     const css=getComputedStyle(el),results=el.closest('.ps-browseheader').nextElementSibling;
+     return [css.backgroundColor,css.borderBottomWidth,getComputedStyle(results).backgroundColor,
+       results.getBoundingClientRect().top-el.getBoundingClientRect().bottom];
+    });
+    assert.deepEqual(stripStyle,['rgb(247, 247, 248)','0px','rgb(247, 247, 248)',0]);
     assert.equal(await page.locator('.ps-quickrail button svg,.ps-sortcontrol svg').count(),0);
     const quick=page.locator('.ps-quickrail button').first(),quickBounds=await quick.boundingBox();
     await page.mouse.move(quickBounds.x+quickBounds.width/2,quickBounds.y+quickBounds.height/2);

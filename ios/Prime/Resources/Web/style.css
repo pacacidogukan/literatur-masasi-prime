@@ -510,7 +510,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-categorytabs::-webkit-scrollbar,#prime-square-campaigns .ps-quickrail::-webkit-scrollbar{display:none}
 #prime-square-campaigns .ps-categorytabs button{flex:none;position:relative;min-height:48px;padding:8px 0;border:0;border-bottom:3px solid transparent;background:none;color:#fff;font-size:14px;white-space:nowrap}
 #prime-square-campaigns .ps-categorytabs button[aria-pressed=true]{font-weight:600;border-bottom-color:#fff}
-#prime-square-campaigns .ps-quickfilters{display:flex;gap:12px;align-items:center;padding:10px 0 10px 16px;background:var(--ps-bg);border-bottom:1px solid #eee}
+#prime-square-campaigns .ps-quickfilters{display:flex;gap:12px;align-items:center;padding:10px 0 10px 16px;background:var(--ps-bg)}
+#prime-square-campaigns .ps-browseheader+.ps-campaignspage{display:flow-root;background:var(--ps-bg)}
 #prime-square-campaigns .ps-allfilters{color:var(--ps-red);position:relative;flex:none;width:44px;height:36px;display:grid;place-items:center;border:1px solid #e3e4e7;border-radius:10px;background:white}
 #prime-square-campaigns .ps-allfilters>span{position:absolute;right:-5px;top:-5px;min-width:18px;height:18px;border-radius:10px;background:var(--ps-red);color:white;font-size:11px;line-height:18px;text-align:center;padding:0 3px}
 #prime-square-campaigns .ps-quickrail{display:flex;gap:8px;min-width:0;overflow-x:auto;scrollbar-width:none;border-left:1px solid #eceef0;padding:0 16px 0 12px;overscroll-behavior-x:contain}
