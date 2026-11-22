@@ -28,12 +28,12 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
       rail.top-document.querySelector('.ps-header').getBoundingClientRect().bottom,
       el.nextElementSibling.getBoundingClientRect().top-rail.bottom],
     singleRow:cards.every(card=>card.top===cards[0].top),
-    borderless:buttons.every(button=>getComputedStyle(button).borderTopWidth==='0px'),
+    outlined:buttons.every(button=>{const css=getComputedStyle(button);return css.borderTopColor==='rgb(227, 228, 231)'&&css.backgroundColor==='rgb(255, 255, 255)'&&css.color==='rgb(255, 49, 49)'&&css.fontWeight==='700';}),
     scrollable:el.scrollWidth>el.clientWidth
    };
   });
   assert(productSpacing.gaps.every(gap=>Math.abs(gap-12)<.5),JSON.stringify(productSpacing));
-  assert(productSpacing.singleRow&&productSpacing.borderless);
+  assert(productSpacing.singleRow&&productSpacing.outlined);
   if(width===320){
    assert(productSpacing.scrollable);
    await productRail.getByRole('button',{name:'Makyaj ve Kozmetik'}).tap();
@@ -81,7 +81,10 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    if(name!=='Favoriler'){
     browseHeadingMetrics.push(await page.locator('.ps-filterresulthead').evaluate(el=>{const h=el.querySelector('h2'),p=el.querySelector('p'),main=el.closest('main'),tools=document.querySelector('.ps-browseheader'),next=el.nextElementSibling,hs=getComputedStyle(h),ps=getComputedStyle(p),r=el.getBoundingClientRect(),hr=h.getBoundingClientRect(),pr=p.getBoundingClientRect();return {topGap:r.top-tools.getBoundingClientRect().bottom,bottomGap:next.getBoundingClientRect().top-r.bottom,left:r.left,right:innerWidth-r.right,title:[hr.top-r.top,hr.height,hs.fontSize,hs.fontWeight,hs.color],count:[pr.top-hr.bottom,pr.height,ps.fontSize,ps.color],padding:getComputedStyle(main).padding};}));
     assert.equal(await page.locator('[data-filter-open="sort"]').count(),1);
-    assert.equal(await page.locator('.ps-allfilters').evaluate(el=>getComputedStyle(el).color),'rgb(116, 120, 127)');
+    assert.deepEqual(await page.locator('.ps-allfilters').evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderTopColor];}),['rgb(255, 49, 49)','rgb(255, 49, 49)']);
+    const activeTab=page.locator('.ps-categorytabs button[aria-pressed="true"]');
+    assert.deepEqual(await activeTab.evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderBottomColor,getComputedStyle(el.parentElement).backgroundColor];}),['rgb(255, 255, 255)','rgb(255, 255, 255)','rgb(255, 49, 49)']);
+    assert.deepEqual(await page.locator('.ps-quickrail button').first().evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderTopColor,s.backgroundColor,s.fontWeight];}),['rgb(255, 49, 49)','rgb(227, 228, 231)','rgb(255, 255, 255)','700']);
     if(width===390){fs.mkdirSync('ci-artifacts/artwork',{recursive:true});await page.screenshot({path:'ci-artifacts/artwork/browse-'+name+'-'+engine.name()+'.png'});}
    }
    if(name==='Kampanyalar'){
@@ -101,16 +104,19 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   const dialog=page.getByRole('dialog');await dialog.waitFor();assert.equal(await dialog.locator('.ps-filterclose .lucide-x').count(),1);
   const bounds=await dialog.boundingBox();assert(bounds.y<=1&&Math.abs(bounds.height-1000)<2,'Sheet must cover entire web viewport below native status bar');
   assert(await page.locator('#ps-screen').evaluate(el=>el.inert));
-  // All sheet filter families share compact, centered, gray controls (selected too).
+  // All sheet filter families share compact, centered controls with a persistent gray border.
   const filterMetrics=await dialog.locator('.ps-filterchips button').evaluateAll(nodes=>nodes.map(el=>{
    const s=getComputedStyle(el),r=el.getBoundingClientRect();
-   return {label:el.textContent,color:s.color,align:s.alignItems,justify:s.justifyContent,textAlign:s.textAlign,
+   return {label:el.textContent,color:s.color,background:s.backgroundColor,border:s.borderTopColor,weight:s.fontWeight,selected:el.getAttribute('aria-pressed')==='true',align:s.alignItems,justify:s.justifyContent,textAlign:s.textAlign,
     top:s.paddingTop,bottom:s.paddingBottom,left:s.paddingLeft,right:s.paddingRight,minHeight:s.minHeight,
     height:r.height,overflow:el.scrollWidth-el.clientWidth};
   }));
   assert(filterMetrics.length>20,'Exercise all filter groups, not just the quick toolbar');
   for(const m of filterMetrics){
-   assert.equal(m.color,'rgb(116, 120, 127)',m.label);
+   assert.equal(m.color,m.selected?'rgb(255, 255, 255)':'rgb(255, 49, 49)',m.label);
+   assert.equal(m.background,m.selected?'rgb(255, 49, 49)':'rgb(255, 255, 255)',m.label);
+   assert.equal(m.border,'rgb(227, 228, 231)',m.label);
+   assert.equal(m.weight,'700',m.label);
    assert.equal(m.align,'center',m.label);assert.equal(m.justify,'center',m.label);assert.equal(m.textAlign,'center',m.label);
    assert.equal(m.top,m.bottom,m.label);assert.equal(m.left,m.right,m.label);
    assert.equal(m.minHeight,'36px',m.label);assert(m.height>=36&&m.overflow<=1,'Clipped filter: '+m.label);
@@ -127,6 +133,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   await iconFilter.tap();
   await page.locator('[data-filter-group="brands"][data-filter-value="Solgar"]').tap();
   await page.locator('[data-filter-apply]').tap();
+  assert.deepEqual(await page.locator('.ps-quickrail button[data-filter-open="brands"]').evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderTopColor,s.backgroundColor,s.fontWeight];}),['rgb(255, 255, 255)','rgb(227, 228, 231)','rgb(255, 49, 49)','700']);
   assert.equal(await page.locator('#ps-native-results [data-offer="valid"]').count(),1);
   assert.equal(await page.locator('#ps-native-results [data-offer="other"]').count(),0);
   await iconFilter.tap();

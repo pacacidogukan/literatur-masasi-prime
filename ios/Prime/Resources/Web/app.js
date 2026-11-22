@@ -419,7 +419,7 @@ function campaignFilterToolbar(scope=view){
 }
 function browseResultHeading(title,count,kind){
  const sortLabel=campaignSortOptions.find(([value])=>value===campaignFilters.sort)?.[1]||'Keşfet';
- return `<div class="ps-filterresulthead"><div><h2>${esc(title)}</h2><p role="status">${count} ${kind}</p></div><button type="button" class="ps-sortcontrol" data-filter-open="sort" aria-haspopup="dialog" aria-label="Sırala: ${esc(sortLabel)}">${icon('arrow-down-up')}Sırala</button></div>`;
+ return `<div class="ps-filterresulthead"><div><h2>${esc(title)}</h2><p role="status">${count} ${kind}</p></div><button type="button" class="ps-sortcontrol${campaignFilters.sort==='discover'?'':' selected'}" data-filter-open="sort" aria-haspopup="dialog" aria-label="Sırala: ${esc(sortLabel)}">${icon('arrow-down-up')}Sırala</button></div>`;
 }
 function campaignFilterResults(scope=view){
  const arr=filteredCampaigns(campaignFilters,scope),filtered=campaignFilterCount()>0||campaignFilters.sort!=='discover'||query.trim();
