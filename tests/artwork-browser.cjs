@@ -28,7 +28,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
       rail.top-document.querySelector('.ps-header').getBoundingClientRect().bottom,
       el.nextElementSibling.getBoundingClientRect().top-rail.bottom],
     singleRow:cards.every(card=>card.top===cards[0].top),
-    outlined:buttons.every(button=>{const css=getComputedStyle(button);return css.borderTopColor==='rgb(227, 228, 231)'&&css.backgroundColor==='rgb(255, 255, 255)'&&css.color==='rgb(255, 49, 49)'&&css.fontWeight==='700';}),
+    outlined:buttons.every(button=>{const css=getComputedStyle(button);return css.borderTopColor==='rgb(237, 237, 239)'&&css.backgroundColor==='rgb(250, 249, 249)'&&css.color==='rgb(255, 49, 49)'&&css.fontWeight==='700';}),
     scrollable:el.scrollWidth>el.clientWidth
    };
   });
@@ -74,17 +74,25 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    await page.getByRole('button',{name,exact:true}).tap();
    const header=page.locator('.ps-pagesearchheader');
    assert.equal(await header.locator('input').count(),1);
-   assert.equal(await header.locator('button').count(),1);
+   assert.equal(await header.locator('button').count(),2);
+   assert.equal(await header.getByRole('button',{name:'Profili aç'}).count(),1);
+   assert(await header.locator('.ps-searchhint').evaluate(el=>{
+    const field=el.closest('.ps-search').getBoundingClientRect();
+    return Array.from(el.children).every(child=>{
+     const text=child.getBoundingClientRect();
+     return Math.abs((text.top-field.top)-(field.bottom-text.bottom))<1&&text.right<=field.right;
+    });
+   }));
    const bounds=await header.evaluate(el=>{const b=el.querySelector('button').getBoundingClientRect(),s=el.querySelector('.ps-search').getBoundingClientRect();return {backWidth:b.width,backHeight:b.height,left:s.left,right:s.right,top:s.top,backTop:b.top,width:innerWidth};});
    assert(bounds.backWidth>=44&&bounds.backHeight>=44);
    assert(bounds.right<=bounds.width&&bounds.left>=0);
    if(name!=='Favoriler'){
     browseHeadingMetrics.push(await page.locator('.ps-filterresulthead').evaluate(el=>{const h=el.querySelector('h2'),p=el.querySelector('p'),main=el.closest('main'),tools=document.querySelector('.ps-browseheader'),next=el.nextElementSibling,hs=getComputedStyle(h),ps=getComputedStyle(p),r=el.getBoundingClientRect(),hr=h.getBoundingClientRect(),pr=p.getBoundingClientRect();return {topGap:r.top-tools.getBoundingClientRect().bottom,bottomGap:next.getBoundingClientRect().top-r.bottom,left:r.left,right:innerWidth-r.right,title:[hr.top-r.top,hr.height,hs.fontSize,hs.fontWeight,hs.color],count:[pr.top-hr.bottom,pr.height,ps.fontSize,ps.color],padding:getComputedStyle(main).padding};}));
     assert.equal(await page.locator('[data-filter-open="sort"]').count(),1);
-    assert.deepEqual(await page.locator('.ps-allfilters').evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderTopColor];}),['rgb(255, 49, 49)','rgb(227, 228, 231)']);
+    assert.deepEqual(await page.locator('.ps-allfilters').evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderTopColor];}),['rgb(255, 49, 49)','rgb(237, 237, 239)']);
     const activeTab=page.locator('.ps-categorytabs button[aria-pressed="true"]');
     assert.deepEqual(await activeTab.evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderBottomColor,getComputedStyle(el.parentElement).backgroundColor];}),['rgb(255, 255, 255)','rgb(255, 255, 255)','rgb(255, 49, 49)']);
-    assert.deepEqual(await page.locator('.ps-quickrail button').first().evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderTopColor,s.backgroundColor,s.fontWeight];}),['rgb(255, 49, 49)','rgb(227, 228, 231)','rgb(255, 255, 255)','700']);
+    assert.deepEqual(await page.locator('.ps-quickrail button').first().evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderTopColor,s.backgroundColor,s.fontWeight];}),['rgb(255, 49, 49)','rgb(237, 237, 239)','rgb(250, 249, 249)','700']);
     const stripStyle=await page.locator('.ps-quickfilters').evaluate(el=>{
      const css=getComputedStyle(el),results=el.closest('.ps-browseheader').nextElementSibling;
      return [css.backgroundColor,css.borderBottomWidth,getComputedStyle(results).backgroundColor,
@@ -95,7 +103,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
     const quick=page.locator('.ps-quickrail button').first(),quickBounds=await quick.boundingBox();
     await page.mouse.move(quickBounds.x+quickBounds.width/2,quickBounds.y+quickBounds.height/2);
     await page.mouse.down();
-    assert.equal(await quick.evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 255, 255)','Touch-down on a filter must retain the unselected color');
+    assert.equal(await quick.evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(250, 249, 249)','Touch-down on a filter must retain the unselected color');
     await page.mouse.move(quickBounds.x+quickBounds.width/2,quickBounds.y-8);
     await page.mouse.up();
     if(width===390){fs.mkdirSync('ci-artifacts/artwork',{recursive:true});await page.screenshot({path:'ci-artifacts/artwork/browse-'+name+'-'+engine.name()+'.png'});}
@@ -128,7 +136,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   for(const m of filterMetrics){
    assert.equal(m.color,m.selected?'rgb(255, 255, 255)':'rgb(255, 49, 49)',m.label);
    assert.equal(m.background,m.selected?'rgb(255, 49, 49)':'rgb(255, 255, 255)',m.label);
-   assert.equal(m.border,'rgb(227, 228, 231)',m.label);
+   assert.equal(m.border,'rgb(237, 237, 239)',m.label);
    assert.equal(m.weight,'700',m.label);
    assert.equal(m.align,'center',m.label);assert.equal(m.justify,'center',m.label);assert.equal(m.textAlign,'center',m.label);
    assert.equal(m.top,m.bottom,m.label);assert.equal(m.left,m.right,m.label);
@@ -146,7 +154,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   await iconFilter.tap();
   await page.locator('[data-filter-group="brands"][data-filter-value="Solgar"]').tap();
   await page.locator('[data-filter-apply]').tap();
-  assert.deepEqual(await page.locator('.ps-quickrail button[data-filter-open="brands"]').evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderTopColor,s.backgroundColor,s.fontWeight];}),['rgb(255, 255, 255)','rgb(227, 228, 231)','rgb(255, 49, 49)','700']);
+  assert.deepEqual(await page.locator('.ps-quickrail button[data-filter-open="brands"]').evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderTopColor,s.backgroundColor,s.fontWeight];}),['rgb(255, 255, 255)','rgb(237, 237, 239)','rgb(255, 49, 49)','700']);
   assert.equal(await page.locator('#ps-native-results [data-offer="valid"]').count(),1);
   assert.equal(await page.locator('#ps-native-results [data-offer="other"]').count(),0);
   await iconFilter.tap();

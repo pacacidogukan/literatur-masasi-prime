@@ -71,7 +71,7 @@ run("favoriteQuery='solgar';query='Other'");assert.match(run('favoritesContent()
 run("favoriteQuery='Other'");assert.match(run('favoritesContent()'),/Favorilerinde aramana uygun/);
 run("favoriteQuery='seçili'");assert.match(run('favoritesContent()'),/Solgar/);
 run("favoriteQuery='';query=''");
-for(const page of ['brands()','nativeCampaigns()','nativeFavorites()']){const html=run(page);assert.match(html,/ps-pagesearchheader/);assert.equal((html.match(/<input/g)||[]).length,1);assert.doesNotMatch(html,/data-native-search|Profili aç/);}
+for(const page of ['brands()','nativeCampaigns()','nativeFavorites()']){const html=run(page);assert.match(html,/ps-pagesearchheader/);assert.equal((html.match(/<input/g)||[]).length,1);assert.doesNotMatch(html,/data-native-search/);assert.match(html,/aria-label="Profili aç"/);}
 assert(run('copySheetDismissal(100,400,360)'));assert(!run('copySheetDismissal(-90,100,360)'));assert(!run('copySheetDismissal(0,10,360)'));
 fail=true;await run('start()');assert(screen.innerHTML.includes('Kampanyalar yüklenemedi'));assert(!screen.innerHTML.includes('Yeni ayrıcalıklar yakında'));fail=false;await run('start()');assert.equal(run('loaded'),true);assert.equal(run('loadError'),false);
 run("current=offers[0];current.expires=1;revealed=false");const before=requests.length;await run('revealCode()');assert.equal(before,requests.length);
