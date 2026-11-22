@@ -68,11 +68,22 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
   await page.locator('[data-newest="1"]').tap();await headerStyle('.ps-back>span:first-of-type');assert.equal(await page.locator('.ps-newestpage h2').innerText(),'En Yeniler');
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
+  async function checkSearchStyle(){
+   const metrics=await page.locator('.ps-search').evaluate(el=>{
+    const css=getComputedStyle(el),box=el.getBoundingClientRect();
+    const input=el.querySelector('input').getBoundingClientRect();
+    return {background:css.backgroundColor,border:css.borderTopColor,radius:css.borderTopLeftRadius,
+     height:box.height,centerOffset:Math.abs((box.top+box.bottom-input.top-input.bottom)/2)};
+   });
+   assert.deepEqual(metrics,{background:'rgb(255, 255, 255)',border:'rgb(237, 237, 239)',radius:'10px',height:36,centerOffset:0});
+  }
+  await checkSearchStyle();
   // All three tab headers keep one usable search field and a 44px back target.
   const browseHeadingMetrics=[];
   for(const name of ['Markalar','Kampanyalar','Favoriler']){
    await page.getByRole('button',{name,exact:true}).tap();
    const header=page.locator('.ps-pagesearchheader');
+   await checkSearchStyle();
    assert.equal(await header.locator('input').count(),1);
    assert.equal(await header.locator('button').count(),1);
    const bounds=await header.evaluate(el=>{const b=el.querySelector('button').getBoundingClientRect(),s=el.querySelector('.ps-search').getBoundingClientRect();return {backWidth:b.width,backHeight:b.height,left:s.left,right:s.right,top:s.top,backTop:b.top,width:innerWidth};});
