@@ -66,8 +66,8 @@ struct PrimeWebView: UIViewRepresentable {
         view.navigationDelegate = context.coordinator
         view.uiDelegate = context.coordinator
         view.isOpaque = false
-        view.backgroundColor = isLaunching || usesRedHeader ? PrimeSurface.redHeader : PrimeSurface.header
-        view.scrollView.backgroundColor = isLaunching || usesRedHeader ? PrimeSurface.redHeader : PrimeSurface.header
+        view.backgroundColor = isLaunching ? PrimeSurface.redHeader : PrimeSurface.header
+        view.scrollView.backgroundColor = isLaunching ? PrimeSurface.redHeader : PrimeSurface.header
         view.scrollView.contentInsetAdjustmentBehavior = .never
         view.scrollView.bounces = false
         view.scrollView.pinchGestureRecognizer?.isEnabled = false
@@ -86,7 +86,7 @@ struct PrimeWebView: UIViewRepresentable {
         let view = container.webView
         context.coordinator.isLaunching = $isLaunching
         context.coordinator.usesRedHeader = $usesRedHeader
-        view.backgroundColor = isLaunching || usesRedHeader ? PrimeSurface.redHeader : PrimeSurface.header
+        view.backgroundColor = isLaunching ? PrimeSurface.redHeader : PrimeSurface.header
         view.scrollView.backgroundColor = view.backgroundColor
         container.backgroundColor = view.backgroundColor
     }

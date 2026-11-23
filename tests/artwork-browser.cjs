@@ -13,7 +13,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
  for(const width of [320,390,440,768,1024]){
   const page=await browser.newPage({viewport:{width,height:1000},isMobile:true,hasTouch:true});const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.route('https://artwork.test/**',route=>{const slot=path.basename(new URL(route.request().url()).pathname,'.svg'),s=contract.slots[slot]||{width:600,height:1200};route.fulfill({contentType:'image/svg+xml',body:`<svg xmlns="http://www.w3.org/2000/svg" width="${s.width}" height="${s.height}"><rect width="100%" height="100%" fill="#dce9dd"/><rect x="6%" y="6%" width="88%" height="88%" fill="none" stroke="#154e2b" stroke-width="3"/><text x="10%" y="20%" font-size="30">${slot}</text></svg>`});});
-  await page.addInitScript(rows=>{window.webkit={messageHandlers:{primeAPI:{postMessage:async({path})=>({status:200,data:path==='campaigns'?{campaigns:rows}:path==='reveal'?{code:'TEST'}:{authorized:true,ok:true}})}}};},rows);
+  await page.addInitScript(rows=>{window.webkit={messageHandlers:{primeAPI:{postMessage:async({path,body})=>{if(path==='ui/launch-state')window.primeHeaderIsRed=body.redHeader;return {status:200,data:path==='campaigns'?{campaigns:rows}:path==='reveal'?{code:'TEST'}:{authorized:true,ok:true}}}}}};},rows);
   await page.goto(url);await page.getByRole('button',{name:'Ana Sayfa',exact:true}).waitFor();await page.locator('.ps-poster.large').first().waitFor();
   await page.waitForFunction(()=>[...document.querySelectorAll('.ps-poster.large img')].every(i=>i.complete&&i.naturalWidth));
   const outfit=await page.evaluate(async()=>{
@@ -26,6 +26,18 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   assert.deepEqual(outfit,{loaded:true,controls:['Outfit','Outfit','Outfit','Outfit']});
   const homeHeader=page.locator('.ps-homeheader');
   assert.equal(await homeHeader.evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 49, 49)');
+  assert.equal(await page.evaluate(()=>window.primeHeaderIsRed),true);
+  if(width===390){
+   await page.locator('#ps-screen').evaluate(el=>el.scrollTop=el.querySelector('.ps-homeheader').offsetHeight+8);
+   await page.waitForFunction(()=>window.primeHeaderIsRed===false);
+   await page.locator('#ps-screen').evaluate(el=>el.scrollTop=0);
+   await page.waitForFunction(()=>window.primeHeaderIsRed===true);
+  }
+  const homeWordmark=await homeHeader.locator('.ps-wordmark').evaluate(el=>{
+   const style=getComputedStyle(el);
+   return [style.fontFamily,style.fontWeight,parseFloat(style.letterSpacing)/parseFloat(style.fontSize)];
+  });
+  assert.equal(await page.locator('.ps-nav').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(247, 247, 248)');
   const shortcuts=homeHeader.locator('.ps-homequick button');
   assert.deepEqual(await shortcuts.allTextContents(),['Kampanya kategorileri','Ürün kategorileri','Tüm markalar']);
   assert.equal(await homeHeader.locator('input,img').count(),0);
@@ -56,6 +68,10 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    await page.getByRole('button',{name:'Geri',exact:true}).tap();
   }
   const circleGap=await page.locator('.ps-brandrounds button>b').evaluateAll(nodes=>{const a=nodes[0].getBoundingClientRect(),b=nodes[1].getBoundingClientRect();return b.left-a.right;});
+  assert.equal(await page.locator('.ps-brandrounds button>b').first().evaluate(el=>{
+   const style=getComputedStyle(el);
+   return [style.borderTopWidth,style.borderTopColor].join(' ');
+  }),'1px rgb(237, 237, 239)');
   assert(Math.abs(circleGap-12)<.5,'Visible brand-circle gap must be halved from 24px to 12px');
   // Category artwork is a four-column square grid after the brand campaign carousel.
   const grid=page.locator('.ps-categorygrid');assert.equal(await grid.locator('button').count(),12);
@@ -70,6 +86,14 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   assert.equal(new Set(layout.cards.map(c=>Math.round(c.y))).size,3);
   const atlas=await page.evaluate(()=>new Promise(resolve=>{const i=new Image();i.onload=()=>resolve([i.naturalWidth,i.naturalHeight]);i.onerror=()=>resolve(null);i.src='assets/category-prime-light-red.webp';}));
   assert.deepEqual(atlas,[1024,768]);
+  const coupon=await grid.locator('[data-type="Kampanya Kodu"] .ps-atlasicon').evaluate(async el=>{
+   const url=getComputedStyle(el).backgroundImage.slice(5,-2);
+   const img=new Image();
+   img.src=url;
+   await img.decode();
+   return [new URL(url).pathname,img.naturalWidth,img.naturalHeight];
+  });
+  assert.deepEqual(coupon,['/assets/category-approved-coupon.webp',256,256]);
   async function geometry(selector){return page.locator(selector).evaluateAll(nodes=>nodes.map(el=>{const f=el.querySelector('.ps-artwork-frame'),i=f?.querySelector('img'),a=el.getBoundingClientRect(),b=f?.getBoundingClientRect();return {outerWidth:a.width,slot:f?.dataset.artworkSlot,w:b?.width,h:b?.height,left:b?.left-a.left,right:a.right-b?.right,top:b?.top-a.top,bottom:a.bottom-b?.bottom,fit:i&&getComputedStyle(i).objectFit,state:f?.dataset.artworkState};}));}
   for(const selector of ['.ps-poster.large','.ps-poster.small','.ps-codebanner']){
    for(const g of await geometry(selector)){if(selector==='.ps-poster.large')assert(g.outerWidth<=contract.maxLargeWidth+.1);if(selector==='.ps-poster.small')assert(g.outerWidth<=contract.maxCompactWidth+.1);const s=contract.slots[g.slot];assert(Math.abs(g.w/g.h-s.width/s.height)<.002,JSON.stringify({width,selector,g}));for(const edge of ['left','right','top','bottom'])assert(Math.abs(g[edge]-contract.inset)<.2,JSON.stringify({width,selector,g}));assert.equal(g.fit,'contain');}
@@ -108,6 +132,12 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    ]);
    assert.equal(searchColors[0],searchColors[1]);
    assert.equal(await header.locator('.ps-searchhint').textContent(),'Prime içinde ara');
+   const wordmark=await header.locator('.ps-wordmark').evaluate(el=>{
+    const style=getComputedStyle(el);
+    return [style.fontFamily,style.fontWeight,parseFloat(style.letterSpacing)/parseFloat(style.fontSize)];
+   });
+   assert.deepEqual(wordmark.slice(0,2),homeWordmark.slice(0,2));
+   assert(Math.abs(wordmark[2]-homeWordmark[2])<.001);
    assert.equal(await header.locator('..').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 49, 49)');
    assert.equal(await header.locator('input').count(),1);
    assert.equal(await header.locator('button:visible').count(),1);
@@ -267,6 +297,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   // Profile changes survive navigation/relaunch; a wide source image stays within its circle.
   await page.getByRole('button',{name:'Profili aç',exact:true}).tap();
   await headerStyle('.ps-profilebar>strong',true);
+  assert.equal(await page.locator('.ps-profilepage').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(247, 247, 248)');
   assert.equal(await page.locator('.ps-profilebar input,.ps-profilebar [data-search]').count(),0);
   await page.getByRole('button',{name:'Profili düzenle',exact:true}).tap();
   await headerStyle('.ps-profilebar>strong',true);
