@@ -670,3 +670,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 #prime-square-campaigns .ps-realdetail .ps-detailtop{background:var(--ps-red)}
 #prime-square-campaigns .ps-realdetail .ps-detailtop :is(strong,button){color:#fff}
 #prime-square-campaigns .ps-realdetail .ps-detailtop button:focus-visible{outline-color:#fff}
+
+#prime-square-campaigns .ps-brandcampaign-header .ps-nativebar{margin:0;padding:0 var(--ps-browse-inset);background:var(--ps-red)}
+#prime-square-campaigns .ps-brandcampaign-header :is(.ps-nativebar>strong,[data-action="back"]){color:#fff}
+#prime-square-campaigns .ps-brandcampaign-header [data-action="back"]:focus-visible{outline-color:#fff}
+#prime-square-campaigns .ps-brandcampaign-page{min-height:calc(100% - 61px);padding-top:8px}
+#prime-square-campaigns .ps-brandcampaign-page h2{overflow-wrap:anywhere}
+#prime-square-campaigns .ps-brandcampaign-page .ps-nativelist>button{box-shadow:0 4px 14px #1423340b}
