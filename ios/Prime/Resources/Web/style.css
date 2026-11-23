@@ -169,31 +169,27 @@
 @media(max-width:360px){#prime-square-campaigns .ps-nativepage{padding-left:16px;padding-right:16px}#prime-square-campaigns .ps-nativelist img{width:96px;height:96px;flex-basis:96px}}
 #prime-square-campaigns .ps-nativerail img,#prime-square-campaigns .ps-nativelist img{object-fit:cover}
 #prime-square-campaigns #ps-screen:has(.ps-realdetail){overflow:hidden}
-#prime-square-campaigns .ps-realdetail{position:relative;height:100%;background:white;color:#171a22;overflow:hidden}
-#prime-square-campaigns .ps-detailtop{position:absolute;top:0;left:0;right:0;padding:0 12px;height:60px;display:flex;align-items:center;justify-content:space-between;z-index:5;background:#fff;border-bottom:1px solid #e8e8ec}
+#prime-square-campaigns .ps-realdetail{position:relative;display:grid;grid-template-rows:auto minmax(0,1fr) auto;height:100%;background:var(--ps-bg);color:#171a22;overflow:hidden}
+#prime-square-campaigns .ps-detailtop{padding:0 12px;height:60px;display:flex;align-items:center;justify-content:space-between;z-index:5;background:#fff;border-bottom:1px solid #e8e8ec}
 #prime-square-campaigns .ps-detailtop strong{font-size:17px;font-weight:700;letter-spacing:-.4px}
 #prime-square-campaigns .ps-detailtop button{background:none;border:0;color:#717581;width:38px;height:42px;display:grid;place-items:center}
-#prime-square-campaigns .ps-detailtop .active{color:#ff3131}
 #prime-square-campaigns .ps-detailtop .active svg{fill:currentColor;stroke:none}
 #prime-square-campaigns .ps-nativehero{position:absolute;left:20px;right:20px;top:64px;aspect-ratio:3/2;border-radius:14px;overflow:hidden;box-shadow:0 5px 18px #171a220b}
 #prime-square-campaigns .ps-nativehero img{display:block;width:100%;height:100%;object-fit:cover}
-#prime-square-campaigns .ps-detailsheet{position:absolute;top:40%;left:0;right:0;bottom:0;z-index:6;background:white;border-radius:20px 20px 0 0;box-shadow:0 -4px 24px #171a220e;border-top:1px solid #e8e8ec;display:flex;flex-direction:column;overflow:hidden;transition:top .28s ease}
-#prime-square-campaigns .ps-detailsheet[data-snap=expanded]{top:10%}
-#prime-square-campaigns .ps-detailsheet[data-snap=collapsed]{top:52%}
-#prime-square-campaigns .ps-detailsheet.ps-dragging{transition:none}
-#prime-square-campaigns .ps-dragzone{padding:0 20px 10px;flex-shrink:0;touch-action:none}
-#prime-square-campaigns .ps-sheethandle{width:100%;height:23px;padding:0;border:0;background:none;display:grid;place-items:center}
-#prime-square-campaigns .ps-sheethandle span{width:38px;height:4px;border-radius:4px;background:#d9dce0}
+#prime-square-campaigns .ps-detail-scroll{overflow-y:auto;overscroll-behavior:contain;padding:12px var(--ps-browse-inset)}
+#prime-square-campaigns .ps-detail-scroll .ps-nativehero{position:relative;inset:auto;transform:none;width:100%;max-width:680px;margin:0 auto 12px}
+#prime-square-campaigns .ps-detailsheet{max-width:680px;margin:0 auto;padding:16px 18px 4px;background:#fff;border:1px solid var(--ps-line);border-radius:16px}
 #prime-square-campaigns .ps-sheetpills{display:flex;gap:7px;flex-wrap:wrap}
 #prime-square-campaigns .ps-sheetpills span{padding:5px 11px;border-radius:20px;background:#f3f3f5;color:#717581;font-size:11px}
-#prime-square-campaigns .ps-dragzone h1{font-size:24px;line-height:1.25;font-weight:750;letter-spacing:-.8px;margin:10px 0 0}
-#prime-square-campaigns .ps-sheetbody{overflow:auto;min-height:0;flex:1;padding:0 20px 130px;overscroll-behavior:contain}
+#prime-square-campaigns .ps-detailsheet h1{font-size:24px;line-height:1.25;font-weight:750;letter-spacing:-.8px;margin:10px 0 0}
+#prime-square-campaigns .ps-sheetbody{display:flow-root}
 #prime-square-campaigns .ps-sheetbody p{white-space:pre-wrap;overflow-wrap:anywhere;color:#717581;font-size:15px;line-height:1.6;margin:8px 0 20px}
 #prime-square-campaigns .ps-sheetdate{display:flex;gap:10px;align-items:center;border-top:1px solid #e8e8ec;padding:14px 0;color:#717581;font-size:11px}
 #prime-square-campaigns .ps-sheetdate svg{width:26px;height:26px}
 #prime-square-campaigns .ps-sheetdate strong{display:block;color:#717581;font-weight:600;font-size:13px;margin-top:3px}
-#prime-square-campaigns .ps-slidefooter{position:absolute;bottom:0;left:0;right:0;z-index:8;padding:18px 28px 12px;background:linear-gradient(transparent,#fff 17%)}
-#prime-square-campaigns .ps-slidefooter .ps-slide{margin:0;height:58px;position:relative;padding:3px;background:#ff3131;border:1px solid #ff3131;box-shadow:0 5px 16px #ff31311f;overflow:hidden}
+#prime-square-campaigns .ps-slidefooter{padding:12px var(--ps-browse-inset);background:#fff;border-top:1px solid var(--ps-line)}
+#prime-square-campaigns .ps-slidefooter>*{max-width:680px;margin-inline:auto}
+#prime-square-campaigns .ps-slidefooter .ps-slide{margin-block:0;height:58px;position:relative;padding:3px;background:#ff3131;border:1px solid #ff3131;box-shadow:0 5px 16px #ff31311f;overflow:hidden}
 #prime-square-campaigns .ps-code-thumb{position:absolute;left:8px;top:calc(50% - 23px);z-index:2;display:grid;place-items:center;width:46px;height:46px;border-radius:50%;background:#fff;color:var(--ps-red);touch-action:none;user-select:none;-webkit-touch-callout:none;cursor:grab}
 #prime-square-campaigns .ps-code-thumb:focus-visible{outline:2px solid #34363a;outline-offset:-4px}
 #prime-square-campaigns .ps-code-thumb svg{width:23px;height:23px;pointer-events:none}
@@ -209,7 +205,6 @@
 #prime-square-campaigns .ps-copydialog .ps-code{font-size:23px;background:#f0f1f4;color:#171a22;letter-spacing:0;margin:16px 0 14px}
 #prime-square-campaigns .ps-copyclose{position:absolute;top:10px;right:10px;border:0;background:none;color:#80848e;padding:10px}
 #prime-square-campaigns .ps-copystay{width:100%;min-height:48px;margin-top:8px;border:0;background:none;color:#80848e;font-size:16px;font-weight:600}
-@media(prefers-reduced-motion:reduce){#prime-square-campaigns .ps-detailsheet{transition:none}}
 #prime-square-campaigns .ps-home .ps-rounds{padding-top:10px;padding-bottom:24px;margin:0}
 #prime-square-campaigns #ps-discovery>.ps-carousel.small{padding-bottom:0}
 #prime-square-campaigns #ps-discovery>.ps-brandrounds{padding-top:24px;padding-bottom:24px;margin:0}
@@ -288,8 +283,6 @@
 #prime-square-campaigns .ps-nativelogo{padding:22px}
 #prime-square-campaigns .ps-nativelist img{width:96px;height:96px;flex-basis:96px}
 #prime-square-campaigns .ps-nativehero{box-shadow:0 5px 18px rgba(23,26,34,.045)}
-#prime-square-campaigns .ps-detailsheet[data-snap=middle]{top:var(--sheet-middle-top,40%)}
-#prime-square-campaigns .ps-detailsheet[data-snap=collapsed]{top:var(--sheet-collapsed-top,52%)}
 
 /* Large card width and height are both 80% of the approved original (78% rail width). */
 
@@ -508,14 +501,14 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
 }
 #prime-square-campaigns .ps-browseheader .ps-search {
   height:38px;gap:10px;padding:0 13px;border:1px solid white;border-radius:20px;
-  background:#fffafa;color:#373037;
+  background:#fffafa;color:#665d63;
 }
 #prime-square-campaigns .ps-browseheader .ps-search:focus-within {border-color:#ffbfc5}
 #prime-square-campaigns .ps-browseheader .ps-search input {font-size:16px}
 #prime-square-campaigns .ps-browseheader .ps-searchfield:has(.ps-searchhint) input::placeholder {color:transparent}
 #prime-square-campaigns .ps-searchhint {
   position:absolute;inset:0;display:flex;align-items:center;gap:6px;
-  pointer-events:none;color:#665d63;font-size:14px;white-space:nowrap;
+  pointer-events:none;color:inherit;font-size:14px;white-space:nowrap;
 }
 #prime-square-campaigns .ps-searchhint strong {color:var(--ps-red);font-size:18px;font-weight:750}
 #prime-square-campaigns .ps-search input:not(:placeholder-shown)+.ps-searchhint {display:none}
@@ -673,3 +666,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f7f7f8}body{font-fami
   width:24px;height:24px;border-radius:8px;background:#ffffff21;
 }
 #prime-square-campaigns .ps-homequick svg {width:15px;height:15px}
+
+#prime-square-campaigns .ps-realdetail .ps-detailtop{background:var(--ps-red)}
+#prime-square-campaigns .ps-realdetail .ps-detailtop :is(strong,button){color:#fff}
+#prime-square-campaigns .ps-realdetail .ps-detailtop button:focus-visible{outline-color:#fff}
