@@ -12,14 +12,17 @@ for(const event of ['copy','cut','contextmenu','dragstart']){
 let lastControlTouch;
 document.addEventListener('touchstart',e=>{
  const control=e.target.closest('button,a[href]');
- lastControlTouch=e.touches.length===1&&control?{control,started:performance.now()}:null;
+ lastControlTouch=e.touches.length===1&&control?{control,started:e.timeStamp}:null;
+},{capture:true,passive:true});
+document.addEventListener('touchend',e=>{
+ if(lastControlTouch)lastControlTouch.ended=e.timeStamp;
 },{capture:true,passive:true});
 document.addEventListener('keydown',()=>{lastControlTouch=null;},true);
 document.addEventListener('click',e=>{
  const touch=lastControlTouch;
  lastControlTouch=null;
  if(!touch||e.target.closest('button,a[href]')!==touch.control||
-    performance.now()-touch.started<500)return;
+    (touch.ended??e.timeStamp)-touch.started<500)return;
  e.preventDefault();
  e.stopImmediatePropagation();
 },true);
