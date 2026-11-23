@@ -80,7 +80,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
   await page.locator('[data-newest="1"]').tap();await headerStyle('.ps-back>span:first-of-type');assert.equal(await page.locator('.ps-newestpage h2').innerText(),'En Yeniler');
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
-  async function checkSearchStyle(branded){
+  async function checkSearchStyle(){
    const metrics=await page.locator('.ps-search').evaluate(el=>{
     const css=getComputedStyle(el),box=el.getBoundingClientRect();
     const field=el.querySelector('input'),input=field.getBoundingClientRect();
@@ -88,18 +88,15 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
      fontSize:getComputedStyle(field).fontSize,placeholderSize:getComputedStyle(field,'::placeholder').fontSize,
      height:box.height,centerOffset:Math.abs((box.top+box.bottom-input.top-input.bottom)/2)};
    });
-   if(branded){
-    assert.deepEqual(metrics,{background:'rgb(255, 250, 250)',border:'rgb(255, 255, 255)',radius:'20px',fontSize:'16px',placeholderSize:'16px',height:38,centerOffset:0});
-    return;
-   }
-   assert.deepEqual(metrics,{background:'rgb(255, 255, 255)',border:'rgb(237, 237, 239)',radius:'10px',fontSize:'13px',placeholderSize:'13px',height:36,centerOffset:0});
+   assert.deepEqual(metrics,{background:'rgb(255, 250, 250)',border:'rgb(255, 255, 255)',radius:'20px',fontSize:'16px',placeholderSize:'16px',height:38,centerOffset:0});
   }
   // All three tab headers keep one usable search field and a 44px back target.
   const browseHeadingMetrics=[];
   for(const name of ['Markalar','Kampanyalar','Favoriler']){
    await page.getByRole('button',{name,exact:true}).tap();
    const header=page.locator('.ps-pagesearchheader');
-   await checkSearchStyle(name!=='Favoriler');
+   await checkSearchStyle();
+   assert.equal(await header.locator('..').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 49, 49)');
    assert.equal(await header.locator('input').count(),1);
    assert.equal(await header.locator('button').count(),1);
    const bounds=await header.evaluate(el=>{const b=el.querySelector('button').getBoundingClientRect(),s=el.querySelector('.ps-search').getBoundingClientRect();return {backWidth:b.width,backHeight:b.height,left:s.left,right:s.right,top:s.top,backTop:b.top,width:innerWidth};});
@@ -124,7 +121,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
     assert.deepEqual(railSpacing,['8px','8px','8px',8,'14px','14px']);
     assert.deepEqual(await page.locator('.ps-allfilters').evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderTopColor];}),['rgb(80, 80, 90)','rgb(237, 237, 239)']);
     const activeTab=page.locator('.ps-categorytabs button[aria-pressed="true"]');
-    assert.deepEqual(await activeTab.evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.backgroundColor,s.borderTopLeftRadius];}),['rgb(197, 26, 44)','rgb(255, 250, 250)','11px']);
+    assert.deepEqual(await activeTab.evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.backgroundColor,s.borderTopLeftRadius];}),['rgb(255, 49, 49)','rgb(255, 250, 250)','11px']);
     assert.deepEqual(await page.locator('.ps-quickrail button').first().evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderTopColor,s.backgroundColor,s.fontWeight];}),['rgb(80, 80, 90)','rgb(237, 237, 239)','rgb(255, 255, 255)','700']);
     const stripStyle=await page.locator('.ps-quickfilters').evaluate(el=>{
      const css=getComputedStyle(el),results=el.closest('.ps-browseheader').nextElementSibling;
@@ -160,7 +157,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   const dialog=page.getByRole('dialog');await dialog.waitFor();assert.equal(await dialog.locator('.ps-filterclose .lucide-x').count(),1);
   const bounds=await dialog.boundingBox();assert(bounds.y<=1&&Math.abs(bounds.height-1000)<2,'Sheet must cover entire web viewport below native status bar');
   assert(await page.locator('#ps-screen').evaluate(el=>el.inert));
-  assert.match(await dialog.locator('.ps-filterdialoghead').evaluate(el=>getComputedStyle(el).backgroundImage),/^linear-gradient/);
+  assert.equal(await dialog.locator('.ps-filterdialoghead').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 49, 49)');
   assert.equal(await dialog.locator('.ps-filterchips').first().evaluate(el=>getComputedStyle(el).gap),'8px');
   // All sheet filter families share compact, centered controls with a persistent gray border.
   const filterMetrics=await dialog.locator('.ps-filterchips button').evaluateAll(nodes=>nodes.map(el=>{
@@ -172,7 +169,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   assert(filterMetrics.length>20,'Exercise all filter groups, not just the quick toolbar');
   for(const m of filterMetrics){
    assert.equal(m.color,m.selected?'rgb(255, 255, 255)':'rgb(80, 80, 90)',m.label);
-   assert.equal(m.background,m.selected?'rgb(197, 26, 44)':'rgb(255, 255, 255)',m.label);
+   assert.equal(m.background,m.selected?'rgb(255, 49, 49)':'rgb(255, 255, 255)',m.label);
    assert.equal(m.border,'rgb(237, 237, 239)',m.label);
    assert.equal(m.weight,'700',m.label);
    assert.equal(m.align,'center',m.label);assert.equal(m.justify,'center',m.label);assert.equal(m.textAlign,'center',m.label);
@@ -191,7 +188,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   await iconFilter.tap();
   await page.locator('[data-filter-group="brands"][data-filter-value="Solgar"]').tap();
   await page.locator('[data-filter-apply]').tap();
-  assert.deepEqual(await page.locator('.ps-quickrail button[data-filter-open="brands"]').evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderTopColor,s.backgroundColor,s.fontWeight];}),['rgb(255, 255, 255)','rgb(237, 237, 239)','rgb(197, 26, 44)','700']);
+  assert.deepEqual(await page.locator('.ps-quickrail button[data-filter-open="brands"]').evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderTopColor,s.backgroundColor,s.fontWeight];}),['rgb(255, 255, 255)','rgb(237, 237, 239)','rgb(255, 49, 49)','700']);
   assert.equal(await page.locator('#ps-native-results [data-offer="valid"]').count(),1);
   assert.equal(await page.locator('#ps-native-results [data-offer="other"]').count(),0);
   await iconFilter.tap();
