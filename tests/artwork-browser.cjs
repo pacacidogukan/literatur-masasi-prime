@@ -59,12 +59,16 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   assert(Math.abs(circleGap-12)<.5,'Visible brand-circle gap must be halved from 24px to 12px');
   // Category artwork is a four-column square grid after the brand campaign carousel.
   const grid=page.locator('.ps-categorygrid');assert.equal(await grid.locator('button').count(),12);
-  const layout=await grid.evaluate(el=>{const cards=[...el.querySelectorAll('button>b')].map(n=>{const r=n.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};});const section=el.closest('.ps-categorysection'),brand=document.querySelector('.ps-brandcampaigns');return {cards,columns:getComputedStyle(el).gridTemplateColumns.split(' ').length,after:!!(brand.compareDocumentPosition(section)&Node.DOCUMENT_POSITION_FOLLOWING)};});
+  const layout=await grid.evaluate(el=>{const cards=[...el.querySelectorAll('button>b')].map(n=>{const r=n.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};});const tiles=[...el.querySelectorAll('button')].map(n=>{const r=n.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom};});const section=el.closest('.ps-categorysection'),brand=document.querySelector('.ps-brandcampaigns');return {cards,tiles,columns:getComputedStyle(el).gridTemplateColumns.split(' ').length,after:!!(brand.compareDocumentPosition(section)&Node.DOCUMENT_POSITION_FOLLOWING)};});
   assert.equal(layout.columns,4);assert(layout.after);
-  assert(Math.abs(layout.cards[1].x-layout.cards[0].x-layout.cards[0].w-12)<.5,'Category horizontal gap must equal shared 12px card gap');
+  for(const [i,tile] of layout.tiles.entries()){
+   if(i%4)assert(Math.abs(tile.left-layout.tiles[i-1].right-12)<.5,'Category columns share a 12px gap');
+   if(i>=4)assert(Math.abs(tile.top-layout.tiles[i-4].bottom-12)<.5,'Category rows share the same 12px gap');
+  }
+  assert.equal(await grid.locator('button>b').first().evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 222, 222)');
   for(const card of layout.cards)assert(Math.abs(card.w-card.h)<.5,'Category image must remain square');
   assert.equal(new Set(layout.cards.map(c=>Math.round(c.y))).size,3);
-  const atlas=await page.evaluate(()=>new Promise(resolve=>{const i=new Image();i.onload=()=>resolve([i.naturalWidth,i.naturalHeight]);i.onerror=()=>resolve(null);i.src='assets/category-powder-red-v2.webp';}));
+  const atlas=await page.evaluate(()=>new Promise(resolve=>{const i=new Image();i.onload=()=>resolve([i.naturalWidth,i.naturalHeight]);i.onerror=()=>resolve(null);i.src='assets/category-prime-light-red.webp';}));
   assert.deepEqual(atlas,[1024,768]);
   async function geometry(selector){return page.locator(selector).evaluateAll(nodes=>nodes.map(el=>{const f=el.querySelector('.ps-artwork-frame'),i=f?.querySelector('img'),a=el.getBoundingClientRect(),b=f?.getBoundingClientRect();return {outerWidth:a.width,slot:f?.dataset.artworkSlot,w:b?.width,h:b?.height,left:b?.left-a.left,right:a.right-b?.right,top:b?.top-a.top,bottom:a.bottom-b?.bottom,fit:i&&getComputedStyle(i).objectFit,state:f?.dataset.artworkState};}));}
   for(const selector of ['.ps-poster.large','.ps-poster.small','.ps-codebanner']){
