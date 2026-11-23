@@ -118,6 +118,27 @@ final class PrimeFlowTests: XCTestCase {
         XCTAssertTrue(button("Solgar kampanyalarını aç").waitForExistence(timeout: 15))
     }
 
+    func testBrandCampaignLongPressDoesNotOfferSystemCopy() {
+        home()
+        tap("Markalar")
+        tap("Solgar kampanyalarını aç")
+        let header = app.webViews.staticTexts["Marka Kampanyaları"].firstMatch
+        XCTAssertTrue(header.waitForExistence(timeout: 15))
+        let targets = [
+            header.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)),
+            app.webViews.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.34))
+        ]
+        for target in targets {
+            target.press(forDuration: 1.0)
+            for title in ["Copy", "Kopyala"] {
+                XCTAssertFalse(app.menuItems[title].exists)
+                XCTAssertFalse(app.buttons[title].exists)
+            }
+        }
+        tap("Geri")
+        XCTAssertTrue(button("Solgar kampanyalarını aç").waitForExistence(timeout: 15))
+    }
+
     func testProfileNamePersists() {
         login(); tap("Profili aç"); tap("Profili düzenle")
         let expectedName = "Test Kullanıcısı"

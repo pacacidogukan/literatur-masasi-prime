@@ -24,6 +24,13 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
     controls:['.ps-homebrand span','.ps-homequick button','.ps-nav button','.ps-sectionheading h2'].map(family)};
   });
   assert.deepEqual(outfit,{loaded:true,controls:['Outfit','Outfit','Outfit','Outfit']});
+  if(width===390){
+   const display=page.locator('.ps-homebrand .ps-wordmark');
+   assert.equal(await display.evaluate(el=>getComputedStyle(el).userSelect),'none');
+   assert.deepEqual(await display.evaluate(el=>['copy','cut','contextmenu','dragstart'].map(type=>
+    el.dispatchEvent(new Event(type,{bubbles:true,cancelable:true}))
+   )),[false,false,false,false]);
+  }
   const homeHeader=page.locator('.ps-homeheader');
   assert.equal(await homeHeader.evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 49, 49)');
   assert.equal(await page.evaluate(()=>window.primeHeaderIsRed),true);
@@ -122,6 +129,12 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   assert.equal(await page.locator('.ps-discountpage [data-offer="valid"]').count(),1);
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
   async function checkSearchStyle(){
+   const editPolicy=await page.locator('.ps-search input').evaluate(el=>[
+    getComputedStyle(el).userSelect,
+    el.dispatchEvent(new Event('copy',{bubbles:true,cancelable:true})),
+    el.dispatchEvent(new Event('paste',{bubbles:true,cancelable:true}))
+   ]);
+   assert.deepEqual(editPolicy,['text',false,true]);
    const metrics=await page.locator('.ps-search').evaluate(el=>{
     const css=getComputedStyle(el),box=el.getBoundingClientRect();
     const field=el.querySelector('input'),input=field.getBoundingClientRect();
@@ -359,6 +372,11 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   // Clicking the nested title must open detail from a brand list AND search list.
   await page.getByRole('button',{name:'Markalar',exact:true}).tap();await page.getByRole('button',{name:'Solgar kampanyalarını aç',exact:true}).tap();
   await headerStyle('.ps-campaignlist-header strong',true);
+  const selectionPolicies=await page.locator('.ps-campaignlist-header strong,.ps-brandcampaign-page h2,.ps-brandcampaign-page .ps-nativelist strong').evaluateAll(nodes=>
+   nodes.map(node=>getComputedStyle(node).userSelect)
+  );
+  assert(selectionPolicies.length>=3);
+  assert(selectionPolicies.every(policy=>policy==='none'));
   assert.equal(await page.locator('.ps-brandcampaign-page h2').innerText(),'Solgar');
   assert.equal(await page.locator('.ps-brandcampaign-page [role="status"]').innerText(),'1 kampanya');
   await page.getByRole('button',{name:'Solgar: Test ayrıcalığı',exact:true}).locator('.ps-artwork-frame').tap();
