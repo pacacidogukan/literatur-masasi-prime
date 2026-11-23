@@ -98,7 +98,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    await page.getByRole('button',{name,exact:true}).tap();
    const header=page.locator('.ps-pagesearchheader');
    await checkSearchStyle();
-   assert.equal(await header.locator('.ps-searchhint').innerText(),'Prime içinde ara');
+   assert.equal(await header.locator('.ps-searchhint').textContent(),'Prime içinde ara');
    assert.equal(await header.locator('..').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 49, 49)');
    assert.equal(await header.locator('input').count(),1);
    assert.equal(await header.locator('button').count(),1);
