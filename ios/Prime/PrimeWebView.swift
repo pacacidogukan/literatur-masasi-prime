@@ -3,7 +3,7 @@ import WebKit
 import UIKit
 
 enum PrimeSurface {
-    static let home = UIColor(red: 1, green: 49.0 / 255.0, blue: 49.0 / 255.0, alpha: 1)
+    static let redHeader = UIColor(red: 1, green: 49.0 / 255.0, blue: 49.0 / 255.0, alpha: 1)
     // Matches --ps-header-bg (#f7f7f8) in the bundled web interface.
     static let header = UIColor(red: 247.0 / 255.0, green: 247.0 / 255.0,
                                 blue: 248.0 / 255.0, alpha: 1)
@@ -36,8 +36,8 @@ final class PrimeWebContainer: UIView {
 
 struct PrimeWebView: UIViewRepresentable {
     @Binding var isLaunching: Bool
-    @Binding var isHome: Bool
-    func makeCoordinator() -> Coordinator { Coordinator(isLaunching: $isLaunching, isHome: $isHome) }
+    @Binding var usesRedHeader: Bool
+    func makeCoordinator() -> Coordinator { Coordinator(isLaunching: $isLaunching, usesRedHeader: $usesRedHeader) }
     func makeUIView(context: Context) -> PrimeWebContainer {
         let configuration = WKWebViewConfiguration()
         configuration.ignoresViewportScaleLimits = false
@@ -84,7 +84,7 @@ struct PrimeWebView: UIViewRepresentable {
     func updateUIView(_ container: PrimeWebContainer, context: Context) {
         let view = container.webView
         context.coordinator.isLaunching = $isLaunching
-        context.coordinator.isHome = $isHome
+        context.coordinator.usesRedHeader = $usesRedHeader
         view.backgroundColor = isLaunching ? .white : PrimeSurface.header
         view.scrollView.backgroundColor = view.backgroundColor
         container.backgroundColor = view.backgroundColor
@@ -100,10 +100,10 @@ struct PrimeWebView: UIViewRepresentable {
 
     final class Coordinator: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDelegate, WKUIDelegate {
         var isLaunching: Binding<Bool>
-        var isHome: Binding<Bool>
-        init(isLaunching: Binding<Bool>, isHome: Binding<Bool>) {
+        var usesRedHeader: Binding<Bool>
+        init(isLaunching: Binding<Bool>, usesRedHeader: Binding<Bool>) {
             self.isLaunching = isLaunching
-            self.isHome = isHome
+            self.usesRedHeader = usesRedHeader
             super.init()
         }
         private weak var foregroundWebView: WKWebView?
@@ -154,10 +154,10 @@ struct PrimeWebView: UIViewRepresentable {
                 guard let body = payload["body"] as? [String: Any], let visible = body["visible"] as? Bool else {
                     replyHandler(nil, "Geçersiz ekran durumu."); return
                 }
-                let home = body["home"] as? Bool ?? false
+                let redHeader = body["redHeader"] as? Bool ?? false
                 Task { @MainActor in
                     self.isLaunching.wrappedValue = visible
-                    self.isHome.wrappedValue = home
+                    self.usesRedHeader.wrappedValue = redHeader
                     replyHandler(["status":200, "data":["ok":true]], nil)
                 }
                 return
