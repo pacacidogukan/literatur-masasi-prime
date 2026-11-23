@@ -7,6 +7,23 @@ for(const event of ['copy','cut','contextmenu','dragstart']){
  document.addEventListener(event,e=>e.preventDefault(),true);
 }
 
+// A WebKit compatibility click may arrive even after a touch was cancelled.
+// Keep the original contact until a click consumes it or a new contact replaces it.
+let lastControlTouch;
+document.addEventListener('touchstart',e=>{
+ const control=e.target.closest('button,a[href]');
+ lastControlTouch=e.touches.length===1&&control?{control,started:performance.now()}:null;
+},{capture:true,passive:true});
+document.addEventListener('keydown',()=>{lastControlTouch=null;},true);
+document.addEventListener('click',e=>{
+ const touch=lastControlTouch;
+ lastControlTouch=null;
+ if(!touch||e.target.closest('button,a[href]')!==touch.control||
+    performance.now()-touch.started<500)return;
+ e.preventDefault();
+ e.stopImmediatePropagation();
+},true);
+
 // Own single-finger navigation taps before WKWebView can interpret a second
 // touch as smart zoom. Keep keyboard/VoiceOver clicks on the normal route.
 function installNavigationTouchGuard(nav){
