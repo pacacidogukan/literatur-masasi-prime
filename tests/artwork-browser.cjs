@@ -26,7 +26,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   assert.deepEqual(outfit,{loaded:true,controls:['Outfit','Outfit','Outfit','Outfit']});
   if(width===390){
    const display=page.locator('.ps-homebrand .ps-wordmark');
-   assert.equal(await display.evaluate(el=>getComputedStyle(el).userSelect),'none');
+   assert.equal(await display.evaluate(el=>getComputedStyle(el).userSelect||getComputedStyle(el).getPropertyValue('-webkit-user-select')),'none');
    assert.deepEqual(await display.evaluate(el=>['copy','cut','contextmenu','dragstart'].map(type=>
     el.dispatchEvent(new Event(type,{bubbles:true,cancelable:true}))
    )),[false,false,false,false]);
@@ -130,7 +130,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
   async function checkSearchStyle(){
    const editPolicy=await page.locator('.ps-search input').evaluate(el=>[
-    getComputedStyle(el).userSelect,
+    getComputedStyle(el).userSelect||getComputedStyle(el).getPropertyValue('-webkit-user-select'),
     el.dispatchEvent(new Event('copy',{bubbles:true,cancelable:true})),
     el.dispatchEvent(new Event('paste',{bubbles:true,cancelable:true}))
    ]);
@@ -373,7 +373,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   await page.getByRole('button',{name:'Markalar',exact:true}).tap();await page.getByRole('button',{name:'Solgar kampanyalarını aç',exact:true}).tap();
   await headerStyle('.ps-campaignlist-header strong',true);
   const selectionPolicies=await page.locator('.ps-campaignlist-header strong,.ps-brandcampaign-page h2,.ps-brandcampaign-page .ps-nativelist strong').evaluateAll(nodes=>
-   nodes.map(node=>getComputedStyle(node).userSelect)
+   nodes.map(node=>getComputedStyle(node).userSelect||getComputedStyle(node).getPropertyValue('-webkit-user-select'))
   );
   assert(selectionPolicies.length>=3);
   assert(selectionPolicies.every(policy=>policy==='none'));
