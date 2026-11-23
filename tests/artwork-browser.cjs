@@ -296,6 +296,9 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   }
   // Clicking the nested title must open detail from a brand list AND search list.
   await page.getByRole('button',{name:'Markalar',exact:true}).tap();await page.getByRole('button',{name:'Solgar kampanyalarını aç',exact:true}).tap();
+  await headerStyle('.ps-brandcampaign-header strong',true);
+  assert.equal(await page.locator('.ps-brandcampaign-page h2').innerText(),'Solgar');
+  assert.equal(await page.locator('.ps-brandcampaign-page [role="status"]').innerText(),'1 kampanya');
   await page.getByRole('button',{name:'Solgar: Test ayrıcalığı',exact:true}).locator('.ps-artwork-frame').tap();
   await page.getByText('Prime Ayrıcalıkları',{exact:true}).waitFor();
   await headerStyle('.ps-detailtop>strong',true);
