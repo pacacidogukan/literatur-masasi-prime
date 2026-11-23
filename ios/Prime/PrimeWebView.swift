@@ -72,6 +72,12 @@ struct PrimeWebView: UIViewRepresentable {
         view.scrollView.bounces = false
         view.scrollView.pinchGestureRecognizer?.isEnabled = false
         view.allowsLinkPreview = false
+        // Consume stationary holds before WebKit treats their release as a tap.
+        let longPress = UILongPressGestureRecognizer(
+            target: context.coordinator, action: #selector(Coordinator.consumeLongPress)
+        )
+        longPress.minimumPressDuration = 0.4
+        view.addGestureRecognizer(longPress)
         view.allowsBackForwardNavigationGestures = false
         if let root = Bundle.main.url(forResource: "Web", withExtension: nil),
            FileManager.default.fileExists(atPath: root.appendingPathComponent("index.html").path) {
@@ -107,6 +113,10 @@ struct PrimeWebView: UIViewRepresentable {
             self.usesRedHeader = usesRedHeader
             super.init()
         }
+        @objc func consumeLongPress() {
+            // Recognition cancels the touch sequence. No action is performed.
+        }
+
         private weak var foregroundWebView: WKWebView?
         func observeForeground(_ view: WKWebView) {
             foregroundWebView = view
