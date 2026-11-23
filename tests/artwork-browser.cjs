@@ -98,6 +98,11 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    await page.getByRole('button',{name,exact:true}).tap();
    const header=page.locator('.ps-pagesearchheader');
    await checkSearchStyle();
+   const searchColors=await header.locator('.ps-search').evaluate(el=>[
+    getComputedStyle(el.querySelector('svg')).color,
+    getComputedStyle(el.querySelector('.ps-searchhint')).color,
+   ]);
+   assert.equal(searchColors[0],searchColors[1]);
    assert.equal(await header.locator('.ps-searchhint').textContent(),'Prime içinde ara');
    assert.equal(await header.locator('..').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 49, 49)');
    assert.equal(await header.locator('input').count(),1);
@@ -279,11 +284,21 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   await page.waitForFunction(()=>document.querySelector('.ps-poster.large .ps-artwork-frame').dataset.artworkState==='invalid');
   assert(await broken.locator('.ps-artworkfallback').isVisible());
 
+  async function checkDetailLayout(){
+   const layout=await page.locator('.ps-realdetail').evaluate(el=>{
+    const scroll=el.querySelector('.ps-detail-scroll'),art=el.querySelector('.ps-nativehero');
+    const contents=el.querySelector('.ps-detailsheet'),footer=el.querySelector('.ps-slidefooter');
+    return {gap:contents.getBoundingClientRect().top-art.getBoundingClientRect().bottom,
+     boundary:footer.getBoundingClientRect().top-scroll.getBoundingClientRect().bottom,
+     nestedOverflow:getComputedStyle(contents.querySelector('.ps-sheetbody')).overflowY};
+   });
+   assert.deepEqual(layout,{gap:12,boundary:0,nestedOverflow:'visible'});
+  }
   // Clicking the nested title must open detail from a brand list AND search list.
   await page.getByRole('button',{name:'Markalar',exact:true}).tap();await page.getByRole('button',{name:'Solgar kampanyalarını aç',exact:true}).tap();
   await page.getByRole('button',{name:'Solgar: Test ayrıcalığı',exact:true}).locator('.ps-artwork-frame').tap();
   await page.getByText('Prime Ayrıcalıkları',{exact:true}).waitFor();
-  await headerStyle('.ps-detailtop>strong');
+  await headerStyle('.ps-detailtop>strong',true);
   if(width===390){
    const track=page.locator('.ps-realtrack'),thumb=track.getByRole('slider');
    assert.equal(await track.locator('input').count(),0,'Track must not expose a native range hit target');
@@ -330,7 +345,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    await page.mouse.up();
    await page.locator('.ps-realcodereveal strong').filter({hasText:/^TEST$/}).waitFor();
   }
-  for(const g of await geometry('.ps-nativehero'))assert(Math.abs(g.w/g.h-1.5)<.002);assert(await page.evaluate(()=>document.querySelector('.ps-detailsheet').getBoundingClientRect().top<document.querySelector('.ps-slidefooter').getBoundingClientRect().top-80),'Detail drag handle/conditions must remain above footer');
+  for(const g of await geometry('.ps-nativehero'))assert(Math.abs(g.w/g.h-1.5)<.002);await checkDetailLayout();
   await page.getByRole('button',{name:'Geri',exact:true}).tap();await page.getByRole('button',{name:'Ana Sayfa',exact:true}).tap();
   await page.getByRole('button',{name:'Kampanyalar',exact:true}).tap();
   await page.getByRole('textbox',{name:'Marka veya kampanya ara'}).fill('Test ayrıcalığı');
@@ -340,6 +355,8 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   await page.getByRole('textbox',{name:'Marka veya kampanya ara'}).fill('Eski format');
   await page.locator('#ps-native-results .ps-nativelist strong').tap();
   await page.getByText('Prime Ayrıcalıkları',{exact:true}).waitFor();
+  await checkDetailLayout();
+  await page.getByRole('link',{name:'Kampanya sayfasına git',exact:true}).waitFor();
   assert.equal(await page.locator('.ps-nativehero img').count(),0,'Legacy portrait must never enter the detail slot');
   await page.getByRole('button',{name:'Ana Sayfa',exact:true}).count();
   if(width===390){fs.mkdirSync('ci-artifacts/artwork',{recursive:true});await page.screenshot({path:'ci-artifacts/artwork/legacy-accessible.png'});}
