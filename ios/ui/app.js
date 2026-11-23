@@ -2,6 +2,11 @@
 const artworkContract=globalThis.primeArtworkContract;
 const root=document.getElementById('prime-square-campaigns'),screen=root.querySelector('#ps-screen');
 
+// The dedicated campaign-code button uses the native bridge, not DOM copy.
+for(const event of ['copy','cut','contextmenu','dragstart']){
+ document.addEventListener(event,e=>e.preventDefault(),true);
+}
+
 // Own single-finger navigation taps before WKWebView can interpret a second
 // touch as smart zoom. Keep keyboard/VoiceOver clicks on the normal route.
 function installNavigationTouchGuard(nav){
