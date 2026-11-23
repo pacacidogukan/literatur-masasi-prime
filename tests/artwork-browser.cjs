@@ -2,7 +2,7 @@
 const {chromium,webkit}=require('playwright'),fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict'),vm=require('node:vm');
 const ctx={};vm.runInNewContext(fs.readFileSync('ios/ui/artwork-contract.js','utf8'),ctx);const contract=ctx.primeArtworkContract;
 const artwork=Object.fromEntries(Object.keys(contract.slots).map(s=>[s,'https://artwork.test/'+s+'.svg']));
-const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'Test ayrıcalığı',asset:'solgar.png',hasCode:1,channel:'https://example.com',expires:Math.floor(Date.now()/1000)+3600,publishedAt:Math.floor(Date.now()/1000),cardArtwork:artwork},{id:'other',productCategories:['care'],name:'Other',offer:'İkinci kampanya',hasCode:0,cardArtwork:artwork},{id:'legacy',productCategories:['makeup'],name:'Eski format',offer:'Görseli hazırlanıyor',photo:'https://artwork.test/legacy.svg',hasCode:0}];
+const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'Test ayrıcalığı',discountPercent:25,asset:'solgar.png',hasCode:1,channel:'https://example.com',expires:Math.floor(Date.now()/1000)+3600,publishedAt:Math.floor(Date.now()/1000),cardArtwork:artwork},{id:'other',productCategories:['care'],name:'Other',offer:'İkinci kampanya',hasCode:0,cardArtwork:artwork},{id:'legacy',productCategories:['makeup'],name:'Eski format',offer:'Görseli hazırlanıyor',photo:'https://artwork.test/legacy.svg',hasCode:0}];
 (async()=>{
  const base=path.resolve('ios/Prime/Resources/Web');
  const server=http.createServer((req,res)=>{const file=path.resolve(base,'.'+req.url.split('?')[0]);if(!file.startsWith(base+path.sep)){res.writeHead(403).end();return;}try{res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':file.endsWith('.html')?'text/html':file.endsWith('.woff2')?'font/woff2':'application/octet-stream');res.end(fs.readFileSync(file));}catch{res.writeHead(404).end();}});
@@ -86,14 +86,16 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   assert.equal(new Set(layout.cards.map(c=>Math.round(c.y))).size,3);
   const atlas=await page.evaluate(()=>new Promise(resolve=>{const i=new Image();i.onload=()=>resolve([i.naturalWidth,i.naturalHeight]);i.onerror=()=>resolve(null);i.src='assets/category-prime-light-red.webp';}));
   assert.deepEqual(atlas,[1024,768]);
-  const coupon=await grid.locator('[data-type="Kampanya Kodu"] .ps-atlasicon').evaluate(async el=>{
+  for(const [category,asset] of [['Kampanya Kodu','coupon'],['Üyelere Özel','members'],['Ödeme Avantajları','payment']]){
+   const artwork=await grid.locator(`[data-type="${category}"] .ps-atlasicon`).evaluate(async el=>{
    const url=getComputedStyle(el).backgroundImage.slice(5,-2);
    const img=new Image();
    img.src=url;
    await img.decode();
    return [new URL(url).pathname,img.naturalWidth,img.naturalHeight];
   });
-  assert.deepEqual(coupon,['/assets/category-approved-coupon.webp',256,256]);
+   assert.deepEqual(artwork,[`/assets/category-approved-${asset}.webp`,256,256]);
+  }
   async function geometry(selector){return page.locator(selector).evaluateAll(nodes=>nodes.map(el=>{const f=el.querySelector('.ps-artwork-frame'),i=f?.querySelector('img'),a=el.getBoundingClientRect(),b=f?.getBoundingClientRect();return {outerWidth:a.width,slot:f?.dataset.artworkSlot,w:b?.width,h:b?.height,left:b?.left-a.left,right:a.right-b?.right,top:b?.top-a.top,bottom:a.bottom-b?.bottom,fit:i&&getComputedStyle(i).objectFit,state:f?.dataset.artworkState};}));}
   for(const selector of ['.ps-poster.large','.ps-poster.small','.ps-codebanner']){
    for(const g of await geometry(selector)){if(selector==='.ps-poster.large')assert(g.outerWidth<=contract.maxLargeWidth+.1);if(selector==='.ps-poster.small')assert(g.outerWidth<=contract.maxCompactWidth+.1);const s=contract.slots[g.slot];assert(Math.abs(g.w/g.h-s.width/s.height)<.002,JSON.stringify({width,selector,g}));for(const edge of ['left','right','top','bottom'])assert(Math.abs(g[edge]-contract.inset)<.2,JSON.stringify({width,selector,g}));assert.equal(g.fit,'contain');}
@@ -108,7 +110,16 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   }
   await page.locator('[data-type="Kargo Avantajı"]').tap();await page.locator('.ps-categorytabs [aria-pressed="true"]').filter({hasText:'Kargo Avantajı'}).waitFor();
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
-  await page.locator('[data-newest="1"]').tap();await headerStyle('.ps-back>span:first-of-type');assert.equal(await page.locator('.ps-newestpage h2').innerText(),'En Yeniler');
+  await page.locator('[data-newest="1"]').tap();
+  await headerStyle('.ps-campaignlist-header strong',true);
+  assert.equal(await page.locator('.ps-newestpage h2').innerText(),'En Yeniler');
+  assert.equal(await page.evaluate(()=>window.primeHeaderIsRed),true);
+  await page.getByRole('button',{name:'Geri',exact:true}).tap();
+  await page.locator('[data-discount="25"]').tap();
+  await headerStyle('.ps-campaignlist-header strong',true);
+  assert.equal(await page.locator('.ps-discountpage h2').innerText(),'%25 ve üzeri');
+  assert.equal(await page.locator('.ps-discountpage [role="status"]').innerText(),'1 marka · 1 kampanya');
+  assert.equal(await page.locator('.ps-discountpage [data-offer="valid"]').count(),1);
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
   async function checkSearchStyle(){
    const metrics=await page.locator('.ps-search').evaluate(el=>{
@@ -261,7 +272,21 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   await page.locator('[data-filter-open="sort"]').tap();
   assert.equal(await dialog.locator('#ps-filter-title').innerText(),'Sırala');
   assert.deepEqual(await dialog.locator('.ps-filterbody>section').evaluateAll(nodes=>nodes.map(n=>n.id)),['ps-filter-sort']);
-  await dialog.locator('[data-filter-sort="newest"]').tap();await dialog.locator('[data-filter-apply]').tap();
+  const sortStyles=()=>dialog.locator('[data-filter-sort]').evaluateAll(buttons=>buttons.map(button=>{
+   const icon=button.querySelector('svg');
+   return [button.dataset.filterSort,getComputedStyle(button).backgroundColor,getComputedStyle(icon).color,icon.innerHTML];
+  }));
+  const beforeSort=await sortStyles();
+  assert.equal(new Set(beforeSort.map(option=>option[3])).size,4,'Each sort has a distinct icon');
+  assert.deepEqual(beforeSort.map(option=>option.slice(0,3)),[
+   ['discover','rgb(255, 49, 49)','rgb(255, 255, 255)'],
+   ...['newest','ending','discount'].map(option=>[option,'rgb(255, 255, 255)','rgb(255, 49, 49)'])
+  ]);
+  await dialog.locator('[data-filter-sort="newest"]').tap();
+  const afterSort=await sortStyles();
+  assert.deepEqual(afterSort[1].slice(0,3),['newest','rgb(255, 49, 49)','rgb(255, 255, 255)']);
+  assert.deepEqual(afterSort[0].slice(0,3),['discover','rgb(255, 255, 255)','rgb(255, 49, 49)']);
+  await dialog.locator('[data-filter-apply]').tap();
   assert.equal(await page.locator('[data-filter-open="sort"]').getAttribute('aria-label'),'Sırala: En yeniler');
   assert.equal(await page.locator('#ps-native-results [data-offer]').first().getAttribute('data-offer'),'valid');
   await page.locator('[data-filter-open="sort"]').tap();await dialog.locator('[data-filter-clean]').tap();await dialog.locator('[data-filter-apply]').tap();
@@ -333,7 +358,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   }
   // Clicking the nested title must open detail from a brand list AND search list.
   await page.getByRole('button',{name:'Markalar',exact:true}).tap();await page.getByRole('button',{name:'Solgar kampanyalarını aç',exact:true}).tap();
-  await headerStyle('.ps-brandcampaign-header strong',true);
+  await headerStyle('.ps-campaignlist-header strong',true);
   assert.equal(await page.locator('.ps-brandcampaign-page h2').innerText(),'Solgar');
   assert.equal(await page.locator('.ps-brandcampaign-page [role="status"]').innerText(),'1 kampanya');
   await page.getByRole('button',{name:'Solgar: Test ayrıcalığı',exact:true}).locator('.ps-artwork-frame').tap();
