@@ -25,8 +25,9 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   });
   assert.deepEqual(outfit,{loaded:true,controls:['Outfit','Outfit','Outfit','Outfit']});
   const homeHeader=page.locator('.ps-homeheader');
+  assert.equal(await homeHeader.evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 49, 49)');
   const shortcuts=homeHeader.locator('.ps-homequick button');
-  assert.deepEqual(await shortcuts.allTextContents(),['Kampanya kategorileri','Ürün kategorilerini keşfet','Tüm markalar']);
+  assert.deepEqual(await shortcuts.allTextContents(),['Kampanya kategorileri','Ürün kategorileri','Tüm markalar']);
   assert.equal(await homeHeader.locator('input,img').count(),0);
   assert.equal(await page.locator('.ps-productrail').count(),0);
   const shortcutLayout=await shortcuts.evaluateAll(nodes=>nodes.map(el=>({
@@ -72,9 +73,10 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Page overflows horizontally');
   // Compare the real computed styles across page and section headers.
   const sectionStyle=await page.locator('.ps-brandcampaigns h2').evaluate(el=>{const s=getComputedStyle(el);return [s.fontFamily,s.fontSize,s.fontWeight,s.color,s.letterSpacing]});
-  async function headerStyle(selector){
+  async function headerStyle(selector,red=false){
    const result=await page.locator(selector).evaluate(el=>{const s=getComputedStyle(el),h=el.parentElement,b=h.querySelector('[data-action="back"]'),r=b.getBoundingClientRect(),svg=b.querySelector('svg'),v=getComputedStyle(svg);return {title:[s.fontFamily,s.fontSize,s.fontWeight,s.color,s.letterSpacing],background:getComputedStyle(h).backgroundColor,back:getComputedStyle(b).color,w:r.width,h:r.height,icon:[v.width,v.height,v.strokeWidth]};});
-   assert.deepEqual(result.title,sectionStyle);assert.equal(result.background,'rgb(247, 247, 248)');assert.equal(result.back,sectionStyle[3]);assert(result.w>=44&&result.h>=44);assert.deepEqual(result.icon,['22px','22px','1.8px']);
+   const ink=red?'rgb(255, 255, 255)':sectionStyle[3];
+   assert.deepEqual(result.title,sectionStyle.map((value,index)=>index===3?ink:value));assert.equal(result.background,red?'rgb(255, 49, 49)':'rgb(247, 247, 248)');assert.equal(result.back,ink);assert(result.w>=44&&result.h>=44);assert.deepEqual(result.icon,['22px','22px','1.8px']);
   }
   await page.locator('[data-type="Kargo Avantajı"]').tap();await page.locator('.ps-categorytabs [aria-pressed="true"]').filter({hasText:'Kargo Avantajı'}).waitFor();
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
@@ -96,6 +98,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    await page.getByRole('button',{name,exact:true}).tap();
    const header=page.locator('.ps-pagesearchheader');
    await checkSearchStyle();
+   assert.equal(await header.locator('.ps-searchhint').innerText(),'Prime içinde ara');
    assert.equal(await header.locator('..').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 49, 49)');
    assert.equal(await header.locator('input').count(),1);
    assert.equal(await header.locator('button').count(),1);
@@ -122,7 +125,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
     assert.deepEqual(await page.locator('.ps-allfilters').evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderTopColor];}),['rgb(80, 80, 90)','rgb(237, 237, 239)']);
     const activeTab=page.locator('.ps-categorytabs button[aria-pressed="true"]');
     assert.deepEqual(await activeTab.evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.backgroundColor,s.borderTopLeftRadius];}),['rgb(255, 49, 49)','rgb(255, 250, 250)','11px']);
-    assert.deepEqual(await page.locator('.ps-quickrail button').first().evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderTopColor,s.backgroundColor,s.fontWeight];}),['rgb(80, 80, 90)','rgb(237, 237, 239)','rgb(255, 255, 255)','700']);
+    assert.deepEqual(await page.locator('.ps-quickrail button').first().evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderTopColor,s.backgroundColor,s.fontWeight];}),['rgb(80, 80, 90)','rgb(237, 237, 239)','rgb(255, 255, 255)','400']);
     const stripStyle=await page.locator('.ps-quickfilters').evaluate(el=>{
      const css=getComputedStyle(el),results=el.closest('.ps-browseheader').nextElementSibling;
      return [parseFloat(css.paddingInlineStart),css.backgroundColor,css.borderBottomWidth,getComputedStyle(results).backgroundColor,
@@ -155,6 +158,12 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   const after=await iconFilter.boundingBox();assert.equal(before.x,after.x,'All-filter button must stay pinned');
   await iconFilter.tap();
   const dialog=page.getByRole('dialog');await dialog.waitFor();assert.equal(await dialog.locator('.ps-filterclose .lucide-x').count(),1);
+  assert.equal(await dialog.locator('.ps-filterhandle').count(),0);
+  const closeInsets=await dialog.locator('.ps-filterclose').evaluate(button=>{
+   const b=button.getBoundingClientRect(), h=button.parentElement.getBoundingClientRect();
+   return [b.top-h.top,h.right-b.right,h.bottom-b.bottom];
+  });
+  assert.deepEqual(closeInsets,[14,14,14]);
   const bounds=await dialog.boundingBox();assert(bounds.y<=1&&Math.abs(bounds.height-1000)<2,'Sheet must cover entire web viewport below native status bar');
   assert(await page.locator('#ps-screen').evaluate(el=>el.inert));
   assert.equal(await dialog.locator('.ps-filterdialoghead').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 49, 49)');
@@ -171,7 +180,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    assert.equal(m.color,m.selected?'rgb(255, 255, 255)':'rgb(80, 80, 90)',m.label);
    assert.equal(m.background,m.selected?'rgb(255, 49, 49)':'rgb(255, 255, 255)',m.label);
    assert.equal(m.border,'rgb(237, 237, 239)',m.label);
-   assert.equal(m.weight,'700',m.label);
+   assert.equal(m.weight,'400',m.label);
    assert.equal(m.align,'center',m.label);assert.equal(m.justify,'center',m.label);assert.equal(m.textAlign,'center',m.label);
    assert.equal(m.top,m.bottom,m.label);assert.equal(m.left,m.right,m.label);
    assert.equal(m.minHeight,'36px',m.label);assert(m.height>=36&&m.overflow<=1,'Clipped filter: '+m.label);
@@ -188,7 +197,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   await iconFilter.tap();
   await page.locator('[data-filter-group="brands"][data-filter-value="Solgar"]').tap();
   await page.locator('[data-filter-apply]').tap();
-  assert.deepEqual(await page.locator('.ps-quickrail button[data-filter-open="brands"]').evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderTopColor,s.backgroundColor,s.fontWeight];}),['rgb(255, 255, 255)','rgb(237, 237, 239)','rgb(255, 49, 49)','700']);
+  assert.deepEqual(await page.locator('.ps-quickrail button[data-filter-open="brands"]').evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.borderTopColor,s.backgroundColor,s.fontWeight];}),['rgb(255, 255, 255)','rgb(237, 237, 239)','rgb(255, 49, 49)','400']);
   assert.equal(await page.locator('#ps-native-results [data-offer="valid"]').count(),1);
   assert.equal(await page.locator('#ps-native-results [data-offer="other"]').count(),0);
   await iconFilter.tap();
@@ -246,10 +255,10 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   await page.locator('.ps-poster.large').first().waitFor();
   // Profile changes survive navigation/relaunch; a wide source image stays within its circle.
   await page.getByRole('button',{name:'Profili aç',exact:true}).tap();
-  await headerStyle('.ps-profilebar>strong');
+  await headerStyle('.ps-profilebar>strong',true);
   assert.equal(await page.locator('.ps-profilebar input,.ps-profilebar [data-search]').count(),0);
   await page.getByRole('button',{name:'Profili düzenle',exact:true}).tap();
-  await headerStyle('.ps-profilebar>strong');
+  await headerStyle('.ps-profilebar>strong',true);
   await page.getByRole('textbox',{name:'Profil adı',exact:true}).fill('Test Kullanıcısı');
   await page.getByRole('button',{name:'İsmi kaydet',exact:true}).tap();
   const source=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=1800;c.height=900;const x=c.getContext('2d');x.fillStyle='#a51d32';x.fillRect(0,0,1800,900);x.fillStyle='#dedede';x.fillRect(600,100,600,700);return c.toDataURL('image/png').split(',')[1];});
