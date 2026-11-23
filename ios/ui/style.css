@@ -455,21 +455,19 @@ html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;backgrou
 /* Approved soft-blush square category grid, directly below brand campaigns. */
 #prime-square-campaigns .ps-home .ps-categorysection{margin:0 12px;min-width:0}
 #prime-square-campaigns .ps-categorysection>.ps-sectionheading{margin-bottom:12px}
-#prime-square-campaigns .ps-home .ps-categorygrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px 8px;padding:0;margin:0;overflow:visible;scroll-snap-type:none}
+#prime-square-campaigns .ps-home .ps-categorygrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:1fr;gap:var(--ps-home-gap);padding:0;margin:0;overflow:visible;scroll-snap-type:none}
 #prime-square-campaigns .ps-categorygrid[hidden]{display:none}
 #prime-square-campaigns .ps-categorygrid button{width:100%;min-width:0;gap:6px;flex:none;display:flex;align-items:stretch;font-size:11px;line-height:1.3;text-align:center;justify-content:flex-start}
-#prime-square-campaigns .ps-categorygrid button>b,#prime-square-campaigns .ps-categorygrid button.active>b{display:block;width:100%;height:auto;aspect-ratio:1/1;padding:0;border:0;border-radius:12px;overflow:hidden;background:#fff5f5;box-shadow:none}
+#prime-square-campaigns .ps-categorygrid button>b,#prime-square-campaigns .ps-categorygrid button.active>b{display:block;width:100%;height:auto;aspect-ratio:1/1;padding:0;border:0;border-radius:12px;overflow:hidden;background:#ffdede;box-shadow:none}
 #prime-square-campaigns .ps-categorygrid .ps-iconart{display:block;width:100%;height:100%;padding:0}
-#prime-square-campaigns .ps-categorygrid .ps-atlasicon{display:block;width:100%;height:100%;min-height:0;border-radius:inherit;background-repeat:no-repeat}
+#prime-square-campaigns .ps-categorygrid .ps-atlasicon{display:block;width:100%;height:100%;min-height:0;border-radius:inherit;background:url('assets/category-prime-light-red.webp') no-repeat;background-size:400% 300%}
 #prime-square-campaigns .ps-categorygrid .ps-categorylabel{display:block;min-height:3.9em;white-space:normal;overflow-wrap:normal;word-break:normal}
 #prime-square-campaigns .ps-categorygrid button:focus-visible{outline:2px solid var(--ps-red);outline-offset:3px;border-radius:12px}
 #prime-square-campaigns .ps-categorygrid button.active>b{outline:2px solid var(--ps-red);outline-offset:-2px}
 
 /* Match the shared card rhythm; override legacy home-strip width caps. */
-#prime-square-campaigns .ps-home .ps-categorygrid{gap:var(--ps-home-gap)}
 #prime-square-campaigns .ps-home .ps-categorygrid button{width:100%;min-width:0;max-width:none;flex:none;row-gap:6px}
 #prime-square-campaigns .ps-home .ps-categorygrid button>span.ps-categorylabel{width:100%;height:auto;min-height:3.9em;line-height:1.3}
-#prime-square-campaigns .ps-home .ps-categorygrid button>b{background:#ffe8e8}
 /* One visual language for page headers, titles and back controls. */
 #prime-square-campaigns{--ps-header-bg:#f7f7f8;--ps-title-size:16px;--ps-title-weight:500;--ps-title-color:#74787f}
 #prime-square-campaigns .ps-header,#prime-square-campaigns .ps-back,#prime-square-campaigns .ps-nativebar,#prime-square-campaigns .ps-detailtop{background:var(--ps-header-bg);color:var(--ps-title-color);border-bottom:0}
