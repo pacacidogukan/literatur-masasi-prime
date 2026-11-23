@@ -77,6 +77,8 @@ struct PrimeWebView: UIViewRepresentable {
             target: context.coordinator, action: #selector(Coordinator.consumeLongPress)
         )
         longPress.minimumPressDuration = 0.4
+        longPress.cancelsTouchesInView = true
+        longPress.delegate = context.coordinator
         view.addGestureRecognizer(longPress)
         view.allowsBackForwardNavigationGestures = false
         if let root = Bundle.main.url(forResource: "Web", withExtension: nil),
@@ -105,7 +107,7 @@ struct PrimeWebView: UIViewRepresentable {
         view.stopLoading()
     }
 
-    final class Coordinator: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDelegate, WKUIDelegate {
+    final class Coordinator: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDelegate, WKUIDelegate, UIGestureRecognizerDelegate {
         var isLaunching: Binding<Bool>
         var usesRedHeader: Binding<Bool>
         init(isLaunching: Binding<Bool>, usesRedHeader: Binding<Bool>) {
@@ -115,6 +117,11 @@ struct PrimeWebView: UIViewRepresentable {
         }
         @objc func consumeLongPress() {
             // Recognition cancels the touch sequence. No action is performed.
+        }
+
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                               shouldBeRequiredToFailBy other: UIGestureRecognizer) -> Bool {
+            other is UITapGestureRecognizer
         }
 
         private weak var foregroundWebView: WKWebView?
