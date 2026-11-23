@@ -106,7 +106,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    assert.equal(await header.locator('.ps-searchhint').textContent(),'Prime içinde ara');
    assert.equal(await header.locator('..').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 49, 49)');
    assert.equal(await header.locator('input').count(),1);
-   assert.equal(await header.locator('button').count(),1);
+   assert.equal(await header.locator('button:visible').count(),1);
    const bounds=await header.evaluate(el=>{const b=el.querySelector('button').getBoundingClientRect(),s=el.querySelector('.ps-search').getBoundingClientRect();return {backWidth:b.width,backHeight:b.height,left:s.left,right:s.right,top:s.top,backTop:b.top,width:innerWidth};});
    assert(bounds.backWidth>=44&&bounds.backHeight>=44);
    assert(bounds.right<=bounds.width&&bounds.left>=0);
@@ -150,8 +150,10 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
     const input=header.getByRole('textbox');await input.fill('Test ayrıcalığı');
     assert.equal(await page.locator('#ps-native-results [data-offer="valid"]').count(),1);
     assert.equal(await header.locator('.ps-searchhint').isVisible(),false);
-    await input.fill('');
+    await header.getByRole('button',{name:'Aramayı temizle'}).tap();
+    assert.equal(await input.inputValue(),'');
     assert.equal(await header.locator('.ps-searchhint').isVisible(),true);
+    assert.equal(await header.getByRole('button',{name:'Aramayı temizle'}).count(),0);
    }
   }
   assert.deepEqual(browseHeadingMetrics[0],browseHeadingMetrics[1],'Brands and campaigns must share all heading/count spacing and styles');
