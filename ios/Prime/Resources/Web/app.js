@@ -7,31 +7,6 @@ for(const event of ['copy','cut','contextmenu','dragstart']){
  document.addEventListener(event,e=>e.preventDefault(),true);
 }
 
-// Without the native callout, WebKit can turn a stationary hold into a tap.
-let heldControl=null;
-document.addEventListener('touchstart',e=>{
- const finger=e.touches[0];
- heldControl=e.touches.length===1&&e.target.closest('button,a[href]')
-  ? {id:finger.identifier,x:finger.clientX,y:finger.clientY,started:e.timeStamp}
-  : null;
-},{capture:true,passive:true});
-document.addEventListener('touchmove',e=>{
- if(!heldControl)return;
- const finger=e.touches[0];
- if(e.touches.length!==1||finger.identifier!==heldControl.id||
-    Math.hypot(finger.clientX-heldControl.x,finger.clientY-heldControl.y)>10)heldControl=null;
-},{capture:true,passive:true});
-document.addEventListener('touchcancel',()=>{heldControl=null;},true);
-document.addEventListener('touchend',e=>{
- const hold=heldControl;
- heldControl=null;
- if(!hold||e.touches.length||e.timeStamp-hold.started<500)return;
- const finger=Array.from(e.changedTouches).find(t=>t.identifier===hold.id);
- if(!finger||Math.hypot(finger.clientX-hold.x,finger.clientY-hold.y)>10)return;
- e.preventDefault();
- e.stopPropagation();
-},{capture:true,passive:false});
-
 // Own single-finger navigation taps before WKWebView can interpret a second
 // touch as smart zoom. Keep keyboard/VoiceOver clicks on the normal route.
 function installNavigationTouchGuard(nav){

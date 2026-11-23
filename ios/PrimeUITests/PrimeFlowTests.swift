@@ -100,6 +100,7 @@ final class PrimeFlowTests: XCTestCase {
             let before = nav.frame
             XCTAssertFalse(before.isEmpty, label)
             func assertScaleIsUnchanged() {
+                XCTAssertTrue(nav.exists, "\(label): \(app.debugDescription)")
                 let after = nav.frame
                 XCTAssertEqual(after.width, before.width, accuracy: 1, label)
                 XCTAssertEqual(after.minX, before.minX, accuracy: 1, label)
