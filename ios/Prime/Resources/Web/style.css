@@ -685,5 +685,4 @@ html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;backgrou
 
 #prime-square-campaigns .ps-filterchips button[data-filter-sort] svg{width:18px;height:18px;color:var(--ps-red)}
 #prime-square-campaigns .ps-filterchips button[data-filter-sort] span{min-width:0;flex-shrink:1}
-#prime-square-campaigns .ps-filterchips button[data-filter-sort][aria-pressed=true]{border-color:var(--ps-red)}
 #prime-square-campaigns .ps-filterchips button[data-filter-sort][aria-pressed=true] svg{color:inherit}
