@@ -25,8 +25,9 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   });
   assert.deepEqual(outfit,{loaded:true,controls:['Outfit','Outfit','Outfit','Outfit']});
   const homeHeader=page.locator('.ps-homeheader');
+  assert.equal(await homeHeader.evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 49, 49)');
   const shortcuts=homeHeader.locator('.ps-homequick button');
-  assert.deepEqual(await shortcuts.allTextContents(),['Kampanya kategorileri','Ürün kategorilerini keşfet','Tüm markalar']);
+  assert.deepEqual(await shortcuts.allTextContents(),['Kampanya kategorileri','Ürün kategorileri','Tüm markalar']);
   assert.equal(await homeHeader.locator('input,img').count(),0);
   assert.equal(await page.locator('.ps-productrail').count(),0);
   const shortcutLayout=await shortcuts.evaluateAll(nodes=>nodes.map(el=>({
@@ -157,6 +158,12 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   const after=await iconFilter.boundingBox();assert.equal(before.x,after.x,'All-filter button must stay pinned');
   await iconFilter.tap();
   const dialog=page.getByRole('dialog');await dialog.waitFor();assert.equal(await dialog.locator('.ps-filterclose .lucide-x').count(),1);
+  assert.equal(await dialog.locator('.ps-filterhandle').count(),0);
+  const closeInsets=await dialog.locator('.ps-filterclose').evaluate(button=>{
+   const b=button.getBoundingClientRect(), h=button.parentElement.getBoundingClientRect();
+   return [b.top-h.top,h.right-b.right,h.bottom-b.bottom];
+  });
+  assert.deepEqual(closeInsets,[14,14,14]);
   const bounds=await dialog.boundingBox();assert(bounds.y<=1&&Math.abs(bounds.height-1000)<2,'Sheet must cover entire web viewport below native status bar');
   assert(await page.locator('#ps-screen').evaluate(el=>el.inert));
   assert.equal(await dialog.locator('.ps-filterdialoghead').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 49, 49)');
