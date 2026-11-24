@@ -86,9 +86,11 @@ yatay afiş ve sağ altta marka sırasını gösterir. Hepsini gör ekranı kamp
 marka altında 768 × 768 kare kartlarla gruplar. Birden fazla afişi olan markalarda
 yatay kaydırma diğer kampanya kategorilerindeki davranışı kullanır.
 
-Yeni Trendyol afişleri için yatay ve kare kompozisyonları ayrı üretin. Gerçek
-ürün ambalajını, markanın resmî logosunu ve yalnız doğrulanmış kısa teklif ile
-kapsamını kullanın. Trendyol logosu ve Yetkili Satıcı etiketi görsel dosyasının
-içinde, diğer öğelerle çakışmayan okunur bir alana yerleşir. Konum her afişin
+Trendyol kampanyası başka bir bölümde göründüğünde o bölümün kart ölçüsüne
+uygun ayrı bir kompozisyon kullanın. Buna 720 × 1080 büyük dikey, 600 × 820
+kompakt dikey ve 1200 × 800 detay kartları dahildir. Gerçek ürün ambalajını,
+markanın resmî logosunu ve yalnız doğrulanmış kısa teklif ile kapsamını kullanın.
+Trendyol logosu ve Yetkili Satıcı etiketi görsel dosyasının içinde, diğer
+öğelerle çakışmayan okunur bir alana yerleşir. Konum her afişin
 kompozisyonuna göre seçilir. Yatay afişte uygulama sayacının bulunduğu sağ alt
 alanı boş bırakın. Afişe kupon kodu veya doğrulanmamış koşul yazmayın.

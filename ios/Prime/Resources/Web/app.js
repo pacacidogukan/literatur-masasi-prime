@@ -226,6 +226,21 @@ function imagePoster(o,size="large"){const format=size==="square"?"square":size=
 // Bundled artwork updates are bound to the exact previously approved feed files.
 const trendyolSourcePrefix='https://prime-campaign-editor.pacacidogukan.chatgpt.site/assets/';
 const composedTrendyolArtwork=new Map([
+ ['thelifeco-trendyol-30931485-compact-v1.webp','trendyol-30931485-compact-composed-v1.webp'],
+ ['thelifeco-trendyol-30931485-detail-v1.webp','trendyol-30931485-detail-composed-v1.webp'],
+ ['thelifeco-trendyol-30931485-large-v1.webp','trendyol-30931485-large-composed-v1.webp'],
+ ['thelifeco-trendyol-31197362-compact-v1.webp','trendyol-31197362-compact-composed-v1.webp'],
+ ['thelifeco-trendyol-31197362-detail-v1.webp','trendyol-31197362-detail-composed-v1.webp'],
+ ['thelifeco-trendyol-31197362-large-v1.webp','trendyol-31197362-large-composed-v1.webp'],
+ ['thelifeco-trendyol-31197363-compact-v1.webp','trendyol-31197363-compact-composed-v1.webp'],
+ ['thelifeco-trendyol-31197363-detail-v1.webp','trendyol-31197363-detail-composed-v1.webp'],
+ ['thelifeco-trendyol-31197363-large-v1.webp','trendyol-31197363-large-composed-v1.webp'],
+ ['thelifeco-trendyol-31197364-compact-v1.webp','trendyol-31197364-compact-composed-v1.webp'],
+ ['thelifeco-trendyol-31197364-detail-v1.webp','trendyol-31197364-detail-composed-v1.webp'],
+ ['thelifeco-trendyol-31197364-large-v1.webp','trendyol-31197364-large-composed-v1.webp'],
+ ['creative-sovital-31702571-compact-v1.webp','trendyol-31702571-compact-composed-v1.webp'],
+ ['creative-sovital-31702571-detail-v1.webp','trendyol-31702571-detail-composed-v1.webp'],
+ ['creative-sovital-31702571-large-v1.webp','trendyol-31702571-large-composed-v1.webp'],
  ['creative-sovital-31702571-lastday-v1.webp','trendyol-31702571-lastDay-composed-v1.webp'],
  ['creative-sovital-31702571-square-v1.webp','trendyol-31702571-square-composed-v1.webp'],
  ['thelifeco-trendyol-31197363-lastday-v1.webp','trendyol-31197363-lastDay-composed-v1.webp'],
