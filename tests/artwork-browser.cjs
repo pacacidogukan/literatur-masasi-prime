@@ -117,16 +117,22 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   }
   await page.locator('[data-type="Kargo Avantajı"]').tap();await page.locator('.ps-categorytabs [aria-pressed="true"]').filter({hasText:'Kargo Avantajı'}).waitFor();
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
+  async function checkScopedCampaigns(title){
+   const header=page.locator('.ps-browseheader');
+   assert.equal(await header.evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 49, 49)');
+   assert.equal(await header.locator('#ps-native-query').count(),1);
+   assert.equal(await header.locator('[data-filter-open="all"]').count(),1);
+   assert.equal(await page.locator('#ps-native-results h2').innerText(),title);
+   assert.equal(await page.locator('#ps-native-results [data-filter-open="sort"]').count(),1);
+   assert.equal(await page.evaluate(()=>window.primeHeaderIsRed),true);
+  }
   await page.locator('[data-newest="1"]').tap();
-  await headerStyle('.ps-campaignlist-header strong',true);
-  assert.equal(await page.locator('.ps-newestpage h2').innerText(),'En Yeniler');
-  assert.equal(await page.evaluate(()=>window.primeHeaderIsRed),true);
+  await checkScopedCampaigns('En Yeniler');
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
   await page.locator('[data-discount="25"]').tap();
-  await headerStyle('.ps-campaignlist-header strong',true);
-  assert.equal(await page.locator('.ps-discountpage h2').innerText(),'%25 ve üzeri');
-  assert.equal(await page.locator('.ps-discountpage [role="status"]').innerText(),'1 marka · 1 kampanya');
-  assert.equal(await page.locator('.ps-discountpage [data-offer="valid"]').count(),1);
+  await checkScopedCampaigns('%25 ve üzeri');
+  assert.equal(await page.locator('#ps-native-results [role="status"]').innerText(),'1 kampanya');
+  assert.equal(await page.locator('#ps-native-results [data-offer-id="valid"]').count(),1);
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
   async function checkSearchStyle(){
    const editPolicy=await page.locator('.ps-search input').evaluate(el=>[
