@@ -39,11 +39,22 @@ run('hydrate('+JSON.stringify([...rows,trendyolFixture,
 const lane=run('trendyolFeature(offers)');
 assert.match(lane,/Hepsini gör/);
 assert.match(lane,/data-artwork-slot="lastDay"/);
-assert.match(lane,/trendyol-authorized-seller.svg/);
+assert.doesNotMatch(lane,/ps-trendyol-lockup|trendyol-authorized-seller.svg/);
+const trendyolArtwork=Array.from(run('composedTrendyolArtwork.entries()'));
+for(const [source,bundled] of trendyolArtwork){
+ assert.match(source,/^https:\/\/prime-campaign-editor\.pacacidogukan\.chatgpt\.site\/assets\//);
+ assert(fs.existsSync('ios/Prime/Resources/Web/assets/'+bundled),bundled);
+}
+const [sampleSource,sampleFile]=trendyolArtwork.find(([,filename])=>filename.includes('lastDay'));
+run('lastDayArt["trendyol-reviewed"]='+JSON.stringify(sampleSource));
+assert(run('trendyolFeature(offers)').includes('assets/'+sampleFile));
+run('lastDayArt["trendyol-reviewed"]="https://example.com/revised.png"');
+assert(run('trendyolFeature(offers)').includes('https://example.com/revised.png'));
+
 assert.deepEqual(Array.from(run('trendyolOffers().map(o=>o.id)')),['trendyol-reviewed']);
 assert.ok(screen.innerHTML.indexOf('Marka Kampanyaları')<screen.innerHTML.indexOf('ps-trendyolfeature'));
 screen.scrollTop=146;
-clickRoute({view:'trendyol'});assert.equal(run('view'),'trendyol');assert.match(screen.innerHTML,/data-offer="trendyol-reviewed"/);
+clickRoute({view:'trendyol'});assert.equal(run('view'),'trendyol');assert.match(screen.innerHTML,/data-offer-id="trendyol-reviewed"/);assert.match(screen.innerHTML,/data-artwork-slot="square"/);
 clickRoute({offer:'trendyol-reviewed'});assert.equal(run('view'),'detail');
 clickRoute({action:'back'});assert.equal(run('view'),'trendyol');
 clickRoute({action:'back'});assert.equal(run('view'),'home');assert.equal(screen.scrollTop,146);
@@ -54,7 +65,7 @@ const publicationNow=Math.floor(Date.now()/1000);
 run('hydrate('+JSON.stringify([{...rows[0],id:'recent',publishedAt:publicationNow-86400},{...rows[0],id:'boundary',publishedAt:publicationNow-7*86400},{...rows[0],id:'too-old',publishedAt:publicationNow-7*86400-1,updated:publicationNow},{...rows[0],id:'unknown'},{...rows[0],id:'future',publishedAt:publicationNow+60}])+')');
 assert.deepEqual(Array.from(run('newestOffers(offers,'+publicationNow+').map(o=>o.id)')),['recent','boundary']);
 assert.doesNotMatch(run('newestFeature(offers)'),/data-offer="too-old"|data-offer="unknown"|data-offer="future"/);
-clickRoute({newest:'1'});assert.equal(run('view'),'newest');assert.match(screen.innerHTML,/data-offer-id="recent"/);assert.doesNotMatch(screen.innerHTML,/data-offer-id="too-old"/);
+clickRoute({newest:'1'});assert.equal(run('view'),'newest');assert.match(screen.innerHTML,/ps-native-query/);assert.match(screen.innerHTML,/data-filter-open="sort"/);assert.match(screen.innerHTML,/data-offer-id="recent"/);assert.doesNotMatch(screen.innerHTML,/data-offer-id="too-old"/);
 clickRoute({campaignGroup:'Solgar'});assert.equal(run('campaignOrigin'),'newest');assert.doesNotMatch(screen.innerHTML,/data-offer="too-old"/);
 clickRoute({action:'back'});assert.equal(run('view'),'newest');clickRoute({action:'back'});assert.equal(run('view'),'home');
 assert.equal(run('newestOffers(offers,'+(publicationNow+8*86400)+').length'),0);
@@ -62,6 +73,14 @@ assert.match(run('newestFeature([])'),/Son 7 günde yayınlanan yeni bir kampany
 run('hydrate('+JSON.stringify(rows)+');navigation.length=0');
 // Full campaign routing and shared brand directory filters.
 run("view='home';query='';campaignFilters.rates=['50'];navigation.length=0");
+for(const rate of ['10','25','50']){
+ clickRoute({discount:rate});assert.equal(run('view'),'discount');
+ assert.match(screen.innerHTML,/ps-native-query/);assert.match(screen.innerHTML,/data-filter-open="sort"/);
+ assert.equal(run('filteredCampaigns().length'),rate==='50'?0:1);
+ clickRoute({filterCategory:'Kargo Avantajı'});assert.equal(run('view'),'discount');assert.equal(run('filteredCampaigns().length'),0);
+ clickRoute({filterCategory:'Tümü'});assert.equal(run('filteredCampaigns().length'),rate==='50'?0:1);
+ clickRoute({action:'back'});
+}
 clickRoute({discount:'all'});assert.equal(run('view'),'campaigns');assert.equal(run('campaignFilterCount()'),0);
 clickRoute({view:'brands'});assert.equal(run('selectedCategory'),'Tümü');assert.match(screen.innerHTML,/data-filter-open="ending"/);
 run("campaignFilters.brands=['Solgar'];render()");assert.match(screen.innerHTML,/data-brand="Solgar"/);assert.doesNotMatch(screen.innerHTML,/data-brand="Other"/);

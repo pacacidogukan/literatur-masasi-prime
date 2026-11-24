@@ -467,30 +467,33 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   assert.deepEqual(await cards.locator('.ps-codecount').allTextContents(),['1/2','2/2']);
   const geometry=await cards.first().evaluate(card=>{
    const bounds=s=>card.querySelector(s).getBoundingClientRect();
-   const outer=card.getBoundingClientRect(),art=bounds('.ps-artwork-frame'),badge=bounds('.ps-trendyol-lockup'),count=bounds('.ps-codecount');
-   return {ratio:Math.abs(outer.width/outer.height-3),noOverlap:art.right<=badge.left&&art.right<=count.left,within:badge.right<=outer.right&&count.bottom<=outer.bottom&&badge.bottom<=count.top};
+   const outer=card.getBoundingClientRect(),art=bounds('.ps-artwork-frame'),count=bounds('.ps-codecount');
+   return {ratio:Math.abs(outer.width/outer.height-3),fullArtwork:Math.abs(art.width-outer.width)<1&&Math.abs(art.height-outer.height)<1,within:count.right<=outer.right&&count.bottom<=outer.bottom};
   });
-  assert(geometry.ratio<0.03&&geometry.noOverlap&&geometry.within,JSON.stringify({width,geometry}));
+  assert(geometry.ratio<0.03&&geometry.fullArtwork&&geometry.within,JSON.stringify({width,geometry}));
   await page.locator('[data-view="trendyol"]').tap();
   assert.equal(await page.evaluate(()=>window.primeHeaderIsRed),true);
   assert.equal(await page.locator('.ps-browseheader').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 49, 49)');
-  assert.equal(await page.locator('.ps-trendyol-list .ps-trendyol-card').count(),2);
-  await page.locator('.ps-trendyol-list [data-campaign-group]').tap();
+  assert.equal(await page.locator('.ps-nativegroup').count(),2);
+  const sovital=page.locator('.ps-nativegroup').filter({has:page.locator('[data-offer-id="trend-1"]')});
+  const railGeometry=await sovital.locator('.ps-nativerail').evaluate(el=>({scroll:el.scrollWidth>el.clientWidth,ratio:el.firstElementChild.getBoundingClientRect().width/el.firstElementChild.getBoundingClientRect().height}));
+  assert(railGeometry.scroll&&Math.abs(railGeometry.ratio-1)<0.02);
+  await sovital.locator('[data-offer-id="trend-1"]').tap();
   assert.equal(await page.locator('.ps-nativelist [data-offer]').count(),2);
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
   const search=page.locator('#ps-native-query');
   await search.fill('TheLifeCo');
-  assert.deepEqual(await page.locator('.ps-trendyol-list .ps-codecount').allTextContents(),['1/1']);
+  assert.equal(await page.locator('.ps-nativegroup').count(),1);
   await search.fill('');
   await page.locator('[data-filter-category="Kargo Avantajı"]').tap();
-  assert.equal(await page.locator('.ps-trendyol-list .ps-trendyol-card').count(),0);
+  assert.equal(await page.locator('.ps-nativegroup').count(),0);
   await page.locator('[data-filter-category="Tümü"]').tap();
   await page.locator('[data-filter-open="sort"]').tap();
   await page.locator('[data-filter-sort="discount"]').tap();
   await page.locator('[data-filter-apply]').tap();
-  assert.match(await page.locator('.ps-trendyol-list .ps-trendyol-card').first().getAttribute('aria-label'),/sovital/i);
+  assert.match(await page.locator('.ps-nativegroup').first().getAttribute('data-brand-group'),/sovital/i);
   await page.close();
-  console.log('PASS: '+engine.name()+' Trendyol brand cards, separated badges, counter and filters at '+width+'px');
+  console.log('PASS: '+engine.name()+' Trendyol full-width art, square swipe groups, counter and filters at '+width+'px');
  }
  await browser.close();browser=null;
  }

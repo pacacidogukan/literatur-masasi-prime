@@ -81,7 +81,14 @@ Güncel açılış: beyaz zemin üzerinde kırmızı Literatür Masası Prime lo
 
 Trendyol alanı, hedefi Trendyol olan ve satıcı doğrulamasından sonra kanal alanına
 `Trendyol · Yetkili Satıcı` yazılan yayındaki kampanyaları gösterir. Kampanyanın
-onaylı altı mobil görseli gerekir. Yatay kart Son Gün ile aynı 1200 × 400 ölçüsünü
-kullanır. Alt afişte markanın resmî logosu, gerçek ürün fotoğrafı ve kısa teklif
-notu yer alır. Uygulama Trendyol logosunu ve Yetkili Satıcı etiketini sağ üstte
-gösterir; afişte bu alanı açık bırakın. Afişe kupon kodu yazmayın.
+onaylı altı mobil görseli gerekir. Ana sayfa marka başına tek 1200 × 400
+yatay afiş ve sağ altta marka sırasını gösterir. Hepsini gör ekranı kampanyaları
+marka altında 768 × 768 kare kartlarla gruplar. Birden fazla afişi olan markalarda
+yatay kaydırma diğer kampanya kategorilerindeki davranışı kullanır.
+
+Yeni Trendyol afişleri için yatay ve kare kompozisyonları ayrı üretin. Gerçek
+ürün ambalajını, markanın resmî logosunu ve yalnız doğrulanmış kısa teklif ile
+kapsamını kullanın. Trendyol logosu ve Yetkili Satıcı etiketi görsel dosyasının
+içinde, diğer öğelerle çakışmayan okunur bir alana yerleşir. Konum her afişin
+kompozisyonuna göre seçilir. Yatay afişte uygulama sayacının bulunduğu sağ alt
+alanı boş bırakın. Afişe kupon kodu veya doğrulanmamış koşul yazmayın.
