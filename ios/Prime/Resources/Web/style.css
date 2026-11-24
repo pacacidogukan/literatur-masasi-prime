@@ -697,8 +697,12 @@ html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;backgrou
 #prime-square-campaigns .ps-trendyolrail{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;border-radius:17px;overscroll-behavior-x:contain}
 #prime-square-campaigns .ps-trendyolrail::-webkit-scrollbar{display:none}
 #prime-square-campaigns .ps-trendyol-list{display:grid;gap:12px}
-#prime-square-campaigns .ps-trendyol-list .ps-codebanner{width:100%}
-#prime-square-campaigns .ps-trendyol-lockup{position:absolute;z-index:1;inset-block-start:6%;inset-inline-end:3%;display:flex;align-items:center;gap:5px;background:#fff;padding:3px 5px;border-radius:5px;pointer-events:none}
-#prime-square-campaigns .ps-trendyol-lockup img{display:block;width:clamp(39px,9vw,65px);height:auto}
-#prime-square-campaigns .ps-trendyol-lockup img:last-child{width:clamp(57px,13vw,87px)}
+#prime-square-campaigns .ps-codebanner.ps-trendyol-card{width:100%;display:grid;grid-template-columns:minmax(0,1fr) clamp(70px,22%,125px);gap:0;background:var(--ps-bg)}
+/* Artwork and branding occupy independent columns for existing and future banners. */
+#prime-square-campaigns .ps-trendyol-art{min-width:0;align-self:center;display:block}
+#prime-square-campaigns .ps-trendyol-side{height:100%;padding:8px;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;background:var(--ps-bg);border-inline-start:1px solid var(--ps-filter-border)}
+#prime-square-campaigns .ps-trendyol-lockup{display:grid;justify-items:end;gap:4px;width:100%}
+#prime-square-campaigns .ps-trendyol-lockup img{display:block;width:min(100%,65px);height:auto}
+#prime-square-campaigns .ps-trendyol-lockup img:last-child{width:min(100%,87px)}
+#prime-square-campaigns .ps-trendyol-side .ps-codecount{position:static;background:#fff}
 #prime-square-campaigns .ps-trendyol-empty{display:grid;place-items:center;aspect-ratio:3/1;margin:0;padding:12px;border-radius:17px;background:var(--ps-surface,#fff);color:var(--ps-muted);text-align:center}

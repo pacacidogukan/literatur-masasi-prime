@@ -445,6 +445,53 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   if(width===390){fs.mkdirSync('ci-artifacts/artwork',{recursive:true});await page.screenshot({path:'ci-artifacts/artwork/legacy-accessible.png'});}
   assert.deepEqual(errors,[],JSON.stringify({width,errors}));await page.close();console.log('PASS: '+engine.name()+' nested clicks and six-format geometry at '+width+'px');
  }
+ const trendRows=[
+  {...rows[0],id:'trend-1',discountPercent:40,name:'SOVITAL',offer:'Sepette %40 indirim',hasCode:0,expires:0},
+  {...rows[0],id:'trend-2',discountPercent:20,name:'Sovital',offer:'Sepette %20 indirim',hasCode:0,expires:0},
+  {...rows[0],id:'trend-3',discountPercent:10,name:'TheLifeCo',offer:'Sepette %10 indirim',hasCode:0,expires:0}
+ ].map(row=>({...row,channel:'Trendyol · Yetkili Satıcı',campaignPage:'https://www.trendyol.com/sr?prm=12&mid=34'}));
+ for(const width of [320,390,768,1024]){
+  const page=await browser.newPage({viewport:{width,height:900},isMobile:true,hasTouch:true});
+  await page.route('https://artwork.test/**',route=>{
+   const slot=path.basename(new URL(route.request().url()).pathname,'.svg'),{width,height}=contract.slots[slot];
+   return route.fulfill({contentType:'image/svg+xml',body:`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="#e8cbef"/></svg>`});
+  });
+  await page.addInitScript(campaigns=>{window.webkit={messageHandlers:{primeAPI:{postMessage:async request=>{
+   if(request.path==='ui/launch-state')window.primeHeaderIsRed=request.body.redHeader;
+   return {status:200,data:request.path==='campaigns'?{campaigns}:{authorized:true}};
+  }}}};},[...trendRows,rows[0]]);
+  await page.goto(url);
+  const rail=page.locator('.ps-trendyolrail'),cards=rail.locator('.ps-trendyol-card');
+  await cards.first().waitFor();
+  assert.equal(await cards.count(),2);
+  assert.deepEqual(await cards.locator('.ps-codecount').allTextContents(),['1/2','2/2']);
+  const geometry=await cards.first().evaluate(card=>{
+   const bounds=s=>card.querySelector(s).getBoundingClientRect();
+   const outer=card.getBoundingClientRect(),art=bounds('.ps-artwork-frame'),badge=bounds('.ps-trendyol-lockup'),count=bounds('.ps-codecount');
+   return {ratio:Math.abs(outer.width/outer.height-3),noOverlap:art.right<=badge.left&&art.right<=count.left,within:badge.right<=outer.right&&count.bottom<=outer.bottom&&badge.bottom<=count.top};
+  });
+  assert(geometry.ratio<0.03&&geometry.noOverlap&&geometry.within,JSON.stringify({width,geometry}));
+  await page.locator('[data-view="trendyol"]').tap();
+  assert.equal(await page.evaluate(()=>window.primeHeaderIsRed),true);
+  assert.equal(await page.locator('.ps-browseheader').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 49, 49)');
+  assert.equal(await page.locator('.ps-trendyol-list .ps-trendyol-card').count(),2);
+  await page.locator('.ps-trendyol-list [data-campaign-group]').tap();
+  assert.equal(await page.locator('.ps-nativelist [data-offer]').count(),2);
+  await page.getByRole('button',{name:'Geri',exact:true}).tap();
+  const search=page.locator('#ps-native-query');
+  await search.fill('TheLifeCo');
+  assert.deepEqual(await page.locator('.ps-trendyol-list .ps-codecount').allTextContents(),['1/1']);
+  await search.fill('');
+  await page.locator('[data-filter-category="Kargo Avantajı"]').tap();
+  assert.equal(await page.locator('.ps-trendyol-list .ps-trendyol-card').count(),0);
+  await page.locator('[data-filter-category="Tümü"]').tap();
+  await page.locator('[data-filter-open="sort"]').tap();
+  await page.locator('[data-filter-sort="discount"]').tap();
+  await page.locator('[data-filter-apply]').tap();
+  assert.match(await page.locator('.ps-trendyol-list .ps-trendyol-card').first().getAttribute('aria-label'),/sovital/i);
+  await page.close();
+  console.log('PASS: '+engine.name()+' Trendyol brand cards, separated badges, counter and filters at '+width+'px');
+ }
  await browser.close();browser=null;
  }
  }finally{await browser?.close();server.close();}

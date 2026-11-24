@@ -321,18 +321,23 @@ function trendyolOffers(arr=offers){
     (!o.expires||o.expires*1000>Date.now());
  });
 }
-function trendyolBanner(o){
- return `<button type="button" data-offer="${esc(o.id)}" class="ps-codebanner cursor-interaction" aria-label="${esc(o.brand+': '+o.title)}">${campaignImage(o,'lastDay')}<span class="ps-trendyol-lockup"><img src="assets/trendyol-wordmark.png" alt="Trendyol"><img src="assets/trendyol-authorized-seller.svg" alt="Yetkili Satıcı"></span></button>`;
+function trendyolBrandCards(items,grouped=false){
+ const brands=new Map();
+ for(const offer of items){
+  const brandKey=offer.brand.trim().toLocaleLowerCase('tr');
+  if(brands.has(brandKey))brands.get(brandKey).count++;
+  else brands.set(brandKey,{offer,count:1});
+ }
+ const cards=[...brands.values()];
+ return cards.map(({offer:o,count},index)=>{
+  const action=grouped&&count>1?`data-campaign-group="${esc(o.brand)}"`:`data-offer="${esc(o.id)}"`;
+  const label=grouped&&count>1?o.brand+' kampanyalarını aç':o.brand+': '+o.title;
+  return `<button type="button" ${action} class="ps-codebanner ps-trendyol-card cursor-interaction" aria-label="${esc(label)}"><span class="ps-trendyol-art">${campaignImage(o,'lastDay')}</span><span class="ps-trendyol-side"><span class="ps-trendyol-lockup"><img src="assets/trendyol-wordmark.png" alt="Trendyol"><img src="assets/trendyol-authorized-seller.svg" alt="Yetkili Satıcı"></span><span class="ps-nativecount ps-codecount" aria-label="${index+1}. marka, toplam ${cards.length}">${index+1}/${cards.length}</span></span></button>`;
+ }).join('');
 }
 function trendyolFeature(arr){
- const items=trendyolOffers(arr);
- return `<section class="ps-codefeature ps-lastdayfeature ps-trendyolfeature" aria-label="Trendyol kampanyaları"><div class="ps-sectionheading"><h2>Trendyol</h2><button type="button" class="ps-seeall cursor-interaction" data-view="trendyol" aria-label="Trendyol kampanyalarının hepsini gör">Hepsini gör${icon('chevron-right')}</button></div>${items.length?`<div class="ps-trendyolrail" aria-label="Trendyol kampanyaları">${items.map(trendyolBanner).join('')}</div>`:'<p class="ps-trendyol-empty" role="status">Şu anda yayında Trendyol kampanyası yok.</p>'}</section>`;
-}
-function trendyolPage(){
- const items=trendyolOffers();
- return campaignListPage('Trendyol','Trendyol kampanyaları',items.length+' kampanya',
-   items.length?`<div class="ps-trendyol-list">${items.map(trendyolBanner).join('')}</div>`:
-     '<p class="ps-empty">Şu anda yayında Trendyol kampanyası yok.</p>','ps-trendyol-page');
+ const cards=trendyolBrandCards(trendyolOffers(arr));
+ return `<section class="ps-codefeature ps-lastdayfeature ps-trendyolfeature" aria-label="Trendyol kampanyaları"><div class="ps-sectionheading"><h2>Trendyol</h2><button type="button" class="ps-seeall cursor-interaction" data-view="trendyol" aria-label="Trendyol kampanyalarının hepsini gör">Hepsini gör${icon('chevron-right')}</button></div>${cards?`<div class="ps-trendyolrail" aria-label="Trendyol kampanyaları">${cards}</div>`:'<p class="ps-trendyol-empty" role="status">Şu anda yayında Trendyol kampanyası yok.</p>'}</section>`;
 }
 function moveLastDay(i,behavior='smooth'){const rail=root.querySelector('.ps-lastdayrail');if(!rail||!rail.children.length)return;lastDayIndex=i>=rail.children.length?nextCardIndex(rail,i,lastDayIndex):(i+rail.children.length)%rail.children.length;rail.scrollTo({left:lastDayIndex*rail.clientWidth,behavior});}
 root.addEventListener('scroll',e=>{if(!e.target.classList?.contains('ps-lastdayrail'))return;lastDayIndex=Math.round(e.target.scrollLeft/Math.max(1,e.target.clientWidth));},true);
@@ -391,7 +396,7 @@ function nativeCampaigns(){return campaignBrowsePage('campaigns');}
 function nativeGroups(names,sourceOffers=offers){return names.map(n=>{const arr=sourceOffers.filter(o=>o.brand===n);if(!arr.length)return '';return `<article class="ps-nativegroup" data-brand-group="${esc(n)}"><div class="ps-nativerail" tabindex="0" role="group" aria-roledescription="kampanya slaytları" aria-label="${esc(n)} kampanyalarını aç">${arr.map(o=>`<button type="button" class="cursor-interaction" data-campaign-group="${esc(n)}" data-offer-id="${esc(o.id)}" aria-label="${esc(n)} kampanyalarını aç">${campaignImage(o,'square')}</button>`).join('')}</div>${arr.length>1?`<span class="ps-nativecount" aria-label="${arr.length} kampanya">${arr.length}</span><div class="ps-nativedots" aria-hidden="true">${arr.map((o,i)=>`<span class="${i===0?'current':''}"></span>`).join('')}</div>`:''}</article>`}).join('')||'<div class="ps-empty">Marka bulunamadı</div>'}
 function campaignRows(arr,empty='Bu markada kampanya bulunmuyor.'){return `<div class="ps-nativelist">${arr.length?arr.map(o=>`<button type="button" class="cursor-interaction" data-offer="${esc(o.id)}" data-offer-id="${esc(o.id)}" aria-label="${esc(o.brand+': '+o.title)}">${campaignImage(o,'square','ps-listthumb')}<span><strong>${esc(o.title)}</strong><small class="ps-rowsummary">${esc(o.sub||'Kampanyayı incele')}</small></span>${icon('chevron-right')}</button>`).join(''):`<div class="ps-empty">${esc(empty)}</div>`}</div>`;}
 function searchResults(){const arr=offers.filter(matchesSearch);return `<section class="ps-searchresults" aria-label="Arama sonuçları"><p class="ps-searchsummary" role="status">${arr.length} kampanya bulundu</p>${campaignRows(arr,'Aramana uygun kampanya bulunamadı.')}</section>`;}
-function nativeCampaignGroup(){const arr=offers.filter(o=>o.brand===campaignGroup&&(campaignOrigin!=='category'||categoriesFor(o).includes(selectedCategory))&&(!['campaigns','category'].includes(campaignOrigin)||(matchesSearch(o)&&campaignFilterMatches(o)))&&(campaignOrigin!=='newest'||newestOffers([o]).length>0));return brandCampaignPage(campaignGroup,arr,campaignOrigin==='category'?selectedCategory:'');}
+function nativeCampaignGroup(){if(campaignOrigin==='trendyol')return brandCampaignPage(campaignGroup,filteredCampaigns(campaignFilters,'trendyol').filter(o=>o.brand.trim().toLocaleLowerCase('tr')===campaignGroup.trim().toLocaleLowerCase('tr')),'Trendyol');const arr=offers.filter(o=>o.brand===campaignGroup&&(campaignOrigin!=='category'||categoriesFor(o).includes(selectedCategory))&&(!['campaigns','category'].includes(campaignOrigin)||(matchesSearch(o)&&campaignFilterMatches(o)))&&(campaignOrigin!=='newest'||newestOffers([o]).length>0));return brandCampaignPage(campaignGroup,arr,campaignOrigin==='category'?selectedCategory:'');}
 
 const testflightReference={"version":"1.0.1","build":"142.1","commit":"26bcf941968e1a3a49993add45748cca94c9404a","uploadRun":41185972943,"statusRun":41186442406,"appBlob":"3ef3044b8dd3b5970d20cf12518c63fbd84e0f32","cssBlob":"f54ba90bff5d0b681f60bfbc35fd15f2e921af48","notificationsAvailable":false};
 let settingsNotifications=false,settingsPhoto=readLocal('lmprime-photo',null);
@@ -494,7 +499,8 @@ function campaignFilterMatches(o,f=campaignFilters,skip='',now=Date.now()){
  return !expired(o)&&Object.keys(tests).every(k=>k===skip||!f[k].length||tests[k]());
 }
 function campaignFilterSource(scope=view){
- return offers.filter(o=>matchesSearch(o)&&(!['category','brands'].includes(scope)||selectedCategory==='Tümü'||categoriesFor(o).includes(selectedCategory))&&(scope!=='campaigns'||campaignBrand==='Tümü'||o.brand===campaignBrand));
+ const source=scope==='trendyol'?trendyolOffers():offers;
+ return source.filter(o=>matchesSearch(o)&&(!['category','brands','trendyol'].includes(scope)||selectedCategory==='Tümü'||categoriesFor(o).includes(selectedCategory))&&(scope!=='campaigns'||campaignBrand==='Tümü'||o.brand===campaignBrand));
 }
 function filteredCampaigns(f=campaignFilters,scope=view){
  const arr=campaignFilterSource(scope).filter(o=>campaignFilterMatches(o,f));
@@ -505,7 +511,7 @@ function filteredCampaigns(f=campaignFilters,scope=view){
  return arr;
 }
 function campaignFilterToolbar(scope=view){
- const active=['category','brands'].includes(scope)?selectedCategory:'Tümü',count=campaignFilterCount();
+ const active=['category','brands','trendyol'].includes(scope)?selectedCategory:'Tümü',count=campaignFilterCount();
  return `<div class="ps-discoverytools"><div class="ps-categorytabs" role="group" aria-label="Kampanya kategorileri">${['Tümü',...categoryDisplayNames].map(n=>`<button type="button" data-filter-category="${esc(n)}" aria-pressed="${n===active}">${esc(n)}</button>`).join('')}</div><div class="ps-quickfilters"><button type="button" class="ps-allfilters" data-filter-open="all" aria-label="Tüm filtreleri aç${count?', '+count+' seçim':''}" aria-haspopup="dialog">${icon('sliders-horizontal')}${count?`<span>${count}</span>`:''}</button><div class="ps-quickrail" aria-label="Hızlı filtreler">${Object.keys(filterTitles).map(k=>{const values=campaignFilters[k],label=values.length===1?(k==='brands'?values[0]:filterOptions[k].find(([v])=>v===values[0])?.[1]||filterTitles[k]):filterTitles[k]+(values.length?' ('+values.length+')':'');return `<button type="button" data-filter-open="${k}" aria-haspopup="dialog" class="${values.length?'selected':''}">${esc(label)}</button>`;}).join('')}</div></div></div>`;
 }
 function browseResultHeading(title,count,kind){
@@ -514,6 +520,7 @@ function browseResultHeading(title,count,kind){
 }
 function campaignFilterResults(scope=view){
  const arr=filteredCampaigns(campaignFilters,scope),filtered=campaignFilterCount()>0||campaignFilters.sort!=='discover'||query.trim();
+ if(scope==='trendyol')return browseResultHeading('Trendyol',arr.length,'kampanya')+(arr.length?`<div class="ps-trendyol-list">${trendyolBrandCards(arr,true)}</div>`:'<p class="ps-empty">Seçimlerine uygun Trendyol kampanyası bulunamadı.</p>');
  return `${browseResultHeading(scope==='category'?selectedCategory:'Kampanyalar',arr.length,'kampanya')}${arr.length?(filtered?campaignRows(arr):`<div class="ps-nativegrid">${nativeGroups([...new Set(arr.map(o=>o.brand))],arr)}</div>`):`<div class="ps-empty">Seçimlerine uygun kampanya bulunamadı.${campaignFilterCount()?'<button type="button" data-filter-reset="1">Filtreleri temizle</button>':''}</div>`}`;
 }
 function campaignBrowsePage(scope=view){return `<div class="ps-browseheader">${pageSearchHeader('ps-native-query')}${campaignFilterToolbar(scope)}</div><main class="ps-nativepage ps-campaignspage ${scope==='category'?'ps-categorypage':''}"><div id="ps-native-results">${campaignFilterResults(scope)}</div></main>`;}
@@ -548,7 +555,7 @@ function handleCampaignFilterClick(d){
  if(d.filterOpen){openCampaignFilters(d.filterOpen);return true;}
  if(d.filterClose){closeCampaignFilters();return true;}
  if(d.filterApply){closeCampaignFilters(true);return true;}
- if(d.filterCategory){const y=root.querySelector('.ps-categorytabs')?.scrollLeft||0;if(view!=='brands')view=d.filterCategory==='Tümü'?'campaigns':'category';selectedCategory=d.filterCategory;campaignBrand='Tümü';render();screen.scrollTop=0;const rail=root.querySelector('.ps-categorytabs');if(rail)rail.scrollLeft=y;return true;}
+ if(d.filterCategory){const y=root.querySelector('.ps-categorytabs')?.scrollLeft||0;if(!['brands','trendyol'].includes(view))view=d.filterCategory==='Tümü'?'campaigns':'category';selectedCategory=d.filterCategory;campaignBrand='Tümü';render();screen.scrollTop=0;const rail=root.querySelector('.ps-categorytabs');if(rail)rail.scrollLeft=y;return true;}
  if(d.filterReset){campaignFilters=emptyCampaignFilters();render();return true;}
  if(!filterOpen)return false;
  if(d.filterGroup){const k=d.filterGroup,v=d.filterValue;if(!Object.hasOwn(filterTitles,k))return true;filterDraft[k]=filterDraft[k].includes(v)?filterDraft[k].filter(x=>x!==v):[...filterDraft[k],v];}
@@ -569,14 +576,14 @@ function syncLaunchSurface(){
  const visible=!loaded;
  const redHeader=loaded&&(view==='home'
   ? screen.scrollTop<(screen.querySelector('.ps-homeheader')?.offsetHeight??Infinity)
-  : ['brands','brand','campaigns','campaignGroup','category','newest','discount','favorites','detail','settings','personal','notifications','privacy','terms','deleteAccount'].includes(view));
+  : ['brands','brand','campaigns','campaignGroup','category','newest','trendyol','discount','favorites','detail','settings','personal','notifications','privacy','terms','deleteAccount'].includes(view));
  const state=visible?'launch':redHeader?'red':'page';
  if(lastLaunchSurface===state)return;
  lastLaunchSurface=state;
  server('ui/launch-state',{visible,redHeader}).catch(()=>{if(lastLaunchSurface===state)lastLaunchSurface=undefined;});
 }
 screen.addEventListener('scroll',syncLaunchSurface,{passive:true});
-function render(){screen.style.overflowY=loaded&&view==='detail'?'hidden':'auto';const loadingNav=root.querySelector('.ps-nav');if(loadingNav)loadingNav.style.display=!loaded?'none':'';if(!loaded){screen.innerHTML=loadError?'<div class="ps-nativeempty" role="alert"><h2>Kampanyalar yüklenemedi</h2><p>Bağlantını kontrol ederek tekrar dene.</p><button data-retry="1">Tekrar dene</button></div>':`<div class="launch-splash"><span class="launch-brand">Prime</span></div>`;syncLaunchSurface();return;}const nav=root.querySelector('.ps-nav');if(nav)nav.style.display=(view==='detail'||settingsViews.includes(view))?'none':'';const detailScroll=view==='detail'&&screen.querySelector('.ps-realdetail')?.dataset.detailId===current?.id?screen.querySelector('.ps-detail-scroll')?.scrollTop:0;screen.innerHTML=view==='home'?home():view==='brands'?brands():view==='brand'?brandpage():view==='category'?categorypage():view==='newest'?newestPage():view==='trendyol'?trendyolPage():view==='discount'?discountpage():view==='detail'?detail():view==='filter'?filter():view==='campaigns'?nativeCampaigns():view==='campaignGroup'?nativeCampaignGroup():view==='favorites'?nativeFavorites():view==='settings'?settingsPage():settingsViews.includes(view)?settingsSubpage():home();root.querySelectorAll('.ps-previewnav [data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===view)));root.querySelectorAll('.ps-nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===(view==='campaignGroup'?'campaigns':view==='detail'?(returnView==='campaignGroup'?'campaigns':returnView):view)));root.querySelectorAll('.ps-nativerail').forEach(rail=>rail.addEventListener('scroll',()=>{const i=Math.round(rail.scrollLeft/Math.max(1,rail.clientWidth));rail.parentElement.querySelectorAll('.ps-nativedots span').forEach((dot,n)=>dot.classList.toggle('current',n===i));},{passive:true}));screen.querySelectorAll('img').forEach(img=>{img.decoding='async';if(!img.closest('.ps-nativehero')&&!img.closest('.ps-carousel.large'))img.loading='lazy';});syncArtworkFrames();if(detailScroll)screen.querySelector('.ps-detail-scroll').scrollTop=detailScroll;if(filterOpen)redrawCampaignFilterSheet();syncLaunchSurface();if(typeof lucide!=='undefined')lucide.createIcons();}
+function render(){screen.style.overflowY=loaded&&view==='detail'?'hidden':'auto';const loadingNav=root.querySelector('.ps-nav');if(loadingNav)loadingNav.style.display=!loaded?'none':'';if(!loaded){screen.innerHTML=loadError?'<div class="ps-nativeempty" role="alert"><h2>Kampanyalar yüklenemedi</h2><p>Bağlantını kontrol ederek tekrar dene.</p><button data-retry="1">Tekrar dene</button></div>':`<div class="launch-splash"><span class="launch-brand">Prime</span></div>`;syncLaunchSurface();return;}const nav=root.querySelector('.ps-nav');if(nav)nav.style.display=(view==='detail'||settingsViews.includes(view))?'none':'';const detailScroll=view==='detail'&&screen.querySelector('.ps-realdetail')?.dataset.detailId===current?.id?screen.querySelector('.ps-detail-scroll')?.scrollTop:0;screen.innerHTML=view==='home'?home():view==='brands'?brands():view==='brand'?brandpage():view==='category'?categorypage():view==='newest'?newestPage():view==='trendyol'?campaignBrowsePage('trendyol'):view==='discount'?discountpage():view==='detail'?detail():view==='filter'?filter():view==='campaigns'?nativeCampaigns():view==='campaignGroup'?nativeCampaignGroup():view==='favorites'?nativeFavorites():view==='settings'?settingsPage():settingsViews.includes(view)?settingsSubpage():home();root.querySelectorAll('.ps-previewnav [data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===view)));root.querySelectorAll('.ps-nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===(view==='campaignGroup'?'campaigns':view==='detail'?(returnView==='campaignGroup'?'campaigns':returnView):view)));root.querySelectorAll('.ps-nativerail').forEach(rail=>rail.addEventListener('scroll',()=>{const i=Math.round(rail.scrollLeft/Math.max(1,rail.clientWidth));rail.parentElement.querySelectorAll('.ps-nativedots span').forEach((dot,n)=>dot.classList.toggle('current',n===i));},{passive:true}));screen.querySelectorAll('img').forEach(img=>{img.decoding='async';if(!img.closest('.ps-nativehero')&&!img.closest('.ps-carousel.large'))img.loading='lazy';});syncArtworkFrames();if(detailScroll)screen.querySelector('.ps-detail-scroll').scrollTop=detailScroll;if(filterOpen)redrawCampaignFilterSheet();syncLaunchSurface();if(typeof lucide!=='undefined')lucide.createIcons();}
 root.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
 if(d.searchClear){
  const input=b.closest('.ps-search').querySelector('input');
@@ -599,14 +606,14 @@ if(d.settingsBack||d.action==='back'){const p=navigation.pop();if(p){restorePage
 const previous=capturePage();
 const route=d.homeProducts||d.newest||d.homeAll||d.view||d.discount||d.campaignGroup||d.brand||d.offer||d.type||d.nativeSearch;
 if(route){if(d.view&&['home','brands','campaigns','favorites'].includes(d.view))navigation.length=0;else navigation.push(previous);}
-if(d.view){if(d.view==='personal'){profileNameDraft=settingsName;profileMessage='';profileError='';}if(['campaigns','home','brands'].includes(d.view)){campaignFilters=emptyCampaignFilters();campaignBrand='Tümü';}if(d.view==='home')categoryScroll=0;if(d.view==='brands')selectedCategory='Tümü';if(d.view==='filter')returnView=view;view=d.view;query='';type='Tümü';}
+if(d.view){if(d.view==='personal'){profileNameDraft=settingsName;profileMessage='';profileError='';}if(['campaigns','home','brands','trendyol'].includes(d.view)){campaignFilters=emptyCampaignFilters();campaignBrand='Tümü';}if(d.view==='home')categoryScroll=0;if(['brands','trendyol'].includes(d.view))selectedCategory='Tümü';if(d.view==='filter')returnView=view;view=d.view;query='';type='Tümü';}
 else if(d.newest){type='Tümü';query='';view='newest';}
 else if(d.homeAll||d.homeProducts){
  campaignFilters=emptyCampaignFilters();campaignBrand='Tümü';type='Tümü';query='';view='campaigns';
 }
 else if(d.discount){discountThreshold=d.discount;type='Tümü';query='';if(d.discount==='all'){campaignFilters=emptyCampaignFilters();campaignBrand='Tümü';view='campaigns';}else view='discount';}
 else if(d.campaignBrand){campaignBrand=d.campaignBrand;view='campaigns';}
-else if(d.campaignGroup){campaignOrigin=view==='category'?'category':view==='newest'?'newest':'campaigns';campaignGroup=d.campaignGroup;view='campaignGroup';}
+else if(d.campaignGroup){campaignOrigin=['category','newest','trendyol'].includes(view)?view:'campaigns';campaignGroup=d.campaignGroup;view='campaignGroup';}
 else if(d.nativeSearch){const input=root.querySelector('#ps-native-query');if(input){navigation.pop();input.focus();return;}view='campaigns';query='';}
 else if(d.brand){brand=d.brand;type='Tümü';query='';view='brand';}
 else if(d.offer){returnView=view;current=offers.find(o=>o.id===d.offer);if(!current)return;view='detail';revealed=false;copyNotice=false;}
@@ -623,7 +630,7 @@ if(d.homeProducts){
 }
 const categoryStrip=root.querySelector('.ps-rounds');if(categoryStrip)categoryStrip.scrollLeft=categoryScroll;if(d.type){const rail=root.querySelector('.ps-categorytabs'),active=rail?.querySelector('[aria-pressed="true"]');if(rail&&active)rail.scrollLeft=Math.max(0,active.offsetLeft-rail.offsetLeft-parseFloat(getComputedStyle(rail).paddingInlineStart));}
 });
-root.addEventListener('input',e=>{if(e.target.id==='ps-favorites-query'){favoriteQuery=e.target.value;const results=root.querySelector('#ps-favorites-results');if(results)results.innerHTML=favoritesContent();if(typeof lucide!=='undefined')lucide.createIcons();return;}if(e.target.id==='ps-native-query'&&['campaigns','category'].includes(view)){query=e.target.value;const results=root.querySelector('#ps-native-results');if(results)results.innerHTML=campaignFilterResults();syncArtworkFrames();return;}if(e.target.id==='ps-native-query'){query=e.target.value;const results=root.querySelector('#ps-native-results');results.className=query.trim()?'':'ps-nativegrid';results.innerHTML=query.trim()?searchResults():nativeGroups(matchingBrands().filter(n=>campaignBrand==='Tümü'||campaignBrand===n),offers);const filters=root.querySelector('.ps-nativefilters');if(filters)filters.hidden=!!query.trim();syncArtworkFrames();return;}if(e.target.id==='ps-search'){query=e.target.value;const discoveryEl=root.querySelector('#ps-discovery');if(discoveryEl){discoveryEl.innerHTML=discovery();const categories=root.querySelector('.ps-rounds');if(categories)categories.hidden=!!query.trim();}else if(view==='brands'){const content=root.querySelector('#ps-brand-results');if(content)content.innerHTML=brandContent();}syncArtworkFrames();if(typeof lucide!=='undefined')lucide.createIcons();}});
+root.addEventListener('input',e=>{if(e.target.id==='ps-favorites-query'){favoriteQuery=e.target.value;const results=root.querySelector('#ps-favorites-results');if(results)results.innerHTML=favoritesContent();if(typeof lucide!=='undefined')lucide.createIcons();return;}if(e.target.id==='ps-native-query'&&['campaigns','category','trendyol'].includes(view)){query=e.target.value;const results=root.querySelector('#ps-native-results');if(results)results.innerHTML=campaignFilterResults();syncArtworkFrames();return;}if(e.target.id==='ps-native-query'){query=e.target.value;const results=root.querySelector('#ps-native-results');results.className=query.trim()?'':'ps-nativegrid';results.innerHTML=query.trim()?searchResults():nativeGroups(matchingBrands().filter(n=>campaignBrand==='Tümü'||campaignBrand===n),offers);const filters=root.querySelector('.ps-nativefilters');if(filters)filters.hidden=!!query.trim();syncArtworkFrames();return;}if(e.target.id==='ps-search'){query=e.target.value;const discoveryEl=root.querySelector('#ps-discovery');if(discoveryEl){discoveryEl.innerHTML=discovery();const categories=root.querySelector('.ps-rounds');if(categories)categories.hidden=!!query.trim();}else if(view==='brands'){const content=root.querySelector('#ps-brand-results');if(content)content.innerHTML=brandContent();}syncArtworkFrames();if(typeof lucide!=='undefined')lucide.createIcons();}});
 
 let codeDrag=null;
 function codeSliderTravel(thumb){
