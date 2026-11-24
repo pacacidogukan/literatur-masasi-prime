@@ -222,7 +222,8 @@ struct PrimeWebView: UIViewRepresentable {
                         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
                         request.httpBody = try JSONSerialization.data(withJSONObject: body)
                     }
-                    if let token = SecureStore.read("session") { request.setValue(token, forHTTPHeaderField: "X-Prime-Mobile-Session") }
+                    let requestToken = SecureStore.read("session")
+                    if let requestToken { request.setValue(requestToken, forHTTPHeaderField: "X-Prime-Mobile-Session") }
                     let (data, response) = try await session.data(for: request)
                     guard let http = response as? HTTPURLResponse,
                           http.value(forHTTPHeaderField: "Content-Type")?.contains("application/json") == true,
@@ -237,7 +238,8 @@ struct PrimeWebView: UIViewRepresentable {
                         SecureStore.clear("session")
                         SecureStore.clear("installation")
                     }
-                    if http.statusCode == 401 || path == "logout" || (path == "me" && result["authorized"] as? Bool == false) {
+                    let invalidSession = http.statusCode == 401 || (path == "me" && result["authorized"] as? Bool == false)
+                    if path == "logout" || (invalidSession && requestToken == SecureStore.read("session")) {
                         SecureStore.clear("session")
                     }
                     if path == "reveal", (200..<300).contains(http.statusCode) {

@@ -52,6 +52,17 @@ run('lastDayArt["trendyol-reviewed"]="https://example.com/revised.png"');
 assert(run('trendyolFeature(offers)').includes('https://example.com/revised.png'));
 
 assert.deepEqual(Array.from(run('trendyolOffers().map(o=>o.id)')),['trendyol-reviewed']);
+run('hydrate('+JSON.stringify([
+ {...trendyolFixture,id:'sovital-first',name:'SOVITAL'},
+ {...trendyolFixture,id:'sovital-second',name:'Sovital'},
+])+')');
+run("view='trendyol';query='';selectedCategory='Tümü';filterGroup='brands';filterDraft=emptyCampaignFilters()");
+const brandSheet=run('campaignFilterSheetHTML()');
+assert.equal((brandSheet.match(/data-filter-group="brands"/g)||[]).length,1);
+run("campaignFilters.brands=['SOVITAL']");
+assert.deepEqual(Array.from(run("filteredCampaigns(campaignFilters,'trendyol').map(o=>o.id)")),['sovital-first','sovital-second']);
+run("view='home';campaignFilters=emptyCampaignFilters();hydrate("+JSON.stringify([...rows,trendyolFixture])+");render()");
+
 assert.ok(screen.innerHTML.indexOf('Marka Kampanyaları')<screen.innerHTML.indexOf('ps-trendyolfeature'));
 screen.scrollTop=146;
 clickRoute({view:'trendyol'});assert.equal(run('view'),'trendyol');assert.match(screen.innerHTML,/data-offer-id="trendyol-reviewed"/);assert.match(screen.innerHTML,/data-artwork-slot="square"/);
@@ -169,9 +180,9 @@ await run('deleteData()');
 assert(requests.some(x=>x.path==='delete-account'));
 assert.equal(run('favorites.size'),0);
 
-// Brand directory always shows every active campaign as shared horizontal rows.
-run('hydrate('+JSON.stringify([...rows,{...rows[0],id:'second-brand-offer',offer:'İkinci fırsat',cardArtwork:undefined}])+')');
-run("view='brands';query='stale';type='Sepette İndirim';navigation.length=0;render()");
+// Unfiltered brand directory shows every active campaign as shared horizontal rows.
+run('hydrate('+JSON.stringify([...rows,{...rows[0],id:'second-brand-offer',offer:'İkinci fırsat',hasCode:0,cardArtwork:undefined}])+')');
+run("view='brands';query='stale';type='Sepette İndirim';selectedCategory='Tümü';navigation.length=0;render()");
 clickRoute({brand:'Solgar'});
 assert.equal(run('view'),'brand');assert.match(screen.innerHTML,/2 kampanya/);
 assert.match(screen.innerHTML,/ps-nativelist/);assert.doesNotMatch(screen.innerHTML,/ps-feed|ps-poster/);
@@ -180,11 +191,43 @@ assert.doesNotMatch(screen.innerHTML,/data-offer="no-code"|data-offer="expired"/
 assert.match(screen.innerHTML,/Seçili ürünler/);
 clickRoute({offer:'second-brand-offer'});assert.equal(run('view'),'detail');
 clickRoute({action:'back'});assert.equal(run('view'),'brand');assert.match(screen.innerHTML,/2 kampanya/);
+clickRoute({action:'back'});
+run("query='';selectedCategory='Kampanya Kodu'");
+clickRoute({brand:'Solgar'});
+assert.match(screen.innerHTML,/data-offer="live"/);
+assert.doesNotMatch(screen.innerHTML,/data-offer="second-brand-offer"/);
+clickRoute({action:'back'});
+run("selectedCategory='Tümü'");
+const isdinVariants=['I','İ','ı','i','I\u0307'];
+for(const first of isdinVariants){
+ for(const second of isdinVariants){
+  const search=first+'sD'+second+'n';
+  assert.equal(run('matchesQuery({brand:"ISDIN",title:"",sub:""},'+JSON.stringify(search)+')'),true,search);
+  assert.equal(run('matchesQuery({brand:'+JSON.stringify(search)+',title:"",sub:""},"isdin")'),true,search);
+ }
+}
+assert.notEqual(run('trendyolBrandKey("Şen")'),run('trendyolBrandKey("Sen")'));
+run('hydrate('+JSON.stringify(rows)+')');
+
+// Verify both accented campaign names and accented queries against plain spellings.
+run('hydrate('+JSON.stringify([
+ {...rows[0],id:'estee-accented',name:'Estée Lauder',offer:'Seçili ürünlerde %25 indirim'},
+ {...rows[0],id:'estee-plain',name:'Estee Lauder',offer:'Sepette %25 indirim'},
+])+')');
+run("campaignFilters=emptyCampaignFilters();selectedCategory='Tümü';favorites=new Set(['estee-accented','estee-plain'])");
+for(const text of ['Estee Lauder','ESTÉE LAUDER','Estêe Lauder','%25 EsTéE LaUDeR']){
+ run('query='+JSON.stringify(text)+';favoriteQuery=query');
+ for(const output of [run('nativeCampaigns()'),run('brands()'),run('favoritesContent()')]){
+  assert.match(output,/data-offer="estee-accented"/);
+  assert.match(output,/data-offer="estee-plain"/);
+ }
+}
+run("query='';favoriteQuery='';favorites.clear()");
 run('hydrate('+JSON.stringify(rows)+')');
 
 // Search matches brands, offer titles and descriptions consistently on every screen.
 run("campaignFilters=emptyCampaignFilters();selectedCategory='Tümü'");
-for(const query of [' solgar ', ' %25 İNDİRİM ', ' seçili ürünler ']){
+for(const query of [' solgar ', ' %25 İNDİRİM ', ' seçili ürünler ', 'SECiLı URUNLER', '  urunler  İNDıRİM\tSoLGaR ']){
  run('query='+JSON.stringify(query));
  assert.deepEqual(Array.from(run('matchingBrands()')),['Solgar']);
  assert.match(run('brands()'),/data-offer="live"[^>]*aria-label="Solgar: %25 indirim"/);
@@ -192,7 +235,9 @@ for(const query of [' solgar ', ' %25 İNDİRİM ', ' seçili ürünler ']){
  for(const output of [run('brands()'),run('nativeCampaigns()'),run('discovery()')]){assert.match(output,/ps-nativelist/);assert.doesNotMatch(output,/ps-brandgrid|ps-nativerail|ps-carousel/);}
  assert.doesNotMatch(run('nativeCampaigns()'),/data-offer-id="no-code"/);
 }
-run("query='does-not-exist'");
+run("favorites=new Set(['live']);favoriteQuery='uRuNLeR  sOLGaR'");
+assert.match(run('favoritesContent()'),/data-offer="live"/);
+run("favorites.clear();favoriteQuery='';query='solgar does-not-exist'");
 assert.equal(run('matchingBrands().length'),0);
 run("view='home';query='solgar';navigation.length=0;render()");clickRoute({offer:'live'});assert.equal(run('view'),'detail');clickRoute({action:'back'});assert.equal(run('view'),'home');assert.equal(run('query'),'solgar');assert.match(screen.innerHTML,/ps-nativelist/);
 run('hydrate('+JSON.stringify([{...rows[0],id:'pending-native',cardArtwork:undefined}])+');query="";type="Tümü"');assert.equal(run('offers[0].artworkReady'),false);assert.match(run('feed(offers)'),/ps-nativelist/);assert.doesNotMatch(run('feed(offers)'),/ps-poster/);assert.equal(run("poster(offers[0],'small')"),'');
@@ -302,6 +347,25 @@ refreshRows=refreshRows.map(r=>r.id==='new'?{...r,offer:'Updated offer',expires:
 run('lastCampaignAttempt=0');await run('refreshCampaigns(true)');assert.equal(run('current.title'),'Updated offer');assert.equal(run('current.code'),'');assert.equal(run('revealed'),false);assert.equal(run('copyNotice'),false);
 // Local expiry uses the same reconciliation for current and back-stack details.
 run("navigation.push(capturePage());applyCampaignRows(offers.filter(o=>o.id!=='new').map(o=>o.raw))");assert.equal(run('view'),'home');run('restorePage(navigation.pop())');assert.equal(run('view'),'home');
+let authorized=false;
+const renewalCalls=[];
+bridge.postMessage=async ({path})=>{
+ renewalCalls.push(path);
+ if(path==='access'){authorized=true;return {status:201,data:{authorized:true}};}
+ if(!authorized)return {status:401,data:{error:'Oturum gerekli.'}};
+ return {status:200,data:path==='campaigns'?{campaigns:refreshRows}:{code:'RENEWED'}};
+};
+run('lastCampaignAttempt=0');
+await Promise.all([run('refreshCampaigns(true)'),run("server('reveal',{id:'new'})")]);
+assert.deepEqual(renewalCalls,['campaigns','reveal','access','campaigns','reveal']);
+const failedRenewalCalls=[];
+bridge.postMessage=async ({path})=>{
+ failedRenewalCalls.push(path);
+ return path==='access'?{status:201,data:{authorized:true}}:{status:401,data:{error:'Oturum gerekli.'}};
+};
+await assert.rejects(run("server('reveal',{id:'new'})"),/Oturum gerekli/);
+assert.deepEqual(failedRenewalCalls,['reveal','access','reveal'],'A repeated 401 cannot create a renewal loop');
+
 bridge.postMessage=originalPost;
 console.log('PASS: live feed refresh, new/unpublished/changed offers, detail and favorite cleanup, navigation preservation, hidden-page throttle, error retention, single flight and stale-response rejection.');
 

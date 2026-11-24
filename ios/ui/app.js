@@ -110,7 +110,26 @@ function spreadCampaigns(items,scope='cards',seed=campaignSessionSeed){
 let loaded=false,loadError=false,revealBusy=false,deleteBusy=false;
 function readLocal(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
 function writeLocal(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch{return false;}}
-async function server(path,body){const bridge=window.webkit?.messageHandlers?.primeAPI;if(!bridge)throw Error('Mobil bağlantı başlatılamadı.');const r=await bridge.postMessage({path,body:body||null});if(r.status<200||r.status>=300)throw Error(r.data?.error||'İşlem tamamlanamadı.');return r.data;}
+// A campaign refresh and a code reveal can encounter the same expired session.
+let sessionRenewal=null,sessionRevision=0;
+async function server(path,body){
+ const bridge=window.webkit?.messageHandlers?.primeAPI;
+ if(!bridge)throw Error('Mobil bağlantı başlatılamadı.');
+ const send=()=>bridge.postMessage({path,body:body||null});
+ const epoch=campaignEpoch,revision=sessionRevision;
+ let response=await send();
+ if(response.status===401&&(path==='campaigns'||path==='reveal')&&epoch===campaignEpoch&&!deleteBusy){
+  if(revision===sessionRevision){
+   if(!sessionRenewal){
+    sessionRenewal=server('access',{}).then(()=>{sessionRevision++;}).finally(()=>{sessionRenewal=null;});
+   }
+   await sessionRenewal;
+  }
+  if(epoch===campaignEpoch&&!deleteBusy)response=await send();
+ }
+ if(response.status<200||response.status>=300)throw Error(response.data?.error||'İşlem tamamlanamadı.');
+ return response.data;
+}
 const expired=o=>Number(o?.expires)>0&&Number(o.expires)*1000<=Date.now();
 function asset(value){const v=String(value||'');if(/^[\w.-]+\.(png|jpg|jpeg|webp|svg)$/.test(v))return 'assets/'+v;if(/^assets\/[\w.\/-]+$/.test(v))return v;try{const u=new URL(v);return u.protocol==='https:'&&!u.username&&!u.password?u.href:''}catch{return ''}}
 function website(value){try{const u=new URL(String(value||''));return u.protocol==='https:'&&!u.username&&!u.password?u.href:''}catch{return ''}}
@@ -133,7 +152,9 @@ function applyCampaignRows(rows){
  for(const page of navigation)reconcile(page);
  const oldCurrent=current;reconcile(position);
  if(oldCurrent&&(!position.current||!position.current.code)){copyNotice=false;revealed=false;}
- if(settingsViews.includes(view)){current=position.current;return true;}restorePage(position);return true;
+ if(settingsViews.includes(view)){current=position.current;return true;}
+ if(position.view===view&&refreshFocusedSearch())return true;
+ restorePage(position);return true;
 }
 async function refreshCampaigns(foreground=false){
  if(!loaded||deleteBusy||document.hidden||campaignRefreshPending)return;
@@ -152,7 +173,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)void refre
 document.addEventListener('prime-foreground',()=>void refreshCampaigns(true));
 setInterval(()=>void refreshCampaigns(),60000);
 async function start(){campaignEpoch++;loaded=false;loadError=false;render();try{let me=await server('me');if(!me.authorized)await server('access',{});const r=await server('campaigns');if(!Array.isArray(r.campaigns))throw Error('Geçersiz kampanya yanıtı.');hydrate(r.campaigns);campaignSignature=JSON.stringify(r.campaigns);lastCampaignAttempt=Date.now();loaded=true;view='home';navigation.length=0;render();}catch(e){loadError=true;render();}}
-async function deleteData(){if(deleteBusy)return;deleteBusy=true;campaignEpoch++;try{const result=await server('delete-account',{});if(result.deleted!==true)throw Error('Silme işlemi doğrulanamadı.');favorites.clear();persistFavorites();profilePhotoEpoch++;profilePhotoBusy=false;settingsPhoto=null;settingsName='';profileNameDraft='';profileMessage='';profileError='';writeLocal('lmprime-photo',null);writeLocal('lmprime-name','');navigation.length=0;await start();}catch(e){showError('Veriler silinemedi. Tekrar dene.');}finally{deleteBusy=false;}}
+async function deleteData(){if(deleteBusy)return;deleteBusy=true;campaignEpoch++;try{await sessionRenewal?.catch(()=>{});const result=await server('delete-account',{});if(result.deleted!==true)throw Error('Silme işlemi doğrulanamadı.');favorites.clear();persistFavorites();profilePhotoEpoch++;profilePhotoBusy=false;settingsPhoto=null;settingsName='';profileNameDraft='';profileMessage='';profileError='';writeLocal('lmprime-photo',null);writeLocal('lmprime-name','');navigation.length=0;await start();}catch(e){showError('Veriler silinemedi. Tekrar dene.');}finally{deleteBusy=false;}}
 root.addEventListener('click',async e=>{const a=e.target.closest('a[href]');if(!a)return;e.preventDefault();const url=website(a.getAttribute('href'));if(!url){showError('Mağaza bağlantısı bulunmuyor.');return;}try{await server('open-external',{url});}catch(e){showError(e.message);}},true);
 setInterval(()=>{if(!loaded||document.hidden)return;const active=offers.filter(o=>!expired(o));if(active.length===offers.length)return;applyCampaignRows(active.map(o=>o.raw));},1000);
 
@@ -192,7 +213,13 @@ function header(){
 function tag(o){const assigned=categoriesFor(o);const label=type!=='Tümü'&&assigned.includes(type)?type:assigned[0]||o.category;const glyph=cats.find(c=>c[0]===label)?.[1]||'tag';return `<div class="ps-tagrow"><span class="ps-tag">${icon(glyph)}${label}</span></div>`}
 function card(o){return poster(o,'feedcard')}
 function matchesSearch(o){return matchesQuery(o,query);}
-function matchesQuery(o,searchQuery){return (o.brand+' '+o.title+' '+o.sub).toLocaleLowerCase('tr').includes(searchQuery.trim().toLocaleLowerCase('tr'));}
+const foldTurkishI=value=>value.normalize('NFC').toLocaleLowerCase('tr').replaceAll('ı','i');
+const searchKey=value=>foldTurkishI(value).normalize('NFD').replace(/\p{M}/gu,'');
+function matchesQuery(o,searchQuery){
+ const terms=searchKey(searchQuery.trim()).split(/\s+/u);
+ const text=searchKey([o.brand,o.title,o.sub].join(' '));
+ return terms.every(term=>text.includes(term));
+}
 function matchingBrands(){return [...new Set(offers.filter(matchesSearch).map(o=>o.brand))];}
 function matches(o){return (type==='Tümü'||categoriesFor(o).includes(type))&&matchesSearch(o)}
 function feed(arr){arr=arr.filter(matches);if(!arr.length)return '<div class="ps-empty">Bu kategoride kampanya yok.</div>';const ready=spreadCampaigns(arr.filter(o=>o.artworkReady),'feed');const pending=arr.filter(o=>!o.artworkReady);return (ready.length?`<div class="ps-feed">${ready.map(card).join('')}</div>`:'')+(pending.length?campaignRows(pending):'');}
@@ -353,7 +380,7 @@ function trendyolOffers(arr=offers){
     (!o.expires||o.expires*1000>Date.now());
  });
 }
-const trendyolBrandKey=name=>name.trim().toLocaleLowerCase('tr').replaceAll('ı','i');
+const trendyolBrandKey=name=>foldTurkishI(name.trim());
 function trendyolBrandCards(items){
  const firstByBrand=new Map();
  for(const offer of items){
@@ -392,7 +419,8 @@ function pageSearchHeader(inputId='ps-search',value=query){
 function brands(){return `<div class="ps-browseheader">${pageSearchHeader()}${campaignFilterToolbar('brands')}</div><main class="ps-nativepage ps-campaignspage ps-brandspage" id="ps-brand-results">${brandContent()}</main>`;}
 
 function brandpage(){
- const arr=offers.filter(o=>o.brand===brand&&campaignFilterMatches(o));
+ const source=navigation.at(-1)?.view==='brands'?filteredCampaigns(campaignFilters,'brands'):offers.filter(o=>campaignFilterMatches(o));
+ const arr=source.filter(o=>o.brand===brand);
  return brandCampaignPage(brand,arr);
 }
 function brandCampaignPage(name,arr,category=''){
@@ -516,18 +544,17 @@ const campaignSortOptions=[
  ['discount','İndirim oranı yüksekten düşüğe','trending-down']
 ];
 function campaignFilterCount(f=campaignFilters){return Object.keys(filterTitles).reduce((n,k)=>n+f[k].length,0);}
-function campaignFilterMatches(o,f=campaignFilters,skip='',now=Date.now()){
+function campaignFilterMatches(o,f=campaignFilters,skip='',now=Date.now(),scope=view){
  const days=86400000,rate=discountRates[o.id]||0;
- const tests={products:()=>f.products.some(id=>o.productCategories.includes(id)),brands:()=>f.brands.includes(o.brand),rates:()=>rate>0&&f.rates.some(v=>rate>=Number(v)),published:()=>o.publishedAt>0&&o.publishedAt*1000<=now&&f.published.some(v=>now-o.publishedAt*1000<=Number(v)*days),ending:()=>o.expires*1000>now&&f.ending.some(v=>o.expires*1000-now<=Number(v)*days),codes:()=>f.codes.includes(o.hasCode?'yes':'no'),saved:()=>f.saved.includes('yes')&&favorites.has(o.id)};
+ const tests={products:()=>f.products.some(id=>o.productCategories.includes(id)),brands:()=>scope==='trendyol'?f.brands.some(name=>trendyolBrandKey(name)===trendyolBrandKey(o.brand)):f.brands.includes(o.brand),rates:()=>rate>0&&f.rates.some(v=>rate>=Number(v)),published:()=>o.publishedAt>0&&o.publishedAt*1000<=now&&f.published.some(v=>now-o.publishedAt*1000<=Number(v)*days),ending:()=>o.expires*1000>now&&f.ending.some(v=>o.expires*1000-now<=Number(v)*days),codes:()=>f.codes.includes(o.hasCode?'yes':'no'),saved:()=>f.saved.includes('yes')&&favorites.has(o.id)};
  return !expired(o)&&Object.keys(tests).every(k=>k===skip||!f[k].length||tests[k]());
 }
 function campaignFilterSource(scope=view){
  const source=scope==='trendyol'?trendyolOffers():scope==='newest'?newestOffers():scope==='discount'?discountOffers():offers;
- const matches=o=>matchesSearch(o)||(scope==='trendyol'&&trendyolBrandKey(o.brand).includes(trendyolBrandKey(query)));
- return source.filter(o=>matches(o)&&(!['category','brands','trendyol','newest','discount'].includes(scope)||selectedCategory==='Tümü'||categoriesFor(o).includes(selectedCategory))&&(scope!=='campaigns'||campaignBrand==='Tümü'||o.brand===campaignBrand));
+ return source.filter(o=>matchesSearch(o)&&(!['category','brands','trendyol','newest','discount'].includes(scope)||selectedCategory==='Tümü'||categoriesFor(o).includes(selectedCategory))&&(scope!=='campaigns'||campaignBrand==='Tümü'||o.brand===campaignBrand));
 }
 function filteredCampaigns(f=campaignFilters,scope=view){
- const arr=campaignFilterSource(scope).filter(o=>campaignFilterMatches(o,f));
+ const arr=campaignFilterSource(scope).filter(o=>campaignFilterMatches(o,f,'',Date.now(),scope));
  const stable=(a,b)=>a.id.localeCompare(b.id);
  if(f.sort==='newest')arr.sort((a,b)=>b.publishedAt-a.publishedAt||stable(a,b));
  else if(f.sort==='ending')arr.sort((a,b)=>(a.expires||Infinity)-(b.expires||Infinity)||stable(a,b));
@@ -557,12 +584,19 @@ function campaignFilterResults(scope=view){
 function campaignBrowsePage(scope=view){return `<div class="ps-browseheader">${pageSearchHeader('ps-native-query')}${campaignFilterToolbar(scope)}</div><main class="ps-nativepage ps-campaignspage ${scope==='category'?'ps-categorypage':''}"><div id="ps-native-results">${campaignFilterResults(scope)}</div></main>`;}
 function filterChip(group,value,label,count){const selected=filterDraft[group].includes(value);return `<button type="button" data-filter-group="${group}" data-filter-value="${esc(value)}" aria-pressed="${selected}">${esc(label)}${count===undefined?'':` <span>${count}</span>`}</button>`;}
 function campaignFilterSheetHTML(){
- const f=filterDraft,counts=new Map();for(const o of campaignFilterSource().filter(o=>campaignFilterMatches(o,f,'brands')))counts.set(o.brand,(counts.get(o.brand)||0)+1);
- const names=[...new Set([...counts.keys(),...f.brands])].sort((a,b)=>a.localeCompare(b,'tr'));
+ const f=filterDraft,counts=new Map();
+ const brandKey=view==='trendyol'?trendyolBrandKey:name=>name;
+ const labels=new Map(f.brands.map(name=>[brandKey(name),name]));
+ for(const o of campaignFilterSource().filter(o=>campaignFilterMatches(o,f,'brands'))){
+  const key=brandKey(o.brand);
+  if(!labels.has(key))labels.set(key,o.brand);
+  counts.set(key,(counts.get(key)||0)+1);
+ }
+ const names=[...labels.values()].sort((a,b)=>a.localeCompare(b,'tr'));
  const shown=filterAllBrands?names:[...new Set([...f.brands,...names.slice(0,6)])];
  const section=(k,content)=>filterGroup!=='all'&&filterGroup!==k?'':`<section id="ps-filter-${k}" aria-labelledby="ps-filter-title-${k}"><h3 id="ps-filter-title-${k}">${filterTitles[k]}</h3><div class="ps-filterchips">${content}</div></section>`;
  const facets=k=>section(k,`<button type="button" data-filter-clear="${k}" aria-pressed="${!f[k].length}">Tümü</button>`+filterOptions[k].map(([v,n])=>filterChip(k,v,n)).join(''));
- return `<section class="ps-filterdialog" role="dialog" aria-modal="true" aria-labelledby="ps-filter-title"><header class="ps-filterdialoghead"><h2 id="ps-filter-title" tabindex="-1">${filterGroup==='all'?'Filtrele':filterGroup==='sort'?'Sırala':filterTitles[filterGroup]}</h2><button type="button" class="ps-filterclose" data-filter-close="1" aria-label="Kapat">${icon('x')}</button></header><div class="ps-filterbody">${['all','sort'].includes(filterGroup)?`<section id="ps-filter-sort" aria-labelledby="ps-filter-title-sort"><h3 id="ps-filter-title-sort">Sıralama</h3><div class="ps-filterchips">${campaignSortOptions.map(([v,n,glyph])=>`<button type="button" data-filter-sort="${v}" aria-pressed="${f.sort===v}">${icon(glyph)}<span>${n}</span></button>`).join('')}</div></section>`:''}${facets('products')}${facets('rates')}${section('brands',`<button type="button" data-filter-clear="brands" aria-pressed="${!f.brands.length}">Tümü</button>`+shown.map(n=>filterChip('brands',n,n,counts.get(n)||0)).join('')+(names.length>6?`<button type="button" class="ps-brandsmore" data-filter-more="1" aria-expanded="${filterAllBrands}">${filterAllBrands?'Daha Az Göster':'Tümünü Gör'}${icon(filterAllBrands?'chevron-up':'chevron-down')}</button>`:''))}${facets('published')}${facets('ending')}${facets('codes')}${facets('saved')}</div><footer class="ps-filterfooter"><button type="button" data-filter-clean="1">Temizle</button><button type="button" data-filter-apply="1">${filteredCampaigns(f).length} kampanyayı göster</button></footer></section>`;
+ return `<section class="ps-filterdialog" role="dialog" aria-modal="true" aria-labelledby="ps-filter-title"><header class="ps-filterdialoghead"><h2 id="ps-filter-title" tabindex="-1">${filterGroup==='all'?'Filtrele':filterGroup==='sort'?'Sırala':filterTitles[filterGroup]}</h2><button type="button" class="ps-filterclose" data-filter-close="1" aria-label="Kapat">${icon('x')}</button></header><div class="ps-filterbody">${['all','sort'].includes(filterGroup)?`<section id="ps-filter-sort" aria-labelledby="ps-filter-title-sort"><h3 id="ps-filter-title-sort">Sıralama</h3><div class="ps-filterchips">${campaignSortOptions.map(([v,n,glyph])=>`<button type="button" data-filter-sort="${v}" aria-pressed="${f.sort===v}">${icon(glyph)}<span>${n}</span></button>`).join('')}</div></section>`:''}${facets('products')}${facets('rates')}${section('brands',`<button type="button" data-filter-clear="brands" aria-pressed="${!f.brands.length}">Tümü</button>`+shown.map(n=>filterChip('brands',n,n,counts.get(brandKey(n))||0)).join('')+(names.length>6?`<button type="button" class="ps-brandsmore" data-filter-more="1" aria-expanded="${filterAllBrands}">${filterAllBrands?'Daha Az Göster':'Tümünü Gör'}${icon(filterAllBrands?'chevron-up':'chevron-down')}</button>`:''))}${facets('published')}${facets('ending')}${facets('codes')}${facets('saved')}</div><footer class="ps-filterfooter"><button type="button" data-filter-clean="1">Temizle</button><button type="button" data-filter-apply="1">${filteredCampaigns(f).length} kampanyayı göster</button></footer></section>`;
 }
 function redrawCampaignFilterSheet(){
  const host=root.querySelector('.ps-filteroverlay');if(!host)return;
@@ -661,6 +695,14 @@ if(d.homeProducts){
 }
 const categoryStrip=root.querySelector('.ps-rounds');if(categoryStrip)categoryStrip.scrollLeft=categoryScroll;if(d.type){const rail=root.querySelector('.ps-categorytabs'),active=rail?.querySelector('[aria-pressed="true"]');if(rail&&active)rail.scrollLeft=Math.max(0,active.offsetLeft-rail.offsetLeft-parseFloat(getComputedStyle(rail).paddingInlineStart));}
 });
+function refreshFocusedSearch(){
+ const input=document.activeElement;
+ if(!input||!screen.contains(input))return false;
+ const selectors={'ps-favorites-query':'#ps-favorites-results','ps-native-query':'#ps-native-results','ps-search':'#ps-brand-results'};
+ if(!selectors[input.id]||!screen.querySelector(selectors[input.id]))return false;
+ input.dispatchEvent(new Event('input',{bubbles:true}));
+ return true;
+}
 root.addEventListener('input',e=>{if(e.target.id==='ps-favorites-query'){favoriteQuery=e.target.value;const results=root.querySelector('#ps-favorites-results');if(results)results.innerHTML=favoritesContent();if(typeof lucide!=='undefined')lucide.createIcons();return;}if(e.target.id==='ps-native-query'&&['campaigns','category','trendyol','newest','discount'].includes(view)){query=e.target.value;const results=root.querySelector('#ps-native-results');if(results)results.innerHTML=campaignFilterResults();syncArtworkFrames();return;}if(e.target.id==='ps-native-query'){query=e.target.value;const results=root.querySelector('#ps-native-results');results.className=query.trim()?'':'ps-nativegrid';results.innerHTML=query.trim()?searchResults():nativeGroups(matchingBrands().filter(n=>campaignBrand==='Tümü'||campaignBrand===n),offers);const filters=root.querySelector('.ps-nativefilters');if(filters)filters.hidden=!!query.trim();syncArtworkFrames();return;}if(e.target.id==='ps-search'){query=e.target.value;const discoveryEl=root.querySelector('#ps-discovery');if(discoveryEl){discoveryEl.innerHTML=discovery();const categories=root.querySelector('.ps-rounds');if(categories)categories.hidden=!!query.trim();}else if(view==='brands'){const content=root.querySelector('#ps-brand-results');if(content)content.innerHTML=brandContent();}syncArtworkFrames();if(typeof lucide!=='undefined')lucide.createIcons();}});
 
 let codeDrag=null;
@@ -730,7 +772,7 @@ root.addEventListener('pointerup',e=>{if(!copyDrag||e.pointerId!==copyDrag.id)re
 root.addEventListener('pointercancel',()=>{if(!copyDrag)return;copyDrag.sheet.classList.remove('ps-copydragging');copyDrag.sheet.style.transform='';copyDrag.sheet.closest('.ps-copyoverlay').style.backgroundColor='';copyDrag=null;});
 function timedMembership(){return offers.filter(o=>isLastDay(o)).map(o=>o.id).join('|')+'::'+newestOffers().map(o=>o.id).join('|')+'::'+trendyolOffers().map(o=>o.id).join('|');}
 let lastDayMembership=timedMembership();
-const lastDayRefresh=setInterval(()=>{if(!root.isConnected){clearInterval(lastDayRefresh);return;}if(document.hidden)return;const membership=timedMembership();if(membership===lastDayMembership)return;lastDayMembership=membership;if(view==='home'||view==='category'||view==='newest'||view==='trendyol'||(view==='campaignGroup'&&campaignOrigin==='newest')){const y=screen.scrollTop;render();screen.scrollTop=y;}},1000);
+const lastDayRefresh=setInterval(()=>{if(!root.isConnected){clearInterval(lastDayRefresh);return;}if(document.hidden)return;const membership=timedMembership();if(membership===lastDayMembership)return;lastDayMembership=membership;if(view==='home'||view==='category'||view==='newest'||view==='trendyol'||(view==='campaignGroup'&&campaignOrigin==='newest')){const y=screen.scrollTop;if(!refreshFocusedSearch()){render();screen.scrollTop=y;}}},1000);
 root.addEventListener('keydown',e=>{const rail=e.target.closest('.ps-nativerail');if(!copyNotice&&rail&&e.target===rail&&['ArrowRight','ArrowLeft'].includes(e.key)){e.preventDefault();rail.scrollBy({left:(e.key==='ArrowRight'?1:-1)*rail.clientWidth,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});return;}if(!copyNotice)return;if(e.key==='Escape'){copyNotice=false;render();screen.querySelector('[data-copy-preview]')?.focus();return;}if(e.key==='Tab'){const all=[...screen.querySelectorAll('.ps-copydialog button,.ps-copydialog a')];const first=all[0],last=all[all.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}});
 function failCampaignImage(img,reason){
  const frame=img.closest('.ps-artwork-frame');
