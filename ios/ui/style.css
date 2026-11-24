@@ -692,3 +692,13 @@ html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;backgrou
 #prime-square-campaigns .ps-filterchips button[data-filter-sort] svg{width:18px;height:18px;color:var(--ps-red)}
 #prime-square-campaigns .ps-filterchips button[data-filter-sort] span{min-width:0;flex-shrink:1}
 #prime-square-campaigns .ps-filterchips button[data-filter-sort][aria-pressed=true] svg{color:inherit}
+
+/* Trendyol shares the reviewed 1200 × 400 Son Gün artwork format. */
+#prime-square-campaigns .ps-trendyolrail{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;border-radius:17px;overscroll-behavior-x:contain}
+#prime-square-campaigns .ps-trendyolrail::-webkit-scrollbar{display:none}
+#prime-square-campaigns .ps-trendyol-list{display:grid;gap:12px}
+#prime-square-campaigns .ps-trendyol-list .ps-codebanner{width:100%}
+#prime-square-campaigns .ps-trendyol-lockup{position:absolute;z-index:1;inset-block-start:6%;inset-inline-end:3%;display:flex;align-items:center;gap:5px;background:#fff;padding:3px 5px;border-radius:5px;pointer-events:none}
+#prime-square-campaigns .ps-trendyol-lockup img{display:block;width:clamp(39px,9vw,65px);height:auto}
+#prime-square-campaigns .ps-trendyol-lockup img:last-child{width:clamp(57px,13vw,87px)}
+#prime-square-campaigns .ps-trendyol-empty{display:grid;place-items:center;aspect-ratio:3/1;margin:0;padding:12px;border-radius:17px;background:var(--ps-surface,#fff);color:var(--ps-muted);text-align:center}

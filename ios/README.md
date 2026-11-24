@@ -76,3 +76,12 @@ Ekran testleri Debug sürümüne özel örnek API yanıtları kullanır; canlı 
 Bu sonuçlar fiziksel cihaz, fotoğraf izinleri, gerçek ağ kesintisi, Release imzalama veya TestFlight doğrulaması anlamına gelmez.
 
 Güncel açılış: beyaz zemin üzerinde kırmızı Literatür Masası Prime logosu, ardından doğrudan ana sayfa. Hesap veya kullanıcı bilgisi istenmez. Teknik oturum otomatik oluşturulur. Mağaza incelemesinde giriş hesabı gerekmiyor olarak işaretlenmelidir.
+
+### Trendyol kampanya alanı
+
+Trendyol alanı, hedefi Trendyol olan ve satıcı doğrulamasından sonra kanal alanına
+`Trendyol · Yetkili Satıcı` yazılan yayındaki kampanyaları gösterir. Kampanyanın
+onaylı altı mobil görseli gerekir. Yatay kart Son Gün ile aynı 1200 × 400 ölçüsünü
+kullanır. Alt afişte markanın resmî logosu, gerçek ürün fotoğrafı ve kısa teklif
+notu yer alır. Uygulama Trendyol logosunu ve Yetkili Satıcı etiketini sağ üstte
+gösterir; afişte bu alanı açık bırakın. Afişe kupon kodu yazmayın.
