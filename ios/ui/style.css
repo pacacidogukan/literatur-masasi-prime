@@ -697,7 +697,7 @@ html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;backgrou
 #prime-square-campaigns .ps-trendyolrail{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;border-radius:17px;overscroll-behavior-x:contain}
 #prime-square-campaigns .ps-trendyolrail::-webkit-scrollbar{display:none}
 #prime-square-campaigns .ps-trendyol-list{display:grid;gap:12px}
-#prime-square-campaigns .ps-codebanner.ps-trendyol-card{width:100%;display:grid;grid-template-columns:minmax(0,1fr) clamp(70px,22%,125px);gap:0;background:var(--ps-bg)}
+#prime-square-campaigns .ps-codebanner.ps-trendyol-card{width:100%;aspect-ratio:3/1;display:grid;grid-template-columns:minmax(0,1fr) clamp(70px,22%,125px);gap:0;background:var(--ps-bg)}
 /* Artwork and branding occupy independent columns for existing and future banners. */
 #prime-square-campaigns .ps-trendyol-art{min-width:0;align-self:center;display:block}
 #prime-square-campaigns .ps-trendyol-side{height:100%;padding:8px;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;background:var(--ps-bg);border-inline-start:1px solid var(--ps-filter-border)}
