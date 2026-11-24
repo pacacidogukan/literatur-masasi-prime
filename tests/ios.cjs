@@ -28,6 +28,27 @@ run("query='';campaignBrand='Tümü';render()");
 clickRoute({type:'Kampanya Kodu'});assert.equal(run('view'),'category');assert.equal(run('selectedCategory'),'Kampanya Kodu');
 assert.match(screen.innerHTML,/data-offer-id="live"/);assert.doesNotMatch(screen.innerHTML,/data-offer-id="no-code"/);
 clickRoute({action:'back'});assert.equal(run('view'),'home');
+// The Trendyol lane accepts only reviewed authorized-seller campaigns.
+const trendyolFixture={...rows[0],id:'trendyol-reviewed',name:'Fixture',channel:'Trendyol · Yetkili Satıcı',campaignPage:'https://www.trendyol.com/sr?mid=1416'};
+run('hydrate('+JSON.stringify([...rows,trendyolFixture,
+ {...trendyolFixture,id:'trendyol-outside',campaignPage:'https://example.com'},
+ {...trendyolFixture,id:'trendyol-unknown-seller',channel:'https://www.trendyol.com'},
+ {...trendyolFixture,id:'trendyol-unreviewed',cardArtwork:undefined},
+ {...trendyolFixture,id:'trendyol-expired',expires:1}
+])+');render()');
+const lane=run('trendyolFeature(offers)');
+assert.match(lane,/Hepsini gör/);
+assert.match(lane,/data-artwork-slot="lastDay"/);
+assert.match(lane,/trendyol-authorized-seller.svg/);
+assert.deepEqual(Array.from(run('trendyolOffers().map(o=>o.id)')),['trendyol-reviewed']);
+assert.ok(screen.innerHTML.indexOf('Marka Kampanyaları')<screen.innerHTML.indexOf('ps-trendyolfeature'));
+screen.scrollTop=146;
+clickRoute({view:'trendyol'});assert.equal(run('view'),'trendyol');assert.match(screen.innerHTML,/data-offer="trendyol-reviewed"/);
+clickRoute({offer:'trendyol-reviewed'});assert.equal(run('view'),'detail');
+clickRoute({action:'back'});assert.equal(run('view'),'trendyol');
+clickRoute({action:'back'});assert.equal(run('view'),'home');assert.equal(screen.scrollTop,146);
+run('hydrate('+JSON.stringify(rows)+')');
+assert.match(run('trendyolFeature(offers)'),/Şu anda yayında Trendyol kampanyası yok/);
 // Newest section uses only immutable publication dates within a rolling seven days.
 const publicationNow=Math.floor(Date.now()/1000);
 run('hydrate('+JSON.stringify([{...rows[0],id:'recent',publishedAt:publicationNow-86400},{...rows[0],id:'boundary',publishedAt:publicationNow-7*86400},{...rows[0],id:'too-old',publishedAt:publicationNow-7*86400-1,updated:publicationNow},{...rows[0],id:'unknown'},{...rows[0],id:'future',publishedAt:publicationNow+60}])+')');
