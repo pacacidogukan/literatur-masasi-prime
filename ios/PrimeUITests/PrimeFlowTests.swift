@@ -238,10 +238,10 @@ final class PrimeFlowTests: XCTestCase {
         tap("Ana Sayfa")
         tap("Profili aç")
         tap("Gizlilik")
-        XCTAssertTrue(app.webViews.staticTexts["Literatür Masası Prime Gizlilik Bilgilendirmesi"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.webViews.staticTexts["Prime Gizlilik Bilgilendirmesi"].waitForExistence(timeout: 15))
         tap("Geri")
         tap("Kullanıcı Sözleşmesi")
-        XCTAssertTrue(app.webViews.staticTexts["Literatür Masası Prime Kullanıcı Sözleşmesi"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.webViews.staticTexts["Prime Kullanıcı Sözleşmesi"].waitForExistence(timeout: 15))
     }
     func testLiveStoreScreenshots() throws {
         app.terminate()

@@ -701,3 +701,27 @@ html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;backgrou
 #prime-square-campaigns .ps-trendyolrail{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;border-radius:17px;overscroll-behavior-x:contain}
 #prime-square-campaigns .ps-trendyolrail::-webkit-scrollbar{display:none}
 #prime-square-campaigns .ps-trendyol-empty{display:grid;place-items:center;aspect-ratio:3/1;margin:0;padding:12px;border-radius:17px;background:var(--ps-surface,#fff);color:var(--ps-muted);text-align:center}
+
+/* Profile links and campaign counters. */
+#prime-square-campaigns .ps-profilehome{display:flex;flex-direction:column}
+#prime-square-campaigns .ps-profilehome .ps-profilecontent{flex:1;display:flex;flex-direction:column}
+#prime-square-campaigns .ps-profilehome .ps-profilecard{margin-bottom:12px;flex:none}
+#prime-square-campaigns .ps-profilehome .ps-profilemenu{display:grid;gap:12px;border:0;box-shadow:none;overflow:visible}
+#prime-square-campaigns .ps-profilehome .ps-profilemenu button,#prime-square-campaigns .ps-contactcards button{min-height:56px;background:#fff;border:1px solid var(--ps-line);border-radius:17px;box-shadow:0 4px 14px #1423340b}
+#prime-square-campaigns .ps-profilelegal{margin-top:auto;padding-top:32px;text-align:center;color:var(--ps-muted);font-size:12px}
+#prime-square-campaigns .ps-profilelegal div{display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:wrap}
+#prime-square-campaigns .ps-profilelegal button{background:none;border:0;color:var(--ps-muted);min-height:44px;padding:0 5px;font-size:13px}
+#prime-square-campaigns .ps-profilelegal p{margin:0}
+#prime-square-campaigns .ps-contactcards{display:grid;gap:12px}
+#prime-square-campaigns .ps-contactcards button{display:flex;align-items:center;gap:12px;text-align:left;padding:12px 16px;color:var(--ps-ink);font-size:14px}
+#prime-square-campaigns .ps-contactcards button>span:nth-child(2){flex:1;min-width:0;overflow-wrap:anywhere}
+#prime-square-campaigns .ps-contactcards small{display:block;font-size:12px;color:var(--ps-muted);margin-top:3px}
+#prime-square-campaigns .ps-contactcards button>svg{width:18px;height:18px;color:var(--ps-muted)}
+#prime-square-campaigns .ps-contactcards button:disabled{opacity:.65}
+#prime-square-campaigns .ps-feedbackform fieldset{border:0;padding:0;margin:0 0 16px}
+#prime-square-campaigns .ps-feedbackform .ps-feedbackchoice{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;color:var(--ps-ink);font-size:14px;font-weight:400;margin:0;border-bottom:1px solid var(--ps-line)}
+#prime-square-campaigns .ps-feedbackform input[type=radio]{accent-color:var(--ps-red);width:19px;height:19px;min-height:0;padding:0}
+#prime-square-campaigns .ps-feedbackform textarea{display:block;width:100%;min-height:116px;padding:12px;margin-bottom:12px;border:1px solid var(--ps-line);border-radius:10px;font:inherit;font-size:16px;color:var(--ps-ink);resize:vertical}
+#prime-square-campaigns .ps-feedbackform .ps-profilefeedback{margin-top:8px}
+#prime-square-campaigns .ps-visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+#prime-square-campaigns .ps-nativecount{top:auto;bottom:8px;height:20px;min-width:20px;padding:0 6px;border-radius:7px;background:rgba(0,0,0,.52);color:#fff;font-size:11px;font-weight:500;line-height:20px}

@@ -168,6 +168,18 @@ assert.equal(run('saveProfileName("")'),true);assert.equal(run('profileDisplayNa
 assert.match(run('header()'),/aria-label="Profili aç"/);assert.doesNotMatch(run('settingsHeader("Profil")'),/aria-label="Ara"/);
 box.document.createElement=originalCreateElement;
 console.log('PASS: profile name validation/escaping/persistence, normalized photos, removal, and failed storage retain visible state.');
+run("appInfo={version:'1.0.1',build:'275.1',date:'25.11.2026'}");
+const profileMarkup=run('settingsPage()');
+assert.match(profileMarkup,/Geri Bildirim ve Öneriler/);
+assert.match(profileMarkup,/İletişim/);
+assert.match(profileMarkup,/Versiyon 1.0.1 \(275.1\) · 25.11.2026/);
+assert.match(run('contactPage()'),/marka@literaturmasasi\.com/);
+assert.match(run('contactPage()'),/UCD10yhLvpHWsSNhJYQfP45Q/);
+assert.match(run('contactPage()'),/https:\/\/x\.com\/literaturmasasi/);
+assert.match(run('feedbackPage()'),/Prime’da görmek istiyorum/);
+assert.match(run('settingsTerms'),/Prime Kullanıcı Sözleşmesi/);
+assert.doesNotMatch(run('settingsPrivacy'),/Literatür Masası Prime/);
+
 
 // A successful HTTP response alone must not clear local data.
 deleteAcknowledged=false;

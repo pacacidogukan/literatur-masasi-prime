@@ -2,3 +2,11 @@ const iconMarkup={"share":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\
 
 iconMarkup.zap='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m13 2-9 12h7l-1 8 10-12h-7l1-8z"/></svg>';
 iconMarkup['trending-down']='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 7 6 6 4-4 8 8m-6 0h6v-6"/></svg>';
+
+iconMarkup['message-circle']='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8 8 0 0 1-8.5 8 10 10 0 0 1-4-.9L3 21l1.7-5A8 8 0 0 1 3 11.5a9 9 0 0 1 18 0Z"/><path d="M8 11.5h.01m4 0h.01m4 0h.01"/></svg>';
+iconMarkup['mail']='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>';
+iconMarkup['instagram']='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/></svg>';
+iconMarkup['tiktok']='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v12a4 4 0 1 1-4-4m4-8c0 4 3 6 7 6"/></svg>';
+iconMarkup['youtube']='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="4"/><path d="m10 9 5 3-5 3z"/></svg>';
+iconMarkup['facebook']='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 21v-8h3l1-4h-4V7c0-1 .5-2 3-2V2h-3c-4 0-5 2-5 5v2H6v4h3v8"/></svg>';
+iconMarkup['twitter']='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3h4l12 18h-4L4 3Zm16 0L4 21"/></svg>';

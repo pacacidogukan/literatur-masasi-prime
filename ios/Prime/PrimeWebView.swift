@@ -168,6 +168,39 @@ struct PrimeWebView: UIViewRepresentable {
                 }
                 return
             }
+            if path == "ui/app-info" {
+                let info = Bundle.main.infoDictionary ?? [:]
+                replyHandler(["status":200, "data":[
+                    "version":info["CFBundleShortVersionString"] as? String ?? "",
+                    "build":info["CFBundleVersion"] as? String ?? "",
+                    "date":info["PrimeReleaseDate"] as? String ?? ""
+                ]], nil)
+                return
+            }
+            if path == "contact-email" {
+                let body = payload["body"] as? [String: Any] ?? [:]
+                let subject = body["subject"] as? String ?? "Prime iletişim"
+                let message = body["message"] as? String ?? ""
+                let email = body["email"] as? String ?? ""
+                guard subject.count <= 100, message.count <= 2000, email.count <= 254 else {
+                    replyHandler(nil, "Mesaj bilgileri geçersiz."); return
+                }
+                var components = URLComponents()
+                components.scheme = "mailto"
+                components.path = "marka@literaturmasasi.com"
+                components.queryItems = [
+                    URLQueryItem(name: "subject", value: "Prime · " + subject),
+                    URLQueryItem(name: "body", value: message + (email.isEmpty ? "" : "\n\nE-posta: " + email))
+                ]
+                guard let url = components.url else { replyHandler(nil, "E-posta bağlantısı açılamadı."); return }
+                Task { @MainActor in
+                    UIApplication.shared.open(url) { opened in
+                        if opened { replyHandler(["status":200, "data":["ok":true]], nil) }
+                        else { replyHandler(nil, "E-posta uygulamanı açamadık. marka@literaturmasasi.com adresine yazabilirsin.") }
+                    }
+                }
+                return
+            }
             if path == "share-campaign" {
                 guard let body = payload["body"] as? [String: Any],
                       let text = body["text"] as? String, !text.isEmpty, text.count <= 2000,
