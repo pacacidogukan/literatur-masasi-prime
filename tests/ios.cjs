@@ -89,6 +89,32 @@ for(const scope of ['amazon','hepsiburada']){
  clickRoute({campaignGroup:'SOVITAL'});assert.equal(run('campaignOrigin'),scope);assert.equal((screen.innerHTML.match(/data-offer-id=/g)||[]).length,2);
  clickRoute({action:'back'});clickRoute({action:'back'});assert.equal(run('view'),'home');
 }
+// Marketplace filter: only the three approved platforms; OR within, AND across facets.
+run('view="campaigns";campaignBrand="Tümü";query="";selectedCategory="Tümü";campaignFilters=emptyCampaignFilters();render()');
+assert.match(screen.innerHTML,/data-filter-open="platforms"[^>]*>Alışveriş Platformları/);
+assert(run('filteredCampaigns().some(o=>o.id==="live")'),'No selection must retain direct-brand campaigns');
+run('openCampaignFilters("platforms")');
+const platformSheet=run('campaignFilterSheetHTML()');
+assert.match(platformSheet,/Alışveriş Platformları/);
+assert.equal((platformSheet.match(/data-filter-group="platforms"/g)||[]).length,3);
+assert.doesNotMatch(platformSheet,/id="ps-filter-brands"|data-filter-clear="platforms"/);
+run('handleCampaignFilterClick({filterGroup:"platforms",filterValue:"trendyol"});handleCampaignFilterClick({filterGroup:"platforms",filterValue:"hepsiburada"})');
+assert.equal(run('campaignFilters.platforms.length'),0);
+run('closeCampaignFilters(true)');
+assert.equal(run('campaignFilterCount()'),2);
+assert.deepEqual(Array.from(run('filteredCampaigns().map(o=>o.id)')).sort(),['hepsiburada-one','hepsiburada-other','hepsiburada-two','trendyol-reviewed'].sort());
+run('campaignFilters.brands=["SOVITAL"]');
+assert.deepEqual(Array.from(run('filteredCampaigns().map(o=>o.id)')),['hepsiburada-one']);
+run('campaignFilters.brands=[];openCampaignFilters("platforms");handleCampaignFilterClick({filterClean:"1"});closeCampaignFilters(false)');
+assert.equal(run('campaignFilters.platforms.length'),2);
+run('campaignFilters.rates=["10"];openCampaignFilters("platforms");handleCampaignFilterClick({filterClean:"1"});closeCampaignFilters(true)');
+assert.equal(run('campaignFilters.platforms.length'),0);
+assert.deepEqual(Array.from(run('campaignFilters.rates')),['10']);
+run('campaignFilters=emptyCampaignFilters();campaignFilters.platforms=["amazon"]');
+assert.deepEqual(Array.from(run('filteredCampaigns().map(o=>o.id)')),['amazon-one','amazon-two','amazon-other']);
+run('navigation.push(capturePage());campaignFilters.platforms=[];restorePage(navigation.pop())');
+assert.deepEqual(Array.from(run('campaignFilters.platforms')),['amazon']);
+run('campaignFilters=emptyCampaignFilters()');
 run('view="settings";render()');assert.match(screen.innerHTML,/Bizi App Store’da Değerlendir/);assert.ok(screen.innerHTML.indexOf('Geri Bildirim ve Öneriler')<screen.innerHTML.indexOf('Bizi App Store’da Değerlendir'));
 clickRoute({reviewApp:'1'});await new Promise(r=>setImmediate(r));assert(requests.some(r=>r.path==='open-external'&&r.body.url==='https://apps.apple.com/tr/app/id6823890365?action=write-review'));
 run('view="home";query="";navigation.length=0;hydrate('+JSON.stringify(rows)+');render()');
