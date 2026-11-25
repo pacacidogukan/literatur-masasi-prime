@@ -18,5 +18,11 @@ try{
  const active=result.campaigns.filter(c=>!c.expires||c.expires>Date.now()/1000);
  assert.ok(active.length>=Number(process.env.PRIME_EXPECTED_MIN_CAMPAIGNS||1),'Unexpectedly empty active campaign feed');
  assert.ok(active.every(c=>c.id&&c.name&&c.photo&&!Object.hasOwn(c,'code')),'Invalid public campaign contract');
+ // One stable, clearly labelled synthetic message: verifies the real feedback route
+ // on every build without creating accumulating test messages in the management panel.
+ const feedback={id:'e80dbd74a0a84ce4a30a918cdccfc481',type:'Geri bildirim',message:'[SİSTEM TESTİ] Prime geri bildirim bağlantısı otomatik doğrulama kaydı.',email:'',version:'CI doğrulaması'};
+ const acknowledgment=await request('feedback',feedback);
+ assert.equal(acknowledgment.ok,true);assert.equal(acknowledgment.id,feedback.id);
+ console.log('PASS: live feedback persisted and acknowledged.');
  console.log('PASS: live mobile access, authenticated session, '+active.length+' active campaigns, codes excluded.');
 }finally{if(token)await request('logout',{});}

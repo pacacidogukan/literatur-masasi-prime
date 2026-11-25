@@ -13,7 +13,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
  for(const width of [320,390,440,768,1024]){
   const page=await browser.newPage({viewport:{width,height:1000},isMobile:true,hasTouch:true});const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.route('https://artwork.test/**',route=>{const slot=path.basename(new URL(route.request().url()).pathname,'.svg'),s=contract.slots[slot]||{width:600,height:1200};route.fulfill({contentType:'image/svg+xml',body:`<svg xmlns="http://www.w3.org/2000/svg" width="${s.width}" height="${s.height}"><rect width="100%" height="100%" fill="#dce9dd"/><rect x="6%" y="6%" width="88%" height="88%" fill="none" stroke="#154e2b" stroke-width="3"/><text x="10%" y="20%" font-size="30">${slot}</text></svg>`});});
-  await page.addInitScript(rows=>{window.webkit={messageHandlers:{primeAPI:{postMessage:async({path,body})=>{if(path==='ui/launch-state')window.primeHeaderIsRed=body.redHeader;return {status:200,data:path==='campaigns'?{campaigns:rows}:path==='reveal'?{code:'TEST'}:{authorized:true,ok:true}}}}}};},rows);
+  await page.addInitScript(rows=>{window.webkit={messageHandlers:{primeAPI:{postMessage:async({path,body})=>{if(path==='ui/launch-state')window.primeHeaderIsRed=body.redHeader;if(path==='feedback'){(window.feedbackRequests??=[]).push(body);return window.feedbackFail?{status:503,data:{error:'Geçici hata'}}:{status:201,data:{ok:true,id:body.id}};}return {status:200,data:path==='campaigns'?{campaigns:rows}:path==='reveal'?{code:'TEST'}:{authorized:true,ok:true}}}}}};},rows);
   await page.goto(url);await page.getByRole('button',{name:'Ana Sayfa',exact:true}).waitFor();await page.locator('.ps-poster.large').first().waitFor();
   await page.waitForFunction(()=>[...document.querySelectorAll('.ps-poster.large img')].every(i=>i.complete&&i.naturalWidth));
   const outfit=await page.evaluate(async()=>{
@@ -343,6 +343,23 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   await headerStyle('.ps-profilebar>strong',true);
   assert.equal(await page.locator('.ps-profilepage').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(247, 247, 248)');
   assert.equal(await page.locator('.ps-profilebar input,.ps-profilebar [data-search]').count(),0);
+  if(width===390){
+   await page.locator('[data-view=feedback]').tap();
+   await page.locator('#ps-feedback-message').fill('Dokunma testi');
+   await page.evaluate(()=>window.feedbackFail=true);
+   await page.getByRole('button',{name:'Gönder',exact:true}).tap();
+   await page.getByText('Geçici hata Tekrar deneyebilirsin.').waitFor();
+   assert.equal(await page.locator('#ps-feedback-message').inputValue(),'Dokunma testi');
+   assert.equal(await page.getByRole('dialog').count(),0);
+   await page.evaluate(()=>window.feedbackFail=false);
+   await page.getByRole('button',{name:'Gönder',exact:true}).tap();
+   await page.getByRole('dialog',{name:'Mesajın başarıyla gönderildi'}).waitFor();
+   const requests=await page.evaluate(()=>window.feedbackRequests);
+   assert.equal(requests.length,2);assert.equal(requests[0].id,requests[1].id);assert.equal(requests[1].message,'Dokunma testi');
+   await page.getByRole('button',{name:'Tamam',exact:true}).tap();
+   assert.equal(await page.locator('#ps-feedback-message').inputValue(),'');
+   await page.getByRole('button',{name:'Geri',exact:true}).tap();
+  }
   await page.getByRole('button',{name:'Profili düzenle',exact:true}).tap();
   await headerStyle('.ps-profilebar>strong',true);
   await page.getByRole('textbox',{name:'Profil adı',exact:true}).fill('Test Kullanıcısı');
