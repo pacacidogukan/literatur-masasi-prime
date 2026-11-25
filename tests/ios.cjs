@@ -177,6 +177,16 @@ assert.match(run('contactPage()'),/marka@literaturmasasi\.com/);
 assert.match(run('contactPage()'),/UCD10yhLvpHWsSNhJYQfP45Q/);
 assert.match(run('contactPage()'),/https:\/\/x\.com\/literaturmasasi/);
 assert.match(run('feedbackPage()'),/Prime’da görmek istiyorum/);
+box.crypto=require('node:crypto').webcrypto;
+const feedbackBridge=box.window.webkit.messageHandlers.primeAPI,priorFeedbackBridge=feedbackBridge.postMessage;
+let feedbackFail=true,feedbackIds=[];
+feedbackBridge.postMessage=async request=>{if(request.path!=='feedback')return priorFeedbackBridge(request);feedbackIds.push(request.body.id);return feedbackFail?{status:503,data:{error:'Geçici hata'}}:{status:201,data:{ok:true,id:request.body.id}};};
+const priorFeedbackView=run('view');
+run("view='feedback';feedbackDraft={type:'Öneri',message:'Test önerisi',email:''}");
+await run('sendFeedback()');assert.equal(run('feedbackSuccess'),false);assert.equal(run('feedbackDraft.message'),'Test önerisi');
+feedbackFail=false;await run('sendFeedback()');assert.equal(run('feedbackSuccess'),true);assert.equal(run('feedbackDraft.message'),'');assert.equal(feedbackIds[0],feedbackIds[1]);assert.match(run('feedbackPage()'),/Mesajın başarıyla gönderildi/);
+run('feedbackSuccess=false;view='+JSON.stringify(priorFeedbackView));feedbackBridge.postMessage=priorFeedbackBridge;
+
 assert.match(run('settingsTerms'),/Prime Kullanıcı Sözleşmesi/);
 assert.doesNotMatch(run('settingsPrivacy'),/Literatür Masası Prime/);
 
