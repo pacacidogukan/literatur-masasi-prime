@@ -730,3 +730,14 @@ html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;backgrou
 #prime-square-campaigns .ps-feedbackdialog{background:#fff;border-radius:17px;padding:24px;max-width:340px;width:100%;text-align:center}
 #prime-square-campaigns .ps-feedbackdialog h2{font-size:19px;margin:0 0 8px}
 #prime-square-campaigns .ps-feedbackdialog p{color:var(--ps-muted);margin:0 0 16px}
+
+/* Individual filters and sort: keep the all-filter overlay unchanged. */
+#prime-square-campaigns .ps-filteroverlay-bottom{align-items:flex-end;background:#0003}
+#prime-square-campaigns .ps-filterdialog-bottom{height:70dvh;max-height:calc(100dvh - 56px);border-radius:26px 26px 0 0;animation:ps-filter-enter .22s ease-out}
+#prime-square-campaigns .ps-filterdialog-bottom .ps-filterdialoghead{display:flex;flex-direction:column;justify-content:flex-start;gap:8px;min-height:78px;padding:0 16px 15px;background:#fff;color:var(--ps-ink);touch-action:none}
+#prime-square-campaigns .ps-filterdialog-bottom .ps-filterdialoghead h2{font-weight:500;padding:0;text-align:center}
+#prime-square-campaigns .ps-filterhandle{display:grid;place-items:center;width:76px;height:30px;background:transparent;border:0;padding:0;touch-action:none}
+#prime-square-campaigns .ps-filterhandle span{display:block;width:40px;height:4px;border-radius:8px;background:#cbccd0}
+#prime-square-campaigns .ps-filterdialog-bottom .ps-filterbody section h3{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@keyframes ps-filter-enter{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){#prime-square-campaigns .ps-filterdialog-bottom{animation:none}}

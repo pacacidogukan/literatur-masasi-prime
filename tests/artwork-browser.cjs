@@ -289,7 +289,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   await emptyReset.tap();
   assert.equal(await page.locator('.ps-allfilters>span').count(),0);
   await page.locator('[data-filter-open="sort"]').tap();
-  assert.equal(await dialog.locator('#ps-filter-title').innerText(),'Sırala');
+  assert.equal(await dialog.locator('#ps-filter-title').innerText(),'Sırala');assert.equal(await dialog.locator('.ps-filterclose').count(),0);assert.equal(await dialog.locator('.ps-filterhandle').count(),1);
   assert.deepEqual(await dialog.locator('.ps-filterbody>section').evaluateAll(nodes=>nodes.map(n=>n.id)),['ps-filter-sort']);
   const sortStyles=()=>dialog.locator('[data-filter-sort]').evaluateAll(buttons=>buttons.map(button=>{
    const icon=button.querySelector('svg');
@@ -310,7 +310,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   assert.equal(await page.locator('#ps-native-results [data-offer]').first().getAttribute('data-offer'),'valid');
   await page.locator('[data-filter-open="sort"]').tap();await dialog.locator('[data-filter-clean]').tap();await dialog.locator('[data-filter-apply]').tap();
   assert.equal(await page.locator('[data-filter-open="sort"]').getAttribute('aria-label'),'Sırala: Keşfet');
-  for(const group of ['products','brands','rates','published','ending','codes','saved']){
+  for(const group of ['products','brands','platforms','rates','published','ending','codes','saved']){
    await page.locator('[data-filter-open="'+group+'"]').tap();
    assert.deepEqual(await dialog.locator('.ps-filterbody>section').evaluateAll(nodes=>nodes.map(n=>n.id)),['ps-filter-'+group]);
    if(group==='products'){
@@ -323,7 +323,14 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
     await dialog.locator('[data-filter-value="10"]').tap();await dialog.locator('[data-filter-value="25"]').tap();
     assert.equal(await dialog.locator('[data-filter-group][aria-pressed="true"]').count(),2);
    }
-   await page.getByRole('button',{name:'Kapat',exact:true}).tap();
+   assert.equal(await dialog.locator('.ps-filterclose').count(),0);
+   assert.equal(await dialog.locator('.ps-filterhandle').count(),1);
+   const sheet=await dialog.boundingBox();assert(sheet.y>50&&sheet.height<1000,'Individual filter must open from bottom');
+   if(group==='platforms'){
+    const handle=await dialog.locator('.ps-filterhandle').boundingBox();
+    await page.mouse.move(handle.x+handle.width/2,handle.y+handle.height/2);await page.mouse.down();await page.mouse.move(handle.x+handle.width/2,handle.y+handle.height/2+110,{steps:8});await page.mouse.up();
+    await dialog.waitFor({state:'detached'});
+   }else await dialog.getByRole('button',{name:'Pencereyi kapat',exact:true}).tap();
   }
   await page.locator('[data-filter-open="brands"]').tap();
   await dialog.locator('[data-filter-value="Solgar"]').tap();await dialog.locator('[data-filter-apply]').tap();

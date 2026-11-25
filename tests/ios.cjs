@@ -95,7 +95,7 @@ assert.match(screen.innerHTML,/data-filter-open="platforms"[^>]*>Alışveriş Pl
 assert(run('filteredCampaigns().some(o=>o.id==="live")'),'No selection must retain direct-brand campaigns');
 run('openCampaignFilters("platforms")');
 const platformSheet=run('campaignFilterSheetHTML()');
-assert.match(platformSheet,/Alışveriş Platformları/);
+assert.match(platformSheet,/Alışveriş Platformları/);assert.match(platformSheet,/ps-filterhandle/);assert.doesNotMatch(platformSheet,/ps-filterclose/);
 assert.equal((platformSheet.match(/data-filter-group="platforms"/g)||[]).length,3);
 assert.doesNotMatch(platformSheet,/id="ps-filter-brands"|data-filter-clear="platforms"/);
 run('handleCampaignFilterClick({filterGroup:"platforms",filterValue:"trendyol"});handleCampaignFilterClick({filterGroup:"platforms",filterValue:"hepsiburada"})');
@@ -114,7 +114,7 @@ run('campaignFilters=emptyCampaignFilters();campaignFilters.platforms=["amazon"]
 assert.deepEqual(Array.from(run('filteredCampaigns().map(o=>o.id)')),['amazon-one','amazon-two','amazon-other']);
 run('navigation.push(capturePage());campaignFilters.platforms=[];restorePage(navigation.pop())');
 assert.deepEqual(Array.from(run('campaignFilters.platforms')),['amazon']);
-run('campaignFilters=emptyCampaignFilters()');
+run('campaignFilters=emptyCampaignFilters();openCampaignFilters("all")');assert.match(run('campaignFilterSheetHTML()'),/ps-filterclose/);assert.doesNotMatch(run('campaignFilterSheetHTML()'),/ps-filterdialog-bottom/);assert.match(run('campaignFilterSheetHTML()'),/Kod Kullanımı/);run('closeCampaignFilters()');
 run('view="settings";render()');assert.match(screen.innerHTML,/Bizi App Store’da Değerlendir/);assert.ok(screen.innerHTML.indexOf('Geri Bildirim ve Öneriler')<screen.innerHTML.indexOf('Bizi App Store’da Değerlendir'));
 clickRoute({reviewApp:'1'});await new Promise(r=>setImmediate(r));assert(requests.some(r=>r.path==='open-external'&&r.body.url==='https://apps.apple.com/tr/app/id6823890365?action=write-review'));
 run('view="home";query="";navigation.length=0;hydrate('+JSON.stringify(rows)+');render()');
@@ -352,6 +352,7 @@ assert.equal(run('filterGroup'),'sort');
 const sortSheet=run('campaignFilterSheetHTML()');
 assert.match(sortSheet,/id="ps-filter-title"[^>]*>Sırala</);
 assert.match(sortSheet,/id="ps-filter-sort"/);
+assert.match(sortSheet,/ps-filterdialog-bottom/);assert.match(sortSheet,/ps-filterhandle/);assert.doesNotMatch(sortSheet,/ps-filterclose/);
 assert.doesNotMatch(sortSheet,/id="ps-filter-(brands|rates|published|ending|codes|saved)"/);
 run('handleCampaignFilterClick({filterSort:"newest"});closeCampaignFilters(true)');
 assert.equal(run('campaignFilters.sort'),'newest');

@@ -584,7 +584,7 @@ const emptyCampaignFilters=()=>({products:[],brands:[],platforms:[],rates:[],pub
 const cloneCampaignFilters=f=>JSON.parse(JSON.stringify({...emptyCampaignFilters(),...f}));
 let campaignFilters=emptyCampaignFilters(),filterDraft=null,filterOpen=false,filterGroup='all',filterAllBrands=false,filterFocus=null,filterDragStart=null;
 const filterOptions={products:productCategoryOptions,platforms:[['trendyol','Trendyol'],['hepsiburada','Hepsiburada'],['amazon','Amazon']],rates:[['10','%10 ve üzeri'],['25','%25 ve üzeri'],['50','%50 ve üzeri']],published:[['1','Son 24 saat'],['7','Son 7 gün'],['30','Son 30 gün']],ending:[['1','Son 24 saat'],['3','3 gün içinde'],['7','7 gün içinde']],codes:[['yes','Kodlu'],['no','Kodsuz']],saved:[['yes','Favorilerim']]};
-const filterTitles={products:'Ürün Kategorisi',brands:'Markalar',platforms:'Alışveriş Platformları',rates:'İndirim oranı',published:'Yayınlanma tarihi',ending:'Bitiş zamanı',codes:'Kod kullanımı',saved:'Favorilerim'};
+const filterTitles={products:'Ürün Kategorisi',brands:'Markalar',platforms:'Alışveriş Platformları',rates:'İndirim Oranı',published:'Yayınlanma Tarihi',ending:'Bitiş Zamanı',codes:'Kod Kullanımı',saved:'Favorilerim'};
 const campaignSortOptions=[
  ['discover','Keşfet','zap'],
  ['newest','En yeniler','calendar-days'],
@@ -644,7 +644,7 @@ function campaignFilterSheetHTML(){
  const shown=filterAllBrands?names:[...new Set([...f.brands,...names.slice(0,6)])];
  const section=(k,content)=>filterGroup!=='all'&&filterGroup!==k?'':`<section id="ps-filter-${k}" aria-labelledby="ps-filter-title-${k}"><h3 id="ps-filter-title-${k}">${filterTitles[k]}</h3><div class="ps-filterchips">${content}</div></section>`;
  const facets=k=>section(k,`<button type="button" data-filter-clear="${k}" aria-pressed="${!f[k].length}">Tümü</button>`+filterOptions[k].map(([v,n])=>filterChip(k,v,n)).join(''));
- return `<section class="ps-filterdialog" role="dialog" aria-modal="true" aria-labelledby="ps-filter-title"><header class="ps-filterdialoghead"><h2 id="ps-filter-title" tabindex="-1">${filterGroup==='all'?'Filtrele':filterGroup==='sort'?'Sırala':filterTitles[filterGroup]}</h2><button type="button" class="ps-filterclose" data-filter-close="1" aria-label="Kapat">${icon('x')}</button></header><div class="ps-filterbody">${['all','sort'].includes(filterGroup)?`<section id="ps-filter-sort" aria-labelledby="ps-filter-title-sort"><h3 id="ps-filter-title-sort">Sıralama</h3><div class="ps-filterchips">${campaignSortOptions.map(([v,n,glyph])=>`<button type="button" data-filter-sort="${v}" aria-pressed="${f.sort===v}">${icon(glyph)}<span>${n}</span></button>`).join('')}</div></section>`:''}${facets('products')}${facets('rates')}${section('brands',`<button type="button" data-filter-clear="brands" aria-pressed="${!f.brands.length}">Tümü</button>`+shown.map(n=>filterChip('brands',n,n,counts.get(brandKey(n))||0)).join('')+(names.length>6?`<button type="button" class="ps-brandsmore" data-filter-more="1" aria-expanded="${filterAllBrands}">${filterAllBrands?'Daha Az Göster':'Tümünü Gör'}${icon(filterAllBrands?'chevron-up':'chevron-down')}</button>`:''))}${section('platforms',filterOptions.platforms.map(([v,n])=>filterChip('platforms',v,n)).join(''))}${facets('published')}${facets('ending')}${facets('codes')}${facets('saved')}</div><footer class="ps-filterfooter"><button type="button" data-filter-clean="1">Temizle</button><button type="button" data-filter-apply="1">${filteredCampaigns(f).length} kampanyayı göster</button></footer></section>`;
+ return `<section class="ps-filterdialog${filterGroup==='all'?'':' ps-filterdialog-bottom'}" role="dialog" aria-modal="true" aria-labelledby="ps-filter-title"><header class="ps-filterdialoghead">${filterGroup==='all'?'':'<button type="button" class="ps-filterhandle" data-filter-close="1" aria-label="Pencereyi kapat"><span aria-hidden="true"></span></button>'}<h2 id="ps-filter-title" tabindex="-1">${filterGroup==='all'?'Filtrele':filterGroup==='sort'?'Sırala':filterTitles[filterGroup]}</h2>${filterGroup==='all'?`<button type="button" class="ps-filterclose" data-filter-close="1" aria-label="Kapat">${icon('x')}</button>`:''}</header><div class="ps-filterbody">${['all','sort'].includes(filterGroup)?`<section id="ps-filter-sort" aria-labelledby="ps-filter-title-sort"><h3 id="ps-filter-title-sort">Sıralama</h3><div class="ps-filterchips">${campaignSortOptions.map(([v,n,glyph])=>`<button type="button" data-filter-sort="${v}" aria-pressed="${f.sort===v}">${icon(glyph)}<span>${n}</span></button>`).join('')}</div></section>`:''}${facets('products')}${facets('rates')}${section('brands',`<button type="button" data-filter-clear="brands" aria-pressed="${!f.brands.length}">Tümü</button>`+shown.map(n=>filterChip('brands',n,n,counts.get(brandKey(n))||0)).join('')+(names.length>6?`<button type="button" class="ps-brandsmore" data-filter-more="1" aria-expanded="${filterAllBrands}">${filterAllBrands?'Daha Az Göster':'Tümünü Gör'}${icon(filterAllBrands?'chevron-up':'chevron-down')}</button>`:''))}${section('platforms',filterOptions.platforms.map(([v,n])=>filterChip('platforms',v,n)).join(''))}${facets('published')}${facets('ending')}${facets('codes')}${facets('saved')}</div><footer class="ps-filterfooter"><button type="button" data-filter-clean="1">Temizle</button><button type="button" data-filter-apply="1">${filteredCampaigns(f).length} kampanyayı göster</button></footer></section>`;
 }
 function redrawCampaignFilterSheet(){
  const host=root.querySelector('.ps-filteroverlay');if(!host)return;
@@ -655,13 +655,13 @@ function redrawCampaignFilterSheet(){
 }
 function openCampaignFilters(group='all'){
  if(filterOpen)return;filterFocus=document.activeElement;filterDraft=cloneCampaignFilters(campaignFilters);filterOpen=true;filterGroup=group==='sort'||Object.hasOwn(filterTitles,group)?group:'all';filterAllBrands=false;
- const host=document.createElement('div');host.className='ps-filteroverlay';host.innerHTML=campaignFilterSheetHTML();root.append(host);installFilterTouchGuard(host);
+ const host=document.createElement('div');host.className='ps-filteroverlay'+(filterGroup==='all'?'':' ps-filteroverlay-bottom');host.innerHTML=campaignFilterSheetHTML();root.append(host);installFilterTouchGuard(host);
  screen.inert=true;const nav=root.querySelector('.ps-nav');if(nav)nav.inert=true;
  host.querySelector('#ps-filter-title')?.focus();
 }
 function closeCampaignFilters(apply=false){
  if(!filterOpen)return;if(apply)campaignFilters=cloneCampaignFilters(filterDraft);
- root.querySelector('.ps-filteroverlay')?.remove();filterOpen=false;filterDraft=null;screen.inert=false;const nav=root.querySelector('.ps-nav');if(nav)nav.inert=false;
+ root.querySelector('.ps-filteroverlay')?.remove();filterDragStart=null;filterOpen=false;filterDraft=null;screen.inert=false;const nav=root.querySelector('.ps-nav');if(nav)nav.inert=false;
  if(apply){const y=screen.scrollTop;render();screen.scrollTop=y;root.querySelector('[data-filter-open="all"]')?.focus({preventScroll:true});}else filterFocus?.focus({preventScroll:true});
 }
 function handleCampaignFilterClick(d){
@@ -680,9 +680,10 @@ function handleCampaignFilterClick(d){
  redrawCampaignFilterSheet();return true;
 }
 root.addEventListener('keydown',e=>{if(!filterOpen)return;if(e.key==='Escape'){e.preventDefault();closeCampaignFilters();return;}if(e.key!=='Tab')return;const buttons=[...root.querySelectorAll('.ps-filterdialog button')],first=buttons[0],last=buttons.at(-1);if(e.shiftKey&&(document.activeElement===first||document.activeElement?.id==='ps-filter-title')){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}});
-root.addEventListener('pointerdown',e=>{if(filterOpen&&e.target.closest('.ps-filterdialoghead'))filterDragStart=e.clientY;});
-root.addEventListener('pointerup',e=>{if(filterDragStart!==null){const distance=e.clientY-filterDragStart;filterDragStart=null;if(distance>70)closeCampaignFilters();}});
-root.addEventListener('pointercancel',()=>{filterDragStart=null;});
+root.addEventListener('pointerdown',e=>{const head=e.target.closest('.ps-filterdialoghead');if(filterOpen&&head&&e.isPrimary!==false){filterDragStart=e.clientY;if(filterGroup!=='all')e.target.setPointerCapture?.(e.pointerId);}});
+root.addEventListener('pointermove',e=>{if(filterOpen&&filterGroup!=='all'&&filterDragStart!==null){const sheet=root.querySelector('.ps-filterdialog-bottom');if(sheet)sheet.style.transform=`translateY(${Math.max(0,e.clientY-filterDragStart)}px)`;}});
+root.addEventListener('pointerup',e=>{if(filterDragStart!==null){const distance=e.clientY-filterDragStart;filterDragStart=null;if(distance>70)closeCampaignFilters();else {const sheet=root.querySelector('.ps-filterdialog-bottom');if(sheet)sheet.style.transform='';}}});
+root.addEventListener('pointercancel',()=>{filterDragStart=null;const sheet=root.querySelector('.ps-filterdialog-bottom');if(sheet)sheet.style.transform='';});
 
 let lastLaunchSurface;
 function syncLaunchSurface(){
