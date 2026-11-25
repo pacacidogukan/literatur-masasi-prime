@@ -69,9 +69,12 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    await page.getByRole('button',{name:'Geri',exact:true}).tap();
    await shortcuts.nth(2).tap();
    await page.locator('.ps-brandspage').waitFor();
+   assert.equal(await page.locator('.ps-allfilters>span').innerText(),'1','Filter remains selected after navigating to brands');
    await page.getByRole('button',{name:'Geri',exact:true}).tap();
    await homeHeader.locator('.ps-homehero').tap();
    await page.locator('#ps-native-results').waitFor();
+   assert.equal(await page.locator('.ps-allfilters>span').innerText(),'1');
+   await page.locator('[data-filter-open="all"]').tap();await page.locator('[data-filter-clean]').tap();await page.locator('[data-filter-apply]').tap();
    await page.getByRole('button',{name:'Geri',exact:true}).tap();
   }
   const circleGap=await page.locator('.ps-brandrounds button>b').evaluateAll(nodes=>{const a=nodes[0].getBoundingClientRect(),b=nodes[1].getBoundingClientRect();return b.left-a.right;});

@@ -113,7 +113,7 @@ assert.deepEqual(Array.from(run('campaignFilters.rates')),['10']);
 run('campaignFilters=emptyCampaignFilters();campaignFilters.platforms=["amazon"]');
 assert.deepEqual(Array.from(run('filteredCampaigns().map(o=>o.id)')),['amazon-one','amazon-two','amazon-other']);
 run('navigation.push(capturePage());campaignFilters.platforms=[];restorePage(navigation.pop())');
-assert.deepEqual(Array.from(run('campaignFilters.platforms')),['amazon']);
+assert.deepEqual(Array.from(run('campaignFilters.platforms')),[],'Back navigation must not resurrect cleared filters');
 run('campaignFilters=emptyCampaignFilters();openCampaignFilters("all")');assert.match(run('campaignFilterSheetHTML()'),/ps-filterclose/);assert.doesNotMatch(run('campaignFilterSheetHTML()'),/ps-filterdialog-bottom/);assert.match(run('campaignFilterSheetHTML()'),/Kod Kullanımı/);run('closeCampaignFilters()');
 run('view="settings";render()');assert.match(screen.innerHTML,/Bizi App Store’da Değerlendir/);assert.ok(screen.innerHTML.indexOf('Geri Bildirim ve Öneriler')<screen.innerHTML.indexOf('Bizi App Store’da Değerlendir'));
 clickRoute({reviewApp:'1'});await new Promise(r=>setImmediate(r));assert(requests.some(r=>r.path==='open-external'&&r.body.url==='https://apps.apple.com/tr/app/id6823890365?action=write-review'));
@@ -130,7 +130,7 @@ assert.equal(run('newestOffers(offers,'+(publicationNow+8*86400)+').length'),0);
 assert.match(run('newestFeature([])'),/Son 7 günde yayınlanan yeni bir kampanya bulunmuyor/);
 run('hydrate('+JSON.stringify(rows)+');navigation.length=0');
 // Full campaign routing and shared brand directory filters.
-run("view='home';query='';campaignFilters.rates=['50'];navigation.length=0");
+run("view='home';query='';campaignFilters.rates=['10'];campaignFilters.sort='discount';navigation.length=0");
 for(const rate of ['10','25','50']){
  clickRoute({discount:rate});assert.equal(run('view'),'discount');
  assert.match(screen.innerHTML,/ps-native-query/);assert.match(screen.innerHTML,/data-filter-open="sort"/);
@@ -139,10 +139,22 @@ for(const rate of ['10','25','50']){
  clickRoute({filterCategory:'Tümü'});assert.equal(run('filteredCampaigns().length'),rate==='50'?0:1);
  clickRoute({action:'back'});
 }
-clickRoute({discount:'all'});assert.equal(run('view'),'campaigns');assert.equal(run('campaignFilterCount()'),0);
+clickRoute({discount:'all'});assert.equal(run('view'),'campaigns');assert.equal(run('campaignFilterCount()'),1);assert.equal(run('campaignFilters.sort'),'discount');
 clickRoute({view:'brands'});assert.equal(run('selectedCategory'),'Tümü');assert.match(screen.innerHTML,/data-filter-open="ending"/);
 run("campaignFilters.brands=['Solgar'];render()");assert.match(screen.innerHTML,/data-brand="Solgar"/);assert.doesNotMatch(screen.innerHTML,/data-brand="Other"/);
 clickRoute({filterCategory:'Kargo Avantajı'});assert.equal(run('view'),'brands');assert.equal(run("filteredCampaigns(campaignFilters,'brands').length"),0);
+// Persist selections and sorting across every browsing route and back; clear is global.
+run('campaignFilters=emptyCampaignFilters();selectedCategory="Ürün İndirimleri";campaignFilters.rates=["25"];campaignFilters.sort="discount";persistCampaignPreferences()');
+for(const dest of ['home','brands','campaigns','favorites','trendyol','amazon','hepsiburada']){
+ clickRoute({view:dest});assert.equal(run('selectedCategory'),'Ürün İndirimleri');assert.deepEqual(Array.from(run('campaignFilters.rates')),['25']);assert.equal(run('campaignFilters.sort'),'discount');
+}
+run('selectedCategory="Tümü";campaignFilters=emptyCampaignFilters();restoreCampaignPreferences()');assert.equal(run('selectedCategory'),'Ürün İndirimleri');assert.equal(run('campaignFilters.sort'),'discount');assert.deepEqual(Array.from(run('campaignFilters.rates')),['25']);
+run('openCampaignFilters("all");handleCampaignFilterClick({filterClean:"1"});closeCampaignFilters(false)');assert.equal(run('selectedCategory'),'Ürün İndirimleri');
+run('openCampaignFilters("all");handleCampaignFilterClick({filterClean:"1"});closeCampaignFilters(true)');assert.equal(run('selectedCategory'),'Tümü');assert.equal(run('campaignFilterCount()'),0);assert.equal(run('campaignFilters.sort'),'discover');
+assert.equal(run('campaignDestination({source:"https://example.com/campaign?code=x"})'),'https://example.com/');
+for(const url of ['https://www.trendyol.com/sr?mid=1','https://www.amazon.com.tr/dp/example','https://www.hepsiburada.com/example'])assert.equal(run('campaignDestination({source:'+JSON.stringify(url)+'})'),url);
+assert.match(run('detailAction({hasCode:false,source:"https://example.com/promo"})'),/href="https:\/\/example\.com\//);
+run('current={...offers[0],source:"https://example.com/promo",code:"TEST"};copyNotice=true');assert.match(run('detail()'),/href="https:\/\/example\.com\/"[^>]*[^<]*Web sitesine git/);run('copyNotice=false;current=null');
 run('hydrate('+JSON.stringify(rows)+');campaignFilters=emptyCampaignFilters();selectedCategory="Tümü";view="home";query="";navigation.length=0');
 // The native frame reserves each exact ratio with an in-flow replaced element, even before images load.
 for(const [slot,size] of Object.entries(run('artworkContract.slots'))){
@@ -342,7 +354,7 @@ run('campaignFilters=emptyCampaignFilters();campaignFilters.published=["30"]');a
 run('campaignFilters=emptyCampaignFilters();filterDraft=cloneCampaignFilters(campaignFilters);filterDraft.brands=["Solgar"]');assert.equal(run('campaignFilters.brands.length'),0,'Draft cannot mutate applied filters');
 run('campaignFilters.brands=["Orzax"];favorites=new Set(["f1"]);campaignFilters.saved=["yes"]');assert.equal(run('filteredCampaigns().length'),0);
 run('campaignFilters=emptyCampaignFilters();query="Orzax"');assert.deepEqual(Array.from(run('filteredCampaigns().map(o=>o.id)')),['f2']);
-run('campaignFilters.brands=["Orzax"];navigation.push(capturePage());campaignFilters.brands=[];restorePage(navigation.pop())');assert.deepEqual(Array.from(run('campaignFilters.brands')),['Orzax']);
+run('campaignFilters.brands=["Orzax"];navigation.push(capturePage());campaignFilters.brands=[];restorePage(navigation.pop())');assert.deepEqual(Array.from(run('campaignFilters.brands')),[]);
 run('campaignFilters=emptyCampaignFilters();query="";filterDraft=null;hydrate('+JSON.stringify(rows)+')');
 console.log('PASS: multi-select OR/AND facets, expiry/publication unknowns, sorting, search, favorites, draft isolation and navigation restoration.');
 
