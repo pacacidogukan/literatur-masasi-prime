@@ -698,8 +698,8 @@ html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;backgrou
 #prime-square-campaigns .ps-filterchips button[data-filter-sort][aria-pressed=true] svg{color:inherit}
 
 /* Trendyol shares the reviewed 1200 × 400 Son Gün artwork format. */
-#prime-square-campaigns .ps-trendyolrail{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;border-radius:17px;overscroll-behavior-x:contain}
-#prime-square-campaigns .ps-trendyolrail::-webkit-scrollbar{display:none}
+#prime-square-campaigns .ps-marketplacerail{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;border-radius:17px;overscroll-behavior-x:contain}
+#prime-square-campaigns .ps-marketplacerail::-webkit-scrollbar{display:none}
 #prime-square-campaigns .ps-trendyol-empty{display:grid;place-items:center;aspect-ratio:3/1;margin:0;padding:12px;border-radius:17px;background:var(--ps-surface,#fff);color:var(--ps-muted);text-align:center}
 
 /* Profile links and campaign counters. */

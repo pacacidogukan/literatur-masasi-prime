@@ -71,6 +71,27 @@ clickRoute({action:'back'});assert.equal(run('view'),'trendyol');
 clickRoute({action:'back'});assert.equal(run('view'),'home');assert.equal(screen.scrollTop,146);
 run('hydrate('+JSON.stringify(rows)+')');
 assert.match(run('trendyolFeature(offers)'),/Şu anda yayında Trendyol kampanyası yok/);
+// All marketplace lanes share the Trendyol contract, while keeping offers isolated.
+const marketRows=['amazon','hepsiburada'].flatMap(scope=>{
+ const name=scope==='amazon'?'Amazon':'Hepsiburada',host=scope==='amazon'?'www.amazon.com.tr':'www.hepsiburada.com';
+ const row={...trendyolFixture,id:scope+'-one',name:'SOVITAL',channel:name+' · Yetkili Satıcı',campaignPage:'https://'+host+'/offer-one',hasCode:0};
+ return [row,{...row,id:scope+'-two',name:'Sovital'},{...row,id:scope+'-other',name:'Other'},{...row,id:scope+'-wrong-host',campaignPage:'https://example.com'},{...row,id:scope+'-unknown',channel:name},{...row,id:scope+'-missing-art',cardArtwork:undefined},{...row,id:scope+'-expired',expires:1}];
+});
+run('hydrate('+JSON.stringify([...rows,trendyolFixture,...marketRows])+');view="home";query="";render()');
+assert(screen.innerHTML.indexOf('data-marketplace="trendyol"')<screen.innerHTML.indexOf('data-marketplace="amazon"'));
+assert(screen.innerHTML.indexOf('data-marketplace="amazon"')<screen.innerHTML.indexOf('data-marketplace="hepsiburada"'));
+for(const scope of ['amazon','hepsiburada']){
+ assert.deepEqual(Array.from(run(`marketplaceOffers('${scope}').map(o=>o.id)`)),[scope+'-one',scope+'-two',scope+'-other']);
+ const feature=run(`marketplaceFeature('${scope}',offers)`);assert.match(feature,/1\/2/);assert.match(feature,/2\/2/);assert.equal((feature.match(/data-offer=/g)||[]).length,2);
+ clickRoute({view:scope});assert.equal(run('view'),scope);assert.match(screen.innerHTML,/data-artwork-slot="square"/);assert.match(screen.innerHTML,/data-filter-open="sort"/);assert.match(screen.innerHTML,/ps-native-query/);
+ assert.match(screen.innerHTML,new RegExp('data-offer-id="'+scope+'-one"'));assert.doesNotMatch(screen.innerHTML,/trendyol-reviewed|wrong-host|missing-art/);
+ run('query="sovital";render()');assert.equal((screen.innerHTML.match(/data-brand-group=/g)||[]).length,1);
+ clickRoute({campaignGroup:'SOVITAL'});assert.equal(run('campaignOrigin'),scope);assert.equal((screen.innerHTML.match(/data-offer-id=/g)||[]).length,2);
+ clickRoute({action:'back'});clickRoute({action:'back'});assert.equal(run('view'),'home');
+}
+run('view="settings";render()');assert.match(screen.innerHTML,/Bizi App Store’da Değerlendir/);assert.ok(screen.innerHTML.indexOf('Geri Bildirim ve Öneriler')<screen.innerHTML.indexOf('Bizi App Store’da Değerlendir'));
+clickRoute({reviewApp:'1'});await new Promise(r=>setImmediate(r));assert(requests.some(r=>r.path==='open-external'&&r.body.url==='https://apps.apple.com/tr/app/id6823890365?action=write-review'));
+run('view="home";query="";navigation.length=0;hydrate('+JSON.stringify(rows)+');render()');
 // Newest section uses only immutable publication dates within a rolling seven days.
 const publicationNow=Math.floor(Date.now()/1000);
 run('hydrate('+JSON.stringify([{...rows[0],id:'recent',publishedAt:publicationNow-86400},{...rows[0],id:'boundary',publishedAt:publicationNow-7*86400},{...rows[0],id:'too-old',publishedAt:publicationNow-7*86400-1,updated:publicationNow},{...rows[0],id:'unknown'},{...rows[0],id:'future',publishedAt:publicationNow+60}])+')');

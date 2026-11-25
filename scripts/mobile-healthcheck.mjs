@@ -24,5 +24,7 @@ try{
  const acknowledgment=await request('feedback',feedback);
  assert.equal(acknowledgment.ok,true);assert.equal(acknowledgment.id,feedback.id);
  console.log('PASS: live feedback persisted and acknowledged.');
+ const marketplaces=['Trendyol','Amazon','Hepsiburada'];
+ console.log('Marketplace active feed counts: '+JSON.stringify(Object.fromEntries(marketplaces.map(name=>[name,active.filter(c=>String(c.channel||'').trim().toLocaleLowerCase('tr')===(name+' · Yetkili Satıcı').toLocaleLowerCase('tr')).length]))));
  console.log('PASS: live mobile access, authenticated session, '+active.length+' active campaigns, codes excluded.');
 }finally{if(token)await request('logout',{});}
