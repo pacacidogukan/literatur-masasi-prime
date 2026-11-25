@@ -672,6 +672,10 @@ html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;backgrou
 #prime-square-campaigns .ps-realdetail .ps-detailtop{background:var(--ps-red)}
 #prime-square-campaigns .ps-realdetail .ps-detailtop :is(strong,button){color:#fff}
 #prime-square-campaigns .ps-realdetail .ps-detailtop button:focus-visible{outline-color:#fff}
+#prime-square-campaigns .ps-realdetail .ps-detailtop{grid-template-columns:44px minmax(0,1fr) 44px 44px;column-gap:0}
+#prime-square-campaigns .ps-detailtop :is([data-like],[data-share-campaign]){width:44px;height:44px;padding:0}
+#prime-square-campaigns .ps-detailtop :is([data-like],[data-share-campaign]) svg{width:22px;height:22px;stroke-width:1.8}
+
 
 #prime-square-campaigns .ps-campaignlist-header .ps-nativebar{margin:0;padding:0 var(--ps-browse-inset);background:var(--ps-red)}
 #prime-square-campaigns .ps-campaignlist-header :is(.ps-nativebar>strong,[data-action="back"]){color:#fff}

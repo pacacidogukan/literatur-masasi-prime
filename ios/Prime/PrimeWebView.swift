@@ -37,7 +37,8 @@ final class PrimeWebContainer: UIView {
 struct PrimeWebView: UIViewRepresentable {
     @Binding var isLaunching: Bool
     @Binding var usesRedHeader: Bool
-    func makeCoordinator() -> Coordinator { Coordinator(isLaunching: $isLaunching, usesRedHeader: $usesRedHeader) }
+    @Binding var dimmedHeader: Bool
+    func makeCoordinator() -> Coordinator { Coordinator(isLaunching: $isLaunching, usesRedHeader: $usesRedHeader, dimmedHeader: $dimmedHeader) }
     func makeUIView(context: Context) -> PrimeWebContainer {
         let configuration = WKWebViewConfiguration()
         configuration.ignoresViewportScaleLimits = false
@@ -86,6 +87,7 @@ struct PrimeWebView: UIViewRepresentable {
         let view = container.webView
         context.coordinator.isLaunching = $isLaunching
         context.coordinator.usesRedHeader = $usesRedHeader
+        context.coordinator.dimmedHeader = $dimmedHeader
         view.backgroundColor = isLaunching ? PrimeSurface.redHeader : PrimeSurface.header
         view.scrollView.backgroundColor = view.backgroundColor
         container.backgroundColor = view.backgroundColor
@@ -102,9 +104,11 @@ struct PrimeWebView: UIViewRepresentable {
     final class Coordinator: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDelegate, WKUIDelegate {
         var isLaunching: Binding<Bool>
         var usesRedHeader: Binding<Bool>
-        init(isLaunching: Binding<Bool>, usesRedHeader: Binding<Bool>) {
+        var dimmedHeader: Binding<Bool>
+        init(isLaunching: Binding<Bool>, usesRedHeader: Binding<Bool>, dimmedHeader: Binding<Bool>) {
             self.isLaunching = isLaunching
             self.usesRedHeader = usesRedHeader
+            self.dimmedHeader = dimmedHeader
             super.init()
         }
         private weak var foregroundWebView: WKWebView?
@@ -159,7 +163,34 @@ struct PrimeWebView: UIViewRepresentable {
                 Task { @MainActor in
                     self.isLaunching.wrappedValue = visible
                     self.usesRedHeader.wrappedValue = redHeader
+                    self.dimmedHeader.wrappedValue = body["dimmed"] as? Bool ?? false
                     replyHandler(["status":200, "data":["ok":true]], nil)
+                }
+                return
+            }
+            if path == "share-campaign" {
+                guard let body = payload["body"] as? [String: Any],
+                      let text = body["text"] as? String, !text.isEmpty, text.count <= 2000,
+                      let value = body["url"] as? String, value.count <= 2048,
+                      let url = URL(string: value), url.scheme?.lowercased() == "https",
+                      let host = url.host, !host.isEmpty, url.user == nil, url.password == nil else {
+                    replyHandler(nil, "Kampanya paylaşım bilgisi geçersiz."); return
+                }
+                Task { @MainActor in
+                    guard let view = message.webView,
+                          let presenter = view.window?.rootViewController,
+                          presenter.presentedViewController == nil else {
+                        replyHandler(nil, "Paylaşım ekranı açılamadı."); return
+                    }
+                    let activity = UIActivityViewController(activityItems: [text, url], applicationActivities: nil)
+                    if let popover = activity.popoverPresentationController {
+                        popover.sourceView = view
+                        popover.sourceRect = CGRect(x: view.bounds.maxX - 56, y: 8, width: 44, height: 44)
+                        popover.permittedArrowDirections = .up
+                    }
+                    presenter.present(activity, animated: true) {
+                        replyHandler(["status":200, "data":["ok":true]], nil)
+                    }
                 }
                 return
             }
