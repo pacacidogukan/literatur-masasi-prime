@@ -327,6 +327,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    assert.equal(await dialog.locator('.ps-filterhandle').count(),1);
    const sheet=await dialog.boundingBox();assert(sheet.y>50&&sheet.height<1000,'Individual filter must open from bottom');
    if(group==='platforms'){
+    await dialog.evaluate(async el=>{await Promise.all(el.getAnimations().map(animation=>animation.finished.catch(()=>{})));});
     const handle=await dialog.locator('.ps-filterhandle').boundingBox();
     await page.mouse.move(handle.x+handle.width/2,handle.y+handle.height/2);await page.mouse.down();await page.mouse.move(handle.x+handle.width/2,handle.y+handle.height/2+110,{steps:8});await page.mouse.up();
     await dialog.waitFor({state:'detached'});
