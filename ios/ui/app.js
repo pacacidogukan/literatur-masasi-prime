@@ -641,17 +641,34 @@ function campaignFilterSheetHTML(){
   counts.set(key,(counts.get(key)||0)+1);
  }
  const names=[...labels.values()].sort((a,b)=>a.localeCompare(b,'tr'));
- const shown=filterAllBrands?names:[...new Set([...f.brands,...names.slice(0,6)])];
+ const shown=filterAllBrands?names:[...new Set([...names.slice(0,6),...f.brands])];
  const section=(k,content)=>filterGroup!=='all'&&filterGroup!==k?'':`<section id="ps-filter-${k}" aria-labelledby="ps-filter-title-${k}"><h3 id="ps-filter-title-${k}">${filterTitles[k]}</h3><div class="ps-filterchips">${content}</div></section>`;
  const facets=k=>section(k,`<button type="button" data-filter-clear="${k}" aria-pressed="${!f[k].length}">Tümü</button>`+filterOptions[k].map(([v,n])=>filterChip(k,v,n)).join(''));
  return `<section class="ps-filterdialog${filterGroup==='all'?'':' ps-filterdialog-bottom'}" role="dialog" aria-modal="true" aria-labelledby="ps-filter-title"><header class="ps-filterdialoghead">${filterGroup==='all'?'':'<button type="button" class="ps-filterhandle" data-filter-close="1" aria-label="Pencereyi kapat"><span aria-hidden="true"></span></button>'}<h2 id="ps-filter-title" tabindex="-1">${filterGroup==='all'?'Filtrele':filterGroup==='sort'?'Sırala':filterTitles[filterGroup]}</h2>${filterGroup==='all'?`<button type="button" class="ps-filterclose" data-filter-close="1" aria-label="Kapat">${icon('x')}</button>`:''}</header><div class="ps-filterbody">${['all','sort'].includes(filterGroup)?`<section id="ps-filter-sort" aria-labelledby="ps-filter-title-sort"><h3 id="ps-filter-title-sort">Sıralama</h3><div class="ps-filterchips">${campaignSortOptions.map(([v,n,glyph])=>`<button type="button" data-filter-sort="${v}" aria-pressed="${f.sort===v}">${icon(glyph)}<span>${n}</span></button>`).join('')}</div></section>`:''}${facets('products')}${facets('rates')}${section('brands',`<button type="button" data-filter-clear="brands" aria-pressed="${!f.brands.length}">Tümü</button>`+shown.map(n=>filterChip('brands',n,n,counts.get(brandKey(n))||0)).join('')+(names.length>6?`<button type="button" class="ps-brandsmore" data-filter-more="1" aria-expanded="${filterAllBrands}">${filterAllBrands?'Daha Az Göster':'Tümünü Gör'}${icon(filterAllBrands?'chevron-up':'chevron-down')}</button>`:''))}${section('platforms',filterOptions.platforms.map(([v,n])=>filterChip('platforms',v,n)).join(''))}${facets('published')}${facets('ending')}${facets('codes')}${facets('saved')}</div><footer class="ps-filterfooter"><button type="button" data-filter-clean="1">Temizle</button><button type="button" data-filter-apply="1">${filteredCampaigns(f).length} kampanyayı göster</button></footer></section>`;
 }
 function redrawCampaignFilterSheet(){
  const host=root.querySelector('.ps-filteroverlay');if(!host)return;
- const y=host.querySelector('.ps-filterbody')?.scrollTop||0,focused=document.activeElement;
+ // Keep the mounted dialog, header, body and footer in place. Only the initial
+ // open may animate; draft choices update the existing controls.
+ const body=host.querySelector('.ps-filterbody'),y=body.scrollTop,focused=document.activeElement;
  const focusKey=focused?.dataset?.filterGroup!==undefined?{group:focused.dataset.filterGroup,value:focused.dataset.filterValue}:null;
- host.innerHTML=campaignFilterSheetHTML();host.querySelector('.ps-filterbody').scrollTop=y;
- if(focusKey)[...host.querySelectorAll('[data-filter-group]')].find(b=>b.dataset.filterGroup===focusKey.group&&b.dataset.filterValue===focusKey.value)?.focus({preventScroll:true});
+ const next=document.createElement('div');next.innerHTML=campaignFilterSheetHTML();
+ const key=b=>JSON.stringify([b.dataset.filterGroup,b.dataset.filterValue,b.dataset.filterClear,b.dataset.filterSort,b.dataset.filterMore]);
+ for(const section of body.querySelectorAll('section')){
+  const replacement=next.querySelector('#'+section.id);if(!replacement)continue;
+  const current=[...section.querySelectorAll('button')],incoming=[...replacement.querySelectorAll('button')];
+  if(current.length!==incoming.length||current.some((b,i)=>key(b)!==key(incoming[i]))){
+   section.innerHTML=replacement.innerHTML;
+  }else current.forEach((b,i)=>{
+   const n=incoming[i];
+   for(const attr of ['aria-pressed','aria-expanded'])if(n.hasAttribute(attr)&&b.getAttribute(attr)!==n.getAttribute(attr))b.setAttribute(attr,n.getAttribute(attr));
+   if(b.innerHTML!==n.innerHTML)b.innerHTML=n.innerHTML;
+  });
+ }
+ const apply=host.querySelector('[data-filter-apply]'),label=next.querySelector('[data-filter-apply]').textContent;
+ if(apply.textContent!==label)apply.textContent=label;
+ body.scrollTop=y;
+ if(focusKey&&!focused?.isConnected)[...host.querySelectorAll('[data-filter-group]')].find(b=>b.dataset.filterGroup===focusKey.group&&b.dataset.filterValue===focusKey.value)?.focus({preventScroll:true});
 }
 function openCampaignFilters(group='all'){
  if(filterOpen)return;filterFocus=document.activeElement;filterDraft=cloneCampaignFilters(campaignFilters);filterOpen=true;filterGroup=group==='sort'||Object.hasOwn(filterTitles,group)?group:'all';filterAllBrands=false;

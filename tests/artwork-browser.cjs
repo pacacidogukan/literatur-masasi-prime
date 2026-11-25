@@ -316,7 +316,11 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    if(group==='products'){
     assert.equal(await dialog.locator('#ps-filter-title').innerText(),'Ürün Kategorisi');
     for(const label of ['Tümü','Gıda Takviyeleri','Dermokozmetik ve Kişisel Bakım','Sporcu Beslenmesi','Makyaj ve Kozmetik'])assert(await dialog.getByRole('button',{name:label,exact:true}).isVisible());
+    const sheetHandle=await dialog.elementHandle(),bodyHandle=await dialog.locator('.ps-filterbody').elementHandle(),chipHandle=await dialog.locator('[data-filter-value="care"]').elementHandle();
     await dialog.locator('[data-filter-value="supplements"]').tap();await dialog.locator('[data-filter-value="care"]').tap();
+    assert(await sheetHandle.evaluate(el=>el.isConnected),'Selection must not remount the animated sheet');
+    assert(await bodyHandle.evaluate(el=>el.isConnected),'Selection must not remount the white body');
+    assert(await chipHandle.evaluate(el=>el.isConnected&&el.getAttribute('aria-pressed')==='true'),'Multi-select must update existing chips in place');
     assert.equal(await dialog.locator('[data-filter-group][aria-pressed="true"]').count(),2);
    }
    if(group==='rates'){
