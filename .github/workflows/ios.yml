@@ -39,7 +39,10 @@ jobs:
       - run: node tests/campaign-order.cjs
       - run: node tests/ios.cjs
       - run: node tests/mobile-load-failure.cjs
-      - name: Verify live mobile gateway session and campaign delivery
+      - name: Verify live mobile gateway session and campaign delivery for TestFlight
+        env:
+          # TestFlight may validate the app while the live catalogue is intentionally paused.
+          PRIME_EXPECTED_MIN_CAMPAIGNS: '0'
         run: node scripts/mobile-healthcheck.mjs
       - name: Install isolated backend test dependency
         run: npm install --prefix "$RUNNER_TEMP/prime-test-deps" --ignore-scripts --no-audit --no-fund esbuild@0.25.12
