@@ -249,7 +249,6 @@ final class PrimeFlowTests: XCTestCase {
         app.launch()
         home()
         let firstOffer = app.webViews.buttons.matching(NSPredicate(format: "label CONTAINS %@", ": ")).firstMatch
-        XCTAssertTrue(firstOffer.waitForExistence(timeout: 30), app.debugDescription)
         func capture(_ name: String) throws {
             // Allow the visible remote campaign artwork to finish decoding.
             Thread.sleep(forTimeInterval: 4)
@@ -262,6 +261,17 @@ final class PrimeFlowTests: XCTestCase {
             attachment.lifetime = .keepAlways
             add(attachment)
         }
+        if ProcessInfo.processInfo.environment["PRIME_ALLOW_EMPTY_TESTFLIGHT_FEED"] == "1" {
+            let emptyHome = app.webViews.staticTexts["Yeni ayrıcalıklar yakında"].firstMatch
+            if emptyHome.waitForExistence(timeout: 10), !firstOffer.exists {
+                try capture("testflight-empty-home")
+                tap("Kampanyalar")
+                let emptyCampaigns = app.webViews.staticTexts["Seçimlerine uygun kampanya bulunamadı."].firstMatch
+                XCTAssertTrue(emptyCampaigns.waitForExistence(timeout: 15), app.debugDescription)
+                return
+            }
+        }
+        XCTAssertTrue(firstOffer.waitForExistence(timeout: 30), app.debugDescription)
         try capture("01-home")
         // A clickable collapsed poster is still a layout failure (WKWebView flex/ratio regression).
         XCTAssertGreaterThan(firstOffer.frame.height, firstOffer.frame.width,
