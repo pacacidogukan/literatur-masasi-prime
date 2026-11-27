@@ -139,18 +139,21 @@ for(const rate of ['10','25','50']){
  clickRoute({filterCategory:'Tümü'});assert.equal(run('filteredCampaigns().length'),rate==='50'?0:1);
  clickRoute({action:'back'});
 }
-clickRoute({discount:'all'});assert.equal(run('view'),'campaigns');assert.equal(run('campaignFilterCount()'),1);assert.equal(run('campaignFilters.sort'),'discount');
+clickRoute({discount:'all'});assert.equal(run('view'),'campaigns');assert.equal(run('campaignFilterCount()'),0);assert.equal(run('campaignFilters.sort'),'discover');
 clickRoute({view:'brands'});assert.equal(run('selectedCategory'),'Tümü');assert.match(screen.innerHTML,/data-filter-open="ending"/);
 run("campaignFilters.brands=['Solgar'];render()");assert.match(screen.innerHTML,/data-brand="Solgar"/);assert.doesNotMatch(screen.innerHTML,/data-brand="Other"/);
 clickRoute({filterCategory:'Kargo Avantajı'});assert.equal(run('view'),'brands');assert.equal(run("filteredCampaigns(campaignFilters,'brands').length"),0);
-// Persist selections and sorting across every browsing route and back; clear is global.
-run('campaignFilters=emptyCampaignFilters();selectedCategory="Ürün İndirimleri";campaignFilters.rates=["25"];campaignFilters.sort="discount";persistCampaignPreferences()');
-for(const dest of ['home','brands','campaigns','favorites','trendyol','amazon','hepsiburada']){
- clickRoute({view:dest});assert.equal(run('selectedCategory'),'Ürün İndirimleri');assert.deepEqual(Array.from(run('campaignFilters.rates')),['25']);assert.equal(run('campaignFilters.sort'),'discount');
-}
-run('selectedCategory="Tümü";campaignFilters=emptyCampaignFilters();restoreCampaignPreferences()');assert.equal(run('selectedCategory'),'Ürün İndirimleri');assert.equal(run('campaignFilters.sort'),'discount');assert.deepEqual(Array.from(run('campaignFilters.rates')),['25']);
+// A filtered browse page retains its choices on detail/back, and independent views open unfiltered.
+run('view="campaigns";campaignFilters=emptyCampaignFilters();selectedCategory="Ürün İndirimleri";campaignFilters.rates=["25"];campaignFilters.sort="discount";navigation.length=0');
+clickRoute({offer:'live'});assert.equal(run('view'),'detail');
+clickRoute({action:'back'});assert.equal(run('view'),'campaigns');assert.equal(run('selectedCategory'),'Ürün İndirimleri');
+assert.deepEqual(Array.from(run('campaignFilters.rates')),['25']);assert.equal(run('campaignFilters.sort'),'discount');
 run('openCampaignFilters("all");handleCampaignFilterClick({filterClean:"1"});closeCampaignFilters(false)');assert.equal(run('selectedCategory'),'Ürün İndirimleri');
-run('openCampaignFilters("all");handleCampaignFilterClick({filterClean:"1"});closeCampaignFilters(true)');assert.equal(run('selectedCategory'),'Tümü');assert.equal(run('campaignFilterCount()'),0);assert.equal(run('campaignFilters.sort'),'discover');
+run('openCampaignFilters("all");handleCampaignFilterClick({filterClean:"1"});closeCampaignFilters(true)');assert.equal(run('selectedCategory'),'Tümü');assert.equal(run('campaignFilterCount()'),0);
+for(const dest of ['home','brands','campaigns','trendyol','amazon','hepsiburada']){
+ run('selectedCategory="Ürün İndirimleri";campaignFilters.rates=["25"];campaignFilters.sort="discount"');
+ clickRoute({view:dest});assert.equal(run('selectedCategory'),'Tümü');assert.equal(run('campaignFilterCount()'),0);assert.equal(run('campaignFilters.sort'),'discover');
+}
 assert.equal(run('campaignDestination({source:"https://example.com/campaign?code=x"})'),'https://example.com/');
 for(const url of ['https://www.trendyol.com/sr?mid=1','https://www.amazon.com.tr/dp/example','https://www.hepsiburada.com/example'])assert.equal(run('campaignDestination({source:'+JSON.stringify(url)+'})'),url);
 assert.match(run('detailAction({hasCode:false,source:"https://example.com/promo"})'),/href="https:\/\/example\.com\//);

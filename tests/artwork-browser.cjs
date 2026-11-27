@@ -69,13 +69,33 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    await page.getByRole('button',{name:'Geri',exact:true}).tap();
    await shortcuts.nth(2).tap();
    await page.locator('.ps-brandspage').waitFor();
-   assert.equal(await page.locator('.ps-allfilters>span').innerText(),'1','Filter remains selected after navigating to brands');
+   assert.equal(await page.locator('.ps-allfilters>span').count(),0,'An unfiltered brands entry must not inherit the campaign filter');
+   assert.equal(await page.locator('.ps-brandspage [data-brand="Solgar"]').count(),1);
    await page.getByRole('button',{name:'Geri',exact:true}).tap();
    await homeHeader.locator('.ps-homehero').tap();
    await page.locator('#ps-native-results').waitFor();
-   assert.equal(await page.locator('.ps-allfilters>span').innerText(),'1');
-   await page.locator('[data-filter-open="all"]').tap();await page.locator('[data-filter-clean]').tap();await page.locator('[data-filter-apply]').tap();
+   assert.equal(await page.locator('.ps-allfilters>span').count(),0,'All campaigns opens without an unrelated filter');
+   assert.equal(await page.locator('#ps-native-results [data-offer-id]').count(),3);
    await page.getByRole('button',{name:'Geri',exact:true}).tap();
+  }
+  if(width===390){
+   await page.locator('.ps-poster[data-offer="valid"]').first().tap();
+   await page.locator('[data-like="valid"]').tap();
+   assert.equal(await page.locator('[data-like="valid"]').getAttribute('aria-checked'),'true');
+   await page.getByRole('button',{name:'Geri',exact:true}).tap();
+   assert(await page.locator('.ps-poster[data-offer="valid"] .ps-card-saved').count()>0);
+   await page.getByRole('button',{name:'Favoriler',exact:true}).tap();
+   await page.locator('.ps-nativefavorite [data-offer="valid"]').waitFor();
+   await page.getByRole('button',{name:'Ana Sayfa',exact:true}).tap();
+   await homeHeader.locator('.ps-homehero').tap();
+   await page.locator('#ps-native-results [data-offer-id="valid"] .ps-card-saved').waitFor();
+   await page.locator('#ps-native-results [data-offer-id="valid"]').tap();
+   await page.locator('.ps-nativelist [data-offer-id="valid"] .ps-card-saved').waitFor();
+   await page.locator('.ps-nativelist [data-offer-id="valid"]').tap();
+   await page.locator('[data-like="valid"]').tap();
+   await page.getByRole('button',{name:'Geri',exact:true}).tap();
+   assert.equal(await page.locator('.ps-nativelist [data-offer-id="valid"] .ps-card-saved').count(),0);
+   await page.getByRole('button',{name:'Ana Sayfa',exact:true}).tap();
   }
   const circleGap=await page.locator('.ps-brandrounds button>b').evaluateAll(nodes=>{const a=nodes[0].getBoundingClientRect(),b=nodes[1].getBoundingClientRect();return b.left-a.right;});
   assert.equal(await page.locator('.ps-brandrounds button>b').first().evaluate(el=>{
@@ -134,10 +154,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
   await page.locator('[data-discount="25"]').tap();
   await checkScopedCampaigns('%25 ve üzeri');
-  assert.equal(await page.locator('.ps-categorytabs [aria-pressed="true"]').innerText(),'Kargo Avantajı','Category persists across home and scoped pages');
-  assert.equal(await page.locator('#ps-native-results [role="status"]').innerText(),'0 kampanya');
-  await page.locator('[data-filter-reset]').tap();
-  assert.equal(await page.locator('.ps-categorytabs [aria-pressed="true"]').innerText(),'Tümü');
+  assert.equal(await page.locator('.ps-categorytabs [aria-pressed="true"]').innerText(),'Tümü','Discount shortcut opens without an unrelated category');
   assert.equal(await page.locator('#ps-native-results [role="status"]').innerText(),'1 kampanya');
   assert.equal(await page.locator('#ps-native-results [data-offer-id="valid"]').count(),1);
   await page.getByRole('button',{name:'Geri',exact:true}).tap();

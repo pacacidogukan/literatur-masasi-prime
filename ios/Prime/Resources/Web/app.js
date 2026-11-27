@@ -158,7 +158,7 @@ function applyCampaignRows(rows){
 }
 async function refreshCampaigns(foreground=false){
  if(!loaded||deleteBusy||document.hidden||campaignRefreshPending)return;
- const now=Date.now(),interval=foreground?60000:300000;
+ const now=Date.now(),interval=foreground?15000:60000;
  if(now-lastCampaignAttempt<interval)return;
  lastCampaignAttempt=now;const epoch=campaignEpoch;
  campaignRefreshPending=(async()=>{try{
@@ -173,7 +173,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)void refre
 document.addEventListener('prime-foreground',()=>void refreshCampaigns(true));
 setInterval(()=>void refreshCampaigns(),60000);
 async function start(){campaignEpoch++;loaded=false;loadError=false;render();try{let me=await server('me');if(!me.authorized)await server('access',{});const r=await server('campaigns');if(!Array.isArray(r.campaigns))throw Error('Geçersiz kampanya yanıtı.');hydrate(r.campaigns);campaignSignature=JSON.stringify(r.campaigns);lastCampaignAttempt=Date.now();loaded=true;view='home';navigation.length=0;render();}catch(e){loadError=true;render();}}
-async function deleteData(){if(deleteBusy)return;deleteBusy=true;campaignEpoch++;try{await sessionRenewal?.catch(()=>{});const result=await server('delete-account',{});if(result.deleted!==true)throw Error('Silme işlemi doğrulanamadı.');resetAnalytics();favorites.clear();persistFavorites();profilePhotoEpoch++;profilePhotoBusy=false;settingsPhoto=null;settingsName='';profileNameDraft='';feedbackDraft={type:feedbackTypes[0],message:'',email:''};feedbackRequest=null;feedbackSuccess=false;profileMessage='';profileError='';writeLocal('lmprime-photo',null);writeLocal('lmprime-name','');campaignFilters=emptyCampaignFilters();selectedCategory='Tümü';persistCampaignPreferences();navigation.length=0;await start();}catch(e){showError('Veriler silinemedi. Tekrar dene.');}finally{deleteBusy=false;}}
+async function deleteData(){if(deleteBusy)return;deleteBusy=true;campaignEpoch++;try{await sessionRenewal?.catch(()=>{});const result=await server('delete-account',{});if(result.deleted!==true)throw Error('Silme işlemi doğrulanamadı.');resetAnalytics();favorites.clear();persistFavorites();profilePhotoEpoch++;profilePhotoBusy=false;settingsPhoto=null;settingsName='';profileNameDraft='';feedbackDraft={type:feedbackTypes[0],message:'',email:''};feedbackRequest=null;feedbackSuccess=false;profileMessage='';profileError='';writeLocal('lmprime-photo',null);writeLocal('lmprime-name','');campaignFilters=emptyCampaignFilters();selectedCategory='Tümü';navigation.length=0;await start();}catch(e){showError('Veriler silinemedi. Tekrar dene.');}finally{deleteBusy=false;}}
 root.addEventListener('click',async e=>{const a=e.target.closest('a[href]');if(!a)return;e.preventDefault();const url=website(a.getAttribute('href'));if(!url){showError('Mağaza bağlantısı bulunmuyor.');return;}const id=view==='detail'&&current&&a.closest('[data-detail-id]')?current.id:null;if(id)trackAnalytics('store_click',id);try{await server('open-external',{url});if(id)trackAnalytics('store_open',id);}catch(e){if(id)trackAnalytics('store_error',id);showError(e.message);}},true);
 setInterval(()=>{if(!loaded||document.hidden)return;const active=offers.filter(o=>!expired(o));if(active.length===offers.length)return;applyCampaignRows(active.map(o=>o.raw));},1000);
 
@@ -185,8 +185,8 @@ try{const saved=JSON.parse(localStorage.getItem(storageKey));if(Array.isArray(sa
 function persistFavorites(){return writeLocal(storageKey,[...favorites]);}
 function toggleFavorite(id){const next=new Set(favorites);next.has(id)?next.delete(id):next.add(id);if(!writeLocal(storageKey,[...next])){showError('Favori tercihin kaydedilemedi. Cihazında boş alan açıp tekrar dene.');return false;}favorites=next;trackAnalytics(next.has(id)?'favorite_add':'favorite_remove',id);return true;}
 const navigation=[];
-function capturePage(){return {view,type,brand,query,current,returnView,discountThreshold,campaignBrand,campaignGroup,campaignOrigin,y:screen.scrollTop,rails:[...screen.querySelectorAll('.ps-carousel,.ps-coderail,.ps-lastdayrail,.ps-marketplacerail,.ps-rounds,.ps-brandrounds,.ps-nativerail')].map(e=>e.scrollLeft)};}
-function restorePage(p){({view,type,brand,query,current,returnView,discountThreshold,campaignBrand,campaignGroup,campaignOrigin}=p);render();screen.scrollTop=p.y;screen.querySelectorAll('.ps-carousel,.ps-coderail,.ps-lastdayrail,.ps-marketplacerail,.ps-rounds,.ps-brandrounds,.ps-nativerail').forEach((e,i)=>e.scrollLeft=p.rails[i]||0);}
+function capturePage(){return {view,type,brand,query,current,returnView,discountThreshold,campaignBrand,campaignGroup,campaignOrigin,campaignFilters,selectedCategory,y:screen.scrollTop,rails:[...screen.querySelectorAll('.ps-carousel,.ps-coderail,.ps-lastdayrail,.ps-marketplacerail,.ps-rounds,.ps-brandrounds,.ps-nativerail')].map(e=>e.scrollLeft)};}
+function restorePage(p){({view,type,brand,query,current,returnView,discountThreshold,campaignBrand,campaignGroup,campaignOrigin,campaignFilters,selectedCategory}=p);render();screen.scrollTop=p.y;screen.querySelectorAll('.ps-carousel,.ps-coderail,.ps-lastdayrail,.ps-marketplacerail,.ps-rounds,.ps-brandrounds,.ps-nativerail').forEach((e,i)=>e.scrollLeft=p.rails[i]||0);}
 async function copyCurrentCode(){const id=current?.id;try{if(!current?.code||expired(current))throw Error('Kod kullanılamıyor.');await server('copy',{text:current.code});trackAnalytics('copy_success',id);copyNotice=true;render();screen.querySelector('.ps-copyhandle')?.focus();}catch(e){if(id)trackAnalytics('copy_error',id);showError('Kod panoya kopyalanamadı. Tekrar deneyebilirsin.');}}
 const icon=n=>iconMarkup[n]||iconMarkup.tag||'';
 const esc=s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
@@ -290,7 +290,10 @@ function campaignImage(o,slot,extra=''){
  if(!url&&slot==='square'&&logos[o.brand])return `<span class="ps-artwork-frame ps-logo-fallback ${extra}" data-artwork-slot="square">${spacer}<img src="${esc(logos[o.brand])}" alt="${esc(o.brand)} logosu" loading="lazy">${fallback}</span>`;
  return `<span class="ps-artwork-frame ${extra}" data-artwork-slot="${slot}" data-artwork-state="${url?'pending':'unavailable'}">${spacer}${url?`<img width="${m.width}" height="${m.height}" loading="${slot==='detail'?'eager':'lazy'}" decoding="async" data-validate-artwork="${slot}" src="${esc(url)}" alt="${esc(o.brand+' · '+o.title)}">`:''}${fallback}</span>`;
 }
-function poster(o,size){if(!o.artworkReady)return '';const slot=size==='large'?'large':size==='square'?'square':size==='detail'?'detail':'compact';return `<button type="button" class="ps-poster ${size} cursor-interaction" data-offer="${esc(o.id)}" data-card-brand="${esc(o.brand)}" aria-label="${esc(o.brand+': '+o.title)}">${campaignImage(o,slot)}</button>`}
+function favoriteCardMarker(o){
+ return favorites.has(o.id)?`<span class="ps-card-saved" role="img" aria-label="Favorilerde">${icon('bookmark')}</span>`:'';
+}
+function poster(o,size){if(!o.artworkReady)return '';const slot=size==='large'?'large':size==='square'?'square':size==='detail'?'detail':'compact';return `<button type="button" class="ps-poster ${size} cursor-interaction" data-offer="${esc(o.id)}" data-card-brand="${esc(o.brand)}" aria-label="${esc(o.brand+': '+o.title)}">${campaignImage(o,slot)}${favoriteCardMarker(o)}</button>`}
 function carousel(arr,size){return `<div class="ps-carousel ${size}" aria-label="${size==='large'?'Öne çıkan kampanyalar':'Diğer kampanyalar'}">${arr.map(o=>poster(o,size)).join('')}</div>`}
 let categoryScroll=0;
 let selectedCategory='Tümü';
@@ -319,7 +322,7 @@ let codeBannerIndex=0;
 function codeFeature(arr){
 const coded=spreadCampaigns(arr.filter(o=>o.hasCode),'codes');
 if(!coded.length)return '';
-return `<section class="ps-codefeature" aria-label="Kampanya kodlu fırsatlar"><div class="ps-sectionheading"><h2 class="ps-codeheading">Kampanya Kodu</h2><button type="button" class="ps-seeall cursor-interaction" data-type="Kampanya Kodu" aria-label="Kampanya kodlu tüm fırsatları gör">Tümü${icon('chevron-right')}</button></div><div class="ps-coderail" aria-roledescription="kampanya slaytları">${coded.map((o,index)=>`<button type="button" data-offer="${esc(o.id)}" data-card-brand="${esc(o.brand)}" class="ps-codebanner cursor-interaction ${o.brand==='Justin Beauty'?'justin':''}" aria-label="${esc(o.brand+': '+o.title)}">${campaignImage(o,'code')}<span class="ps-nativecount ps-codecount" aria-label="${index+1}. kampanya, toplam ${coded.length}">${index+1}/${coded.length}</span></button>`).join('')}</div></section>`;
+return `<section class="ps-codefeature" aria-label="Kampanya kodlu fırsatlar"><div class="ps-sectionheading"><h2 class="ps-codeheading">Kampanya Kodu</h2><button type="button" class="ps-seeall cursor-interaction" data-type="Kampanya Kodu" aria-label="Kampanya kodlu tüm fırsatları gör">Tümü${icon('chevron-right')}</button></div><div class="ps-coderail" aria-roledescription="kampanya slaytları">${coded.map((o,index)=>`<button type="button" data-offer="${esc(o.id)}" data-card-brand="${esc(o.brand)}" class="ps-codebanner cursor-interaction ${o.brand==='Justin Beauty'?'justin':''}" aria-label="${esc(o.brand+': '+o.title)}">${campaignImage(o,'code')}${favoriteCardMarker(o)}<span class="ps-nativecount ps-codecount" aria-label="${index+1}. kampanya, toplam ${coded.length}">${index+1}/${coded.length}</span></button>`).join('')}</div></section>`;
 }
 function moveCodeBanner(i,behavior='smooth'){
 const rail=root.querySelector('.ps-coderail');if(!rail||!rail.children.length)return;
@@ -371,7 +374,7 @@ const lastDayArt={};
 let lastDayIndex=0;
 function lastDayTicket(o){const xml=v=>String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400"><rect width="1200" height="400" rx="36" fill="#171719"/><path d="M890 0v400" stroke="#f6f0df" stroke-width="4" stroke-dasharray="12 12"/><circle cx="890" cy="0" r="26" fill="#fafafa"/><circle cx="890" cy="400" r="26" fill="#fafafa"/><rect x="44" y="34" width="152" height="44" rx="12" fill="#ff454b"/><text x="120" y="64" text-anchor="middle" font-family="Arial,sans-serif" font-size="25" font-weight="700" fill="#171719">SON GÜN</text><text x="44" y="130" font-family="Arial,sans-serif" font-size="36" fill="#f6f0df">${xml(o.brand)}</text><text x="44" y="217" font-family="Arial,sans-serif" font-size="52" font-weight="700" fill="#f6f0df">${xml(o.title)}</text><text x="44" y="286" font-family="Arial,sans-serif" font-size="30" fill="#f6f0df">${xml(o.sub)}</text><text x="44" y="351" font-family="Arial,sans-serif" font-size="25" fill="#ff7276">Bitmesine 24 saatten az kaldı</text><text x="1043" y="208" text-anchor="middle" font-family="Arial,sans-serif" font-size="72" font-weight="700" fill="#ff454b">24</text><text x="1043" y="250" text-anchor="middle" font-family="Arial,sans-serif" font-size="26" fill="#f6f0df">SAATTEN AZ</text></svg>`);}
 function lastDayFeature(arr){const last=spreadCampaigns(arr.filter(o=>isLastDay(o)),'last-day');if(!last.length)return '';
-return `<section class="ps-codefeature ps-lastdayfeature" aria-label="Son gün kampanyaları"><h2 class="ps-codeheading">Son Gün</h2><div class="ps-lastdayrail" aria-roledescription="kampanya slaytları">${last.map((o,index)=>`<button type="button" data-offer="${esc(o.id)}" data-card-brand="${esc(o.brand)}" class="ps-codebanner cursor-interaction" aria-label="${esc(o.brand+': '+o.title)}">${campaignImage(o,'lastDay')}<span class="ps-nativecount ps-codecount" aria-label="${index+1}. kampanya, toplam ${last.length}">${index+1}/${last.length}</span></button>`).join('')}</div></section>`;}
+return `<section class="ps-codefeature ps-lastdayfeature" aria-label="Son gün kampanyaları"><h2 class="ps-codeheading">Son Gün</h2><div class="ps-lastdayrail" aria-roledescription="kampanya slaytları">${last.map((o,index)=>`<button type="button" data-offer="${esc(o.id)}" data-card-brand="${esc(o.brand)}" class="ps-codebanner cursor-interaction" aria-label="${esc(o.brand+': '+o.title)}">${campaignImage(o,'lastDay')}${favoriteCardMarker(o)}<span class="ps-nativecount ps-codecount" aria-label="${index+1}. kampanya, toplam ${last.length}">${index+1}/${last.length}</span></button>`).join('')}</div></section>`;}
 const marketplaceConfig={
  trendyol:{name:'Trendyol',hosts:['trendyol.com','www.trendyol.com']},
  amazon:{name:'Amazon',hosts:['amazon.com.tr','www.amazon.com.tr']},
@@ -393,7 +396,7 @@ function marketplaceBrandCards(items,scope){
  const firstByBrand=new Map();
  for(const offer of items){const key=trendyolBrandKey(offer.brand);if(!firstByBrand.has(key))firstByBrand.set(key,offer);}
  const cards=[...firstByBrand.values()];
- return cards.map((o,index)=>`<button type="button" data-offer="${esc(o.id)}" class="ps-codebanner ps-marketplace-card ${scope==='trendyol'?'ps-trendyol-card':''} cursor-interaction" aria-label="${esc(o.brand+': '+o.title)}">${campaignImage(o,'lastDay')}<span class="ps-nativecount ps-codecount" aria-label="${index+1}. marka, toplam ${cards.length}">${index+1}/${cards.length}</span></button>`).join('');
+ return cards.map((o,index)=>`<button type="button" data-offer="${esc(o.id)}" class="ps-codebanner ps-marketplace-card ${scope==='trendyol'?'ps-trendyol-card':''} cursor-interaction" aria-label="${esc(o.brand+': '+o.title)}">${campaignImage(o,'lastDay')}${favoriteCardMarker(o)}<span class="ps-nativecount ps-codecount" aria-label="${index+1}. marka, toplam ${cards.length}">${index+1}/${cards.length}</span></button>`).join('');
 }
 function marketplaceFeature(scope,arr){
  const {name}=marketplaceConfig[scope];const cards=marketplaceBrandCards(marketplaceOffers(scope,arr),scope);
@@ -454,8 +457,8 @@ function favoritesContent(){const saved=offers.filter(o=>favorites.has(o.id));co
 function nativeFavorites(){return `<div class="ps-browseheader">${pageSearchHeader('ps-favorites-query',favoriteQuery)}</div><main class="ps-nativepage ps-campaignspage ps-nativefavorites" id="ps-favorites-results">${favoritesContent()}</main>`;}
 function nativeCampaigns(){return campaignBrowsePage('campaigns');}
 
-function nativeGroups(names,sourceOffers=offers,brandKey=name=>name){return names.map(n=>{const arr=sourceOffers.filter(o=>brandKey(o.brand)===brandKey(n));if(!arr.length)return '';return `<article class="ps-nativegroup" data-brand-group="${esc(n)}"><div class="ps-nativerail" tabindex="0" role="group" aria-roledescription="kampanya slaytları" aria-label="${esc(n)} kampanyalarını aç">${arr.map(o=>`<button type="button" class="cursor-interaction" data-campaign-group="${esc(n)}" data-offer-id="${esc(o.id)}" aria-label="${esc(n)} kampanyalarını aç">${campaignImage(o,'square')}</button>`).join('')}</div>${arr.length>1?`<span class="ps-nativecount" data-slide-total="${arr.length}" aria-label="1. kampanya, toplam ${arr.length}">1/${arr.length}</span><div class="ps-nativedots" aria-hidden="true">${arr.map((o,i)=>`<span class="${i===0?'current':''}"></span>`).join('')}</div>`:''}</article>`}).join('')||'<div class="ps-empty">Marka bulunamadı</div>'}
-function campaignRows(arr,empty='Bu markada kampanya bulunmuyor.'){return `<div class="ps-nativelist">${arr.length?arr.map(o=>`<button type="button" class="cursor-interaction" data-offer="${esc(o.id)}" data-offer-id="${esc(o.id)}" aria-label="${esc(o.brand+': '+o.title)}">${campaignImage(o,'square','ps-listthumb')}<span><strong>${esc(o.title)}</strong><small class="ps-rowsummary">${esc(o.sub||'Kampanyayı incele')}</small></span>${icon('chevron-right')}</button>`).join(''):`<div class="ps-empty">${esc(empty)}</div>`}</div>`;}
+function nativeGroups(names,sourceOffers=offers,brandKey=name=>name){return names.map(n=>{const arr=sourceOffers.filter(o=>brandKey(o.brand)===brandKey(n));if(!arr.length)return '';return `<article class="ps-nativegroup" data-brand-group="${esc(n)}"><div class="ps-nativerail" tabindex="0" role="group" aria-roledescription="kampanya slaytları" aria-label="${esc(n)} kampanyalarını aç">${arr.map(o=>`<button type="button" class="cursor-interaction" data-campaign-group="${esc(n)}" data-offer-id="${esc(o.id)}" aria-label="${esc(n)} kampanyalarını aç">${campaignImage(o,'square')}${favoriteCardMarker(o)}</button>`).join('')}</div>${arr.length>1?`<span class="ps-nativecount" data-slide-total="${arr.length}" aria-label="1. kampanya, toplam ${arr.length}">1/${arr.length}</span><div class="ps-nativedots" aria-hidden="true">${arr.map((o,i)=>`<span class="${i===0?'current':''}"></span>`).join('')}</div>`:''}</article>`}).join('')||'<div class="ps-empty">Marka bulunamadı</div>'}
+function campaignRows(arr,empty='Bu markada kampanya bulunmuyor.'){return `<div class="ps-nativelist">${arr.length?arr.map(o=>`<button type="button" class="cursor-interaction" data-offer="${esc(o.id)}" data-offer-id="${esc(o.id)}" aria-label="${esc(o.brand+': '+o.title)}">${campaignImage(o,'square','ps-listthumb')}${favoriteCardMarker(o)}<span><strong>${esc(o.title)}</strong><small class="ps-rowsummary">${esc(o.sub||'Kampanyayı incele')}</small></span>${icon('chevron-right')}</button>`).join(''):`<div class="ps-empty">${esc(empty)}</div>`}</div>`;}
 function searchResults(){const arr=filteredCampaigns(campaignFilters,'home');return `<section class="ps-searchresults" aria-label="Arama sonuçları"><p class="ps-searchsummary" role="status">${arr.length} kampanya bulundu</p>${campaignRows(arr,'Aramana uygun kampanya bulunamadı.')}</section>`;}
 function nativeCampaignGroup(){
  const key=isMarketplace(campaignOrigin)?trendyolBrandKey:name=>name;
@@ -592,20 +595,11 @@ const campaignSortOptions=[
  ['ending','Bitişi en yakın','calendar-clock'],
  ['discount','İndirim oranı yüksekten düşüğe','trending-down']
 ];
-const campaignPreferencesKey='lmprime-campaign-filters';
-function persistCampaignPreferences(){writeLocal(campaignPreferencesKey,{category:selectedCategory,filters:campaignFilters});}
-function restoreCampaignPreferences(){
- const saved=readLocal(campaignPreferencesKey,null);if(!saved||typeof saved!=='object')return;
- if(['Tümü',...categoryDisplayNames].includes(saved.category))selectedCategory=saved.category;
- const clean=emptyCampaignFilters();
- for(const k of Object.keys(filterTitles)){
-  const values=saved.filters?.[k];if(!Array.isArray(values))continue;
-  clean[k]=[...new Set(values.filter(v=>typeof v==='string'&&(k==='brands'||filterOptions[k].some(([id])=>id===v))))];
- }
- if(campaignSortOptions.some(([id])=>id===saved.filters?.sort))clean.sort=saved.filters.sort;
- campaignFilters=clean;
+function resetBrowseFilters(){
+ campaignFilters=emptyCampaignFilters();
+ selectedCategory='Tümü';
+ campaignBrand='Tümü';
 }
-restoreCampaignPreferences();
 function campaignFilterCount(f=campaignFilters){return Object.keys(filterTitles).reduce((n,k)=>n+f[k].length,0);}
 function campaignFilterMatches(o,f=campaignFilters,skip='',now=Date.now(),scope=view){
  const days=86400000,rate=discountRates[o.id]||0;
@@ -692,7 +686,7 @@ function openCampaignFilters(group='all'){
  host.querySelector('#ps-filter-title')?.focus();
 }
 function closeCampaignFilters(apply=false){
- if(!filterOpen)return;if(apply){campaignFilters=cloneCampaignFilters(filterDraft);selectedCategory=filterDraftCategory??selectedCategory;persistCampaignPreferences();}
+ if(!filterOpen)return;if(apply){campaignFilters=cloneCampaignFilters(filterDraft);selectedCategory=filterDraftCategory??selectedCategory;}
  root.querySelector('.ps-filteroverlay')?.remove();filterDragStart=null;filterOpen=false;filterDraft=null;filterDraftCategory=null;screen.inert=false;const nav=root.querySelector('.ps-nav');if(nav)nav.inert=false;
  if(apply){const y=screen.scrollTop;render();screen.scrollTop=y;root.querySelector('[data-filter-open="all"]')?.focus({preventScroll:true});}else filterFocus?.focus({preventScroll:true});
 }
@@ -700,8 +694,8 @@ function handleCampaignFilterClick(d){
  if(d.filterOpen){openCampaignFilters(d.filterOpen);return true;}
  if(d.filterClose){closeCampaignFilters();return true;}
  if(d.filterApply){closeCampaignFilters(true);return true;}
- if(d.filterCategory){const y=root.querySelector('.ps-categorytabs')?.scrollLeft||0;if(!['brands',...marketplaceViews,'newest','discount'].includes(view))view=d.filterCategory==='Tümü'?'campaigns':'category';selectedCategory=d.filterCategory;persistCampaignPreferences();campaignBrand='Tümü';render();screen.scrollTop=0;const rail=root.querySelector('.ps-categorytabs');if(rail)rail.scrollLeft=y;return true;}
- if(d.filterReset){campaignFilters=emptyCampaignFilters();selectedCategory='Tümü';persistCampaignPreferences();render();return true;}
+ if(d.filterCategory){const y=root.querySelector('.ps-categorytabs')?.scrollLeft||0;if(!['brands',...marketplaceViews,'newest','discount'].includes(view))view=d.filterCategory==='Tümü'?'campaigns':'category';selectedCategory=d.filterCategory;campaignBrand='Tümü';render();screen.scrollTop=0;const rail=root.querySelector('.ps-categorytabs');if(rail)rail.scrollLeft=y;return true;}
+ if(d.filterReset){campaignFilters=emptyCampaignFilters();selectedCategory='Tümü';render();return true;}
  if(!filterOpen)return false;
  if(d.filterGroup){const k=d.filterGroup,v=d.filterValue;if(!Object.hasOwn(filterTitles,k))return true;filterDraft[k]=filterDraft[k].includes(v)?filterDraft[k].filter(x=>x!==v):[...filterDraft[k],v];}
  else if(d.filterClear){filterDraft[d.filterClear]=[];}
@@ -760,20 +754,20 @@ if(d.settingsBack||d.action==='back'){feedbackSuccess=false;const p=navigation.p
 const previous=capturePage();
 const route=d.homeProducts||d.newest||d.homeAll||d.view||d.discount||d.campaignGroup||d.brand||d.offer||d.type||d.nativeSearch;
 if(route){if(d.view&&['home','brands','campaigns','favorites'].includes(d.view))navigation.length=0;else navigation.push(previous);}
-if(d.view){if(d.view==='personal'){profileNameDraft=settingsName;profileMessage='';profileError='';}if(['campaigns','home','brands',...marketplaceViews].includes(d.view)){campaignBrand='Tümü';}if(d.view==='home')categoryScroll=0;if(d.view==='filter')returnView=view;view=d.view;query='';type='Tümü';}
-else if(d.newest){type='Tümü';query='';view='newest';}
+if(d.view){if(d.view==='personal'){profileNameDraft=settingsName;profileMessage='';profileError='';}if(d.view!==view&&['campaigns','home','brands',...marketplaceViews].includes(d.view))resetBrowseFilters();if(d.view==='home')categoryScroll=0;if(d.view==='filter')returnView=view;view=d.view;query='';type='Tümü';}
+else if(d.newest){resetBrowseFilters();type='Tümü';query='';view='newest';}
 else if(d.homeAll||d.homeProducts){
- campaignBrand='Tümü';type='Tümü';query='';view='campaigns';
+ resetBrowseFilters();type='Tümü';query='';view='campaigns';
 }
-else if(d.discount){discountThreshold=d.discount;campaignBrand='Tümü';type='Tümü';query='';view=d.discount==='all'?'campaigns':'discount';}
+else if(d.discount){resetBrowseFilters();discountThreshold=d.discount;type='Tümü';query='';view=d.discount==='all'?'campaigns':'discount';}
 else if(d.campaignBrand){campaignBrand=d.campaignBrand;view='campaigns';}
 else if(d.campaignGroup){campaignOrigin=['category','newest',...marketplaceViews,'discount'].includes(view)?view:'campaigns';campaignGroup=d.campaignGroup;view='campaignGroup';}
 else if(d.nativeSearch){const input=root.querySelector('#ps-native-query');if(input){navigation.pop();input.focus();return;}view='campaigns';query='';}
-else if(d.brand){brand=d.brand;type='Tümü';query='';view='brand';}
+else if(d.brand){if(view!=='brands')resetBrowseFilters();brand=d.brand;type='Tümü';query='';view='brand';}
 else if(d.offer){returnView=view;current=offers.find(o=>o.id===d.offer);if(!current)return;view='detail';revealed=false;copyNotice=false;}
 else if(d.closeCopy){closeCopySheet();return;}
 else if(d.reveal){revealCode();return;}
-else if(d.type){categoryScroll=root.querySelector('.ps-rounds')?.scrollLeft||0;selectedCategory=d.type;persistCampaignPreferences();type='Tümü';query='';view='category';}
+else if(d.type){resetBrowseFilters();categoryScroll=root.querySelector('.ps-rounds')?.scrollLeft||0;selectedCategory=d.type;type='Tümü';query='';view='category';}
 else if(d.like){if(!toggleFavorite(d.like))return;}
 else if(d.action==='apply'){view=returnView;}
 else if(d.action==='reset'){type='Tümü';query='';view=returnView;}

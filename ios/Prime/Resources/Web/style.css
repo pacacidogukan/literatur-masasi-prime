@@ -741,3 +741,14 @@ html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;backgrou
 #prime-square-campaigns .ps-filterdialog-bottom .ps-filterbody section h3{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 @keyframes ps-filter-enter{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){#prime-square-campaigns .ps-filterdialog-bottom{animation:none}}
+
+
+#prime-square-campaigns .ps-nativelist [data-offer],
+#prime-square-campaigns .ps-nativerail [data-offer]{position:relative}
+#prime-square-campaigns .ps-card-saved{
+ position:absolute;top:12px;right:12px;z-index:2;display:grid;place-items:center;
+ width:26px;height:26px;border-radius:50%;background:#fff;color:#d72038;
+ box-shadow:0 1px 5px #17171926;pointer-events:none
+}
+#prime-square-campaigns .ps-card-saved svg{width:14px;height:14px;fill:currentColor;color:inherit}
+#prime-square-campaigns .ps-nativelist .ps-card-saved{right:32px;top:8px}
