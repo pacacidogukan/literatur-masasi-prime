@@ -83,18 +83,19 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    await page.locator('[data-like="valid"]').tap();
    assert.equal(await page.locator('[data-like="valid"]').getAttribute('aria-checked'),'true');
    await page.getByRole('button',{name:'Geri',exact:true}).tap();
-   assert(await page.locator('.ps-poster[data-offer="valid"] .ps-card-saved').count()>0);
+   assert.equal(await page.locator('.ps-poster[data-offer="valid"] .lucide-bookmark').count(),0);
    await page.getByRole('button',{name:'Favoriler',exact:true}).tap();
    await page.locator('.ps-nativefavorite [data-offer="valid"]').waitFor();
    await page.getByRole('button',{name:'Ana Sayfa',exact:true}).tap();
    await homeHeader.locator('.ps-homehero').tap();
-   await page.locator('#ps-native-results [data-offer-id="valid"] .ps-card-saved').waitFor();
+   assert.equal(await page.locator('#ps-native-results [data-offer-id="valid"] .lucide-bookmark').count(),0);
    await page.locator('#ps-native-results [data-offer-id="valid"]').tap();
-   await page.locator('.ps-nativelist [data-offer-id="valid"] .ps-card-saved').waitFor();
+   assert.equal(await page.locator('.ps-nativelist [data-offer-id="valid"] .lucide-bookmark').count(),0);
    await page.locator('.ps-nativelist [data-offer-id="valid"]').tap();
    await page.locator('[data-like="valid"]').tap();
    await page.getByRole('button',{name:'Geri',exact:true}).tap();
-   assert.equal(await page.locator('.ps-nativelist [data-offer-id="valid"] .ps-card-saved').count(),0);
+   await page.getByRole('button',{name:'Favoriler',exact:true}).tap();
+   await page.locator('.ps-nativefavorite [data-offer="valid"]').waitFor({state:'detached'});
    await page.getByRole('button',{name:'Ana Sayfa',exact:true}).tap();
   }
   const circleGap=await page.locator('.ps-brandrounds button>b').evaluateAll(nodes=>{const a=nodes[0].getBoundingClientRect(),b=nodes[1].getBoundingClientRect();return b.left-a.right;});
