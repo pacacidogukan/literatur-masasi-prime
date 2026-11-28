@@ -158,7 +158,9 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
   await page.locator('[data-discount="25"]').tap();
   await checkScopedCampaigns('%25 ve üzeri');
-  assert.equal(await page.locator('.ps-categorytabs [aria-pressed="true"]').innerText(),'Tümü','Discount shortcut opens without an unrelated category');
+  assert.equal(await page.locator('.ps-categorytabs [aria-pressed="true"]').innerText(),'Kargo Avantajı','Discount shortcut retains the selected category');
+  assert.equal(await page.locator('#ps-native-results [role="status"]').innerText(),'0 kampanya');
+  await page.locator('[data-filter-category="Tümü"]').tap();
   assert.equal(await page.locator('#ps-native-results [role="status"]').innerText(),'1 kampanya');
   assert.equal(await page.locator('#ps-native-results [data-offer-id="valid"]').count(),1);
   await page.getByRole('button',{name:'Geri',exact:true}).tap();
