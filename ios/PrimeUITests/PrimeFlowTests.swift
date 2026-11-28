@@ -181,10 +181,10 @@ final class PrimeFlowTests: XCTestCase {
     func testFavoritesPersistAndCanBeRemoved() {
         login(); home(); openSolgarCampaign()
         toggleFavorite("Solgar favorilere ekle"); relaunch(); home(); tap("Favoriler")
-        tap("Solgar kampanyasını aç"); toggleFavorite("Solgar favorilerden çıkar")
+        tap("Solgar, 1 favori kampanya"); tap("Solgar: Test ayrıcalığı"); toggleFavorite("Solgar favorilerden çıkar")
         relaunch(); home(); tap("Favoriler")
         XCTAssertTrue(app.webViews.staticTexts["Henüz favorin yok"].waitForExistence(timeout: 15))
-        XCTAssertFalse(button("Solgar kampanyasını aç").exists)
+        XCTAssertFalse(button("Solgar, 1 favori kampanya").exists)
     }
     func testCodelessCampaignHasWebsiteActionOnly() {
         login(); tap("Markalar"); tap("Test Markası kampanyalarını aç")
@@ -218,14 +218,13 @@ final class PrimeFlowTests: XCTestCase {
         toggleFavorite("Solgar favorilere ekle")
         tap("Geri")
         tap("Favoriler")
-        let favoriteCard = button("Solgar kampanyasını aç")
+        let favoriteCard = button("Solgar, 1 favori kampanya")
         XCTAssertTrue(favoriteCard.waitForExistence(timeout: 15))
         let favoriteSize = favoriteCard.frame.size
         XCTAssertGreaterThan(favoriteSize.width, favoriteSize.height, "Favorite card must be landscape.")
         XCTAssertEqual(favoriteSize.height, 108, accuracy: 2)
         let bookmark = app.webViews.switches["Solgar favorilerden çıkar"].firstMatch
-        XCTAssertTrue(bookmark.exists)
-        XCTAssertGreaterThanOrEqual(bookmark.frame.width, 43)
+        XCTAssertFalse(bookmark.exists)
         let screenshot = XCUIScreen.main.screenshot()
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("prime-review-screenshots")
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

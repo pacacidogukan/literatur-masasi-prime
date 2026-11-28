@@ -19,7 +19,7 @@ box.bannerTouch={target:{closest:()=>({classList:{contains:()=>false}})}};run('p
 const clickRoute=dataset=>{for(const handler of listeners.click||[])handler({target:{closest:selector=>selector==='button'?{dataset}:null}});};
 assert.match(run('discovery()'),/Marka Kampanyaları/);
 assert.match(run('codeFeature(offers)'),/Kampanya kodlu tüm fırsatları gör/);
-run("view='home';query='previous search';campaignBrand='stale brand';navigation.length=0;render()");screen.scrollTop=175;
+run("view='home';query='previous search';navigation.length=0;render()");screen.scrollTop=175;
 clickRoute({homeAll:'1'});
 assert.equal(run('view'),'campaigns');assert.equal(run('campaignBrand'),'Tümü');assert.equal(run('query'),'');
 assert.match(screen.innerHTML,/data-offer-id="live"/);assert.match(screen.innerHTML,/data-offer-id="no-code"/);
@@ -139,11 +139,11 @@ for(const rate of ['10','25','50']){
  clickRoute({filterCategory:'Tümü'});assert.equal(run('filteredCampaigns().length'),rate==='50'?0:1);
  clickRoute({action:'back'});
 }
-clickRoute({discount:'all'});assert.equal(run('view'),'campaigns');assert.equal(run('campaignFilterCount()'),0);assert.equal(run('campaignFilters.sort'),'discover');
+clickRoute({discount:'all'});assert.equal(run('view'),'campaigns');assert.equal(run('campaignFilterCount()'),1);assert.equal(run('campaignFilters.sort'),'discount');
 clickRoute({view:'brands'});assert.equal(run('selectedCategory'),'Tümü');assert.match(screen.innerHTML,/data-filter-open="ending"/);
 run("campaignFilters.brands=['Solgar'];render()");assert.match(screen.innerHTML,/data-brand="Solgar"/);assert.doesNotMatch(screen.innerHTML,/data-brand="Other"/);
 clickRoute({filterCategory:'Kargo Avantajı'});assert.equal(run('view'),'brands');assert.equal(run("filteredCampaigns(campaignFilters,'brands').length"),0);
-// A filtered browse page retains its choices on detail/back, and independent views open unfiltered.
+// A filtered browse page retains its choices on detail/back, and other browse pages inherit the same session selection.
 run('view="campaigns";campaignFilters=emptyCampaignFilters();selectedCategory="Ürün İndirimleri";campaignFilters.rates=["25"];campaignFilters.sort="discount";navigation.length=0');
 clickRoute({offer:'live'});assert.equal(run('view'),'detail');
 clickRoute({action:'back'});assert.equal(run('view'),'campaigns');assert.equal(run('selectedCategory'),'Ürün İndirimleri');
@@ -152,7 +152,7 @@ run('openCampaignFilters("all");handleCampaignFilterClick({filterClean:"1"});clo
 run('openCampaignFilters("all");handleCampaignFilterClick({filterClean:"1"});closeCampaignFilters(true)');assert.equal(run('selectedCategory'),'Tümü');assert.equal(run('campaignFilterCount()'),0);
 for(const dest of ['home','brands','campaigns','trendyol','amazon','hepsiburada']){
  run('selectedCategory="Ürün İndirimleri";campaignFilters.rates=["25"];campaignFilters.sort="discount"');
- clickRoute({view:dest});assert.equal(run('selectedCategory'),'Tümü');assert.equal(run('campaignFilterCount()'),0);assert.equal(run('campaignFilters.sort'),'discover');
+ clickRoute({view:dest});assert.equal(run('selectedCategory'),'Ürün İndirimleri');assert.equal(run('campaignFilterCount()'),1);assert.equal(run('campaignFilters.sort'),'discount');
 }
 assert.equal(run('campaignDestination({source:"https://example.com/campaign?code=x"})'),'https://example.com/');
 for(const url of ['https://www.trendyol.com/sr?mid=1','https://www.amazon.com.tr/dp/example','https://www.hepsiburada.com/example'])assert.equal(run('campaignDestination({source:'+JSON.stringify(url)+'})'),url);
@@ -266,6 +266,20 @@ assert.equal(run('favorites.size'),0);
 
 // Unfiltered brand directory shows every active campaign as shared horizontal rows.
 run('hydrate('+JSON.stringify([...rows,{...rows[0],id:'second-brand-offer',offer:'İkinci fırsat',hasCode:0,cardArtwork:undefined}])+')');
+run("view='favorites';favoriteQuery='';favorites=new Set(['live','second-brand-offer']);navigation.length=0");
+assert.equal((run('favoritesContent()').match(/data-campaign-group=/g)||[]).length,1);
+assert.match(run('favoritesContent()'),/2 favori kampanya/);
+clickRoute({campaignGroup:'Solgar'});
+assert.equal(run('campaignOrigin'),'favorites');
+assert.match(screen.innerHTML,/data-filter-open="sort"/);
+assert.equal((screen.innerHTML.match(/data-offer=/g)||[]).length,2);
+assert.match(screen.innerHTML,/data-offer="second-brand-offer"/);
+assert.doesNotMatch(screen.innerHTML,/data-offer="no-code"/);
+clickRoute({action:'back'});assert.equal(run('view'),'favorites');
+run("favorites.clear();query='';selectedCategory='Tümü';campaignFilters=emptyCampaignFilters()");
+const groupedCampaigns=run("campaignFilterResults('campaigns')");
+assert.match(groupedCampaigns,/1\/2<\/span>/);
+assert.doesNotMatch(groupedCampaigns,/ps-nativedots/);
 run("view='brands';query='stale';type='Sepette İndirim';selectedCategory='Tümü';navigation.length=0;render()");
 clickRoute({brand:'Solgar'});
 assert.equal(run('view'),'brand');assert.match(screen.innerHTML,/2 kampanya/);
@@ -275,8 +289,10 @@ assert.doesNotMatch(screen.innerHTML,/data-offer="no-code"|data-offer="expired"/
 assert.match(screen.innerHTML,/Seçili ürünler/);
 clickRoute({offer:'second-brand-offer'});assert.equal(run('view'),'detail');
 clickRoute({action:'back'});assert.equal(run('view'),'brand');assert.match(screen.innerHTML,/2 kampanya/);
-clickRoute({action:'back'});
-run("query='';selectedCategory='Kampanya Kodu'");
+assert.match(screen.innerHTML,/data-filter-open="sort"/);
+run('openCampaignFilters("sort");handleCampaignFilterClick({filterSort:"ending"});closeCampaignFilters(true)');
+clickRoute({action:'back'});assert.equal(run('campaignFilters.sort'),'ending');
+run("query='';selectedCategory='Kampanya Kodu';campaignFilters.sort='discover'");
 clickRoute({brand:'Solgar'});
 assert.match(screen.innerHTML,/data-offer="live"/);
 assert.doesNotMatch(screen.innerHTML,/data-offer="second-brand-offer"/);
@@ -298,10 +314,11 @@ run('hydrate('+JSON.stringify([
  {...rows[0],id:'estee-accented',name:'Estée Lauder',offer:'Seçili ürünlerde %25 indirim'},
  {...rows[0],id:'estee-plain',name:'Estee Lauder',offer:'Sepette %25 indirim'},
 ])+')');
-run("campaignFilters=emptyCampaignFilters();selectedCategory='Tümü';favorites=new Set(['estee-accented','estee-plain'])");
+run("campaignFilters=emptyCampaignFilters();selectedCategory='Tümü';favorites=new Set(['estee-accented','estee-plain']);view='favorites'");
 for(const text of ['Estee Lauder','ESTÉE LAUDER','Estêe Lauder','%25 EsTéE LaUDeR']){
  run('query='+JSON.stringify(text)+';favoriteQuery=query');
- for(const output of [run('nativeCampaigns()'),run('brands()'),run('favoritesContent()')]){
+ assert.equal((run('favoritesContent()').match(/data-campaign-group=/g)||[]).length,2);
+ for(const output of [run('nativeCampaigns()'),run('brands()')]){
   assert.match(output,/data-offer="estee-accented"/);
   assert.match(output,/data-offer="estee-plain"/);
  }
@@ -320,7 +337,7 @@ for(const query of [' solgar ', ' %25 İNDİRİM ', ' seçili ürünler ', 'SECi
  assert.doesNotMatch(run('nativeCampaigns()'),/data-offer-id="no-code"/);
 }
 run("favorites=new Set(['live']);favoriteQuery='uRuNLeR  sOLGaR'");
-assert.match(run('favoritesContent()'),/data-offer="live"/);
+assert.match(run('favoritesContent()'),/data-campaign-group="Solgar"/);
 run("favorites.clear();favoriteQuery='';query='solgar does-not-exist'");
 assert.equal(run('matchingBrands().length'),0);
 run("view='home';query='solgar';navigation.length=0;render()");clickRoute({offer:'live'});assert.equal(run('view'),'detail');clickRoute({action:'back'});assert.equal(run('view'),'home');assert.equal(run('query'),'solgar');assert.match(screen.innerHTML,/ps-nativelist/);

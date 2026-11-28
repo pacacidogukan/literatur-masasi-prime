@@ -69,13 +69,16 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    await page.getByRole('button',{name:'Geri',exact:true}).tap();
    await shortcuts.nth(2).tap();
    await page.locator('.ps-brandspage').waitFor();
-   assert.equal(await page.locator('.ps-allfilters>span').count(),0,'An unfiltered brands entry must not inherit the campaign filter');
-   assert.equal(await page.locator('.ps-brandspage [data-brand="Solgar"]').count(),1);
+   assert.equal(await page.locator('.ps-allfilters>span').innerText(),'1','Brands inherits the applied campaign filter');
+   assert.equal(await page.locator('.ps-brandspage [data-brand="Solgar"]').count(),0);
    await page.getByRole('button',{name:'Geri',exact:true}).tap();
    await homeHeader.locator('.ps-homehero').tap();
    await page.locator('#ps-native-results').waitFor();
-   assert.equal(await page.locator('.ps-allfilters>span').count(),0,'All campaigns opens without an unrelated filter');
-   assert.equal(await page.locator('#ps-native-results [data-offer-id]').count(),3);
+   assert.equal(await page.locator('.ps-allfilters>span').innerText(),'1','Returning to campaigns retains the applied filter');
+   assert.equal(await page.locator('#ps-native-results [data-offer-id]').count(),1);
+   await page.locator('[data-filter-open="products"]').tap();
+   await products.locator('[data-filter-clear="products"]').tap();
+   await products.locator('[data-filter-apply]').tap();
    await page.getByRole('button',{name:'Geri',exact:true}).tap();
   }
   if(width===390){
@@ -85,7 +88,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    await page.getByRole('button',{name:'Geri',exact:true}).tap();
    assert.equal(await page.locator('.ps-poster[data-offer="valid"] .lucide-bookmark').count(),0);
    await page.getByRole('button',{name:'Favoriler',exact:true}).tap();
-   await page.locator('.ps-nativefavorite [data-offer="valid"]').waitFor();
+   await page.locator('.ps-nativefavorite [data-campaign-group="Solgar"]').waitFor();
    await page.getByRole('button',{name:'Ana Sayfa',exact:true}).tap();
    await homeHeader.locator('.ps-homehero').tap();
    assert.equal(await page.locator('#ps-native-results [data-offer-id="valid"] .lucide-bookmark').count(),0);
@@ -95,7 +98,7 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    await page.locator('[data-like="valid"]').tap();
    await page.getByRole('button',{name:'Geri',exact:true}).tap();
    await page.getByRole('button',{name:'Favoriler',exact:true}).tap();
-   await page.locator('.ps-nativefavorite [data-offer="valid"]').waitFor({state:'detached'});
+   await page.locator('.ps-nativefavorite [data-campaign-group="Solgar"]').waitFor({state:'detached'});
    await page.getByRole('button',{name:'Ana Sayfa',exact:true}).tap();
   }
   const circleGap=await page.locator('.ps-brandrounds button>b').evaluateAll(nodes=>{const a=nodes[0].getBoundingClientRect(),b=nodes[1].getBoundingClientRect();return b.left-a.right;});
