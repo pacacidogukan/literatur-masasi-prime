@@ -570,8 +570,13 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    assert.equal(await page.locator('.ps-nativegroup').count(),2);
    const group=page.locator('.ps-nativegroup').filter({has:page.locator('[data-offer-id="'+scope+'-trend-1"]')});
    assert.equal(await group.locator('.ps-nativecount').innerText(),'1/2');
-   const groupRail=await group.locator('.ps-nativerail').elementHandle();
-   await page.waitForFunction(el=>el.clientWidth>0&&el.scrollWidth>el.clientWidth,groupRail);
+   const groupRail=group.locator('.ps-nativerail');
+   await groupRail.scrollIntoViewIfNeeded();
+   const swipe=await groupRail.evaluate(el=>{
+    el.scrollLeft=el.clientWidth;
+    return {offset:el.scrollLeft,width:el.clientWidth,total:el.scrollWidth};
+   });
+   assert(swipe.offset>0&&swipe.total>swipe.width,JSON.stringify({scope,width,swipe}));
    await page.locator('#ps-native-query').fill('TheLifeCo');assert.equal(await page.locator('.ps-nativegroup').count(),1);
    await page.locator('[data-filter-open="sort"]').tap();await page.locator('[data-filter-sort="discount"]').tap();await page.locator('[data-filter-apply]').tap();
    await page.getByRole('button',{name:'Geri',exact:true}).tap();
