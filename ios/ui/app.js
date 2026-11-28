@@ -145,7 +145,7 @@ let campaignSignature='';
 function applyCampaignRows(rows){
  const signature=JSON.stringify(rows);if(signature===campaignSignature)return false;
  const position=capturePage(),previous=new Map(offers.map(o=>[o.id,o]));
- hydrate(rows);campaignSignature=signature;
+ hydrate(rows);campaignSignature=signature;lastDayMembership=timedMembership();
  const fresh=new Map(offers.map(o=>[o.id,o]));
  for(const offer of offers){const old=previous.get(offer.id);if(old&&JSON.stringify(old.raw)===JSON.stringify(offer.raw))offer.code=old.code;}
  const reconcile=page=>{if(!page.current)return;page.current=fresh.get(page.current.id)||null;if(page.view==='detail'&&!page.current)page.view='home';};
