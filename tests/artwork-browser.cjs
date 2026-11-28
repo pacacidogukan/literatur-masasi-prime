@@ -564,12 +564,14 @@ const rows=[{id:'valid',productCategories:['supplements'],name:'Solgar',offer:'T
    const section=page.locator('[data-marketplace="'+scope+'"]');
    assert.equal(await section.locator('.ps-marketplace-card').count(),2);
    assert.deepEqual(await section.locator('.ps-codecount').allTextContents(),['1/2','2/2']);
-   const ratio=await section.locator('.ps-marketplace-card').first().evaluate(el=>el.clientWidth/el.clientHeight);assert(Math.abs(ratio-3)<.03);
+   const banner=await section.locator('.ps-marketplace-card').first().elementHandle();
+   await page.waitForFunction(el=>Math.abs(el.clientWidth/el.clientHeight-3)<.03,banner);
    await section.locator('[data-view="'+scope+'"]').tap();
    assert.equal(await page.locator('.ps-nativegroup').count(),2);
    const group=page.locator('.ps-nativegroup').filter({has:page.locator('[data-offer-id="'+scope+'-trend-1"]')});
    assert.equal(await group.locator('.ps-nativecount').innerText(),'1/2');
-   assert(await group.locator('.ps-nativerail').evaluate(el=>el.scrollWidth>el.clientWidth));
+   const groupRail=await group.locator('.ps-nativerail').elementHandle();
+   await page.waitForFunction(el=>el.clientWidth>0&&el.scrollWidth>el.clientWidth,groupRail);
    await page.locator('#ps-native-query').fill('TheLifeCo');assert.equal(await page.locator('.ps-nativegroup').count(),1);
    await page.locator('[data-filter-open="sort"]').tap();await page.locator('[data-filter-sort="discount"]').tap();await page.locator('[data-filter-apply]').tap();
    await page.getByRole('button',{name:'Geri',exact:true}).tap();
