@@ -3,11 +3,34 @@ const box={};vm.runInNewContext(fs.readFileSync('ios/ui/artwork-contract.js','ut
 const origin='https://prime-campaign-editor.pacacidogukan.chatgpt.site';let token;
 async function api(path,body){const r=await fetch(origin+'/api/mobile/'+path,{method:body?'POST':'GET',headers:{'Content-Type':'application/json',...(token?{'X-Prime-Mobile-Session':token}:{})},body:body?JSON.stringify(body):undefined,redirect:'error',signal:AbortSignal.timeout(30000)});if(!r.ok)throw Error('API '+path+': '+r.status);return r.json();}
 function size(b){if(b.toString('ascii',1,4)==='PNG')return [b.readUInt32BE(16),b.readUInt32BE(20)];if(b.toString('ascii',0,4)==='RIFF'&&b.toString('ascii',8,12)==='WEBP'){for(let p=12;p+8<b.length;){const kind=b.toString('ascii',p,p+4),n=b.readUInt32LE(p+4),q=p+8;if(kind==='VP8X')return [1+b.readUIntLE(q+4,3),1+b.readUIntLE(q+7,3)];if(kind==='VP8L'){const x=b.readUInt32LE(q+1);return [(x&16383)+1,((x>>>14)&16383)+1];}if(kind==='VP8 ')return [b.readUInt16LE(q+6)&16383,b.readUInt16LE(q+8)&16383];p=q+n+(n%2);}}throw Error('Unsupported or corrupt artwork bytes');}
-const out='ci-artifacts/artwork-audit';fs.mkdirSync(out,{recursive:true});const report={contractVersion:contract.version,checkedAt:new Date().toISOString(),campaigns:0,pending:[],assets:[],errors:[]};
+const out='ci-artifacts/artwork-audit';fs.mkdirSync(out,{recursive:true});const report={contractVersion:contract.version,checkedAt:new Date().toISOString(),campaigns:0,pending:[],assets:[],errors:[],compatibilityAliases:[]};
 try{
  token=(await api('access',{installationId:crypto.randomUUID()})).sessionToken;const rows=(await api('campaigns')).campaigns;report.campaigns=rows.length;
- const jobs=[],seen=new Map;for(const c of rows){if(!Object.keys(contract.slots).every(s=>c.cardArtwork?.[s])){report.pending.push({id:c.id,brand:c.name});continue;}for(const [slot,url]of Object.entries(c.cardArtwork)){if(!contract.slots[slot])continue;jobs.push({id:c.id,brand:c.name,offer:c.offer,slot,url});}}
+ const jobs=[],seen=new Map;
+ let completeSets=0;
+ for(const c of rows){
+  const artwork=c.cardArtwork;
+  const required=new Set(['large','compact','square','detail']);
+  if(Number(c.hasCode))required.add('code');
+  // Marketplace lanes also use the lastDay artwork slot for their home banner.
+  const marketplace=/^(Trendyol|Amazon|Hepsiburada) · Yetkili Satıcı$/iu.test(String(c.channel||'').trim());
+  if(Number(c.expires)>0||marketplace)required.add('lastDay');
+  if([...required].some(slot=>!artwork?.[slot])){
+   report.pending.push({id:c.id,brand:c.name});
+   continue;
+  }
+  completeSets++;
+  for(const [slot,url] of Object.entries(artwork)){
+   if(!Object.hasOwn(contract.slots,slot)||!url)continue;
+   // Older iOS builds require six URLs even when a campaign has no such band.
+   if(!required.has(slot)&&url===artwork.detail){
+    report.compatibilityAliases.push({id:c.id,brand:c.name,slot});
+    continue;
+   }
+   jobs.push({id:c.id,brand:c.name,offer:c.offer,slot,url});
+  }
+ }
  let next=0;await Promise.all(Array.from({length:4},async()=>{while(next<jobs.length){const j=jobs[next++];try{let data=seen.get(j.url);if(!data){data=(async()=>{const r=await fetch(j.url,{redirect:'error',signal:AbortSignal.timeout(30000)});if(!r.ok)throw Error('HTTP '+r.status);const b=Buffer.from(await r.arrayBuffer());const dimensions=size(b),sha256=crypto.createHash('sha256').update(b).digest('hex');fs.writeFileSync(out+'/'+sha256+'.img',b);return {dimensions,sha256,bytes:b.length};})();seen.set(j.url,data);}const d=await data;const valid=contract.dimensionsValid(j.slot,...d.dimensions);report.assets.push({...j,...d,valid});if(!valid)report.errors.push({...j,error:'Expected '+JSON.stringify(contract.slots[j.slot])+'; got '+d.dimensions});}catch(e){report.errors.push({...j,error:e.message});}}}));
- console.log(JSON.stringify({campaigns:rows.length,completeSets:jobs.length/6,assets:report.assets.length,pending:report.pending.length,errors:report.errors.length}));
+ console.log(JSON.stringify({campaigns:rows.length,completeSets,compatibilityAliases:report.compatibilityAliases.length,assets:report.assets.length,pending:report.pending.length,errors:report.errors.length}));
 }finally{fs.writeFileSync(out+'/report.json',JSON.stringify(report,null,2));if(token)await api('logout',{});}
 if(report.errors.length)throw Error('Artwork audit failed: '+report.errors.length+' invalid assets; see report.json');

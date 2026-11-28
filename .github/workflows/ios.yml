@@ -10,6 +10,7 @@ on:
       - 'db/**'
       - 'drizzle/**'
       - 'tests/**'
+      - 'scripts/audit-mobile-artwork.mjs'
       - 'package*.json'
       - '.github/workflows/ios.yml'
   pull_request:
